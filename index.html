@@ -1,0 +1,42 @@
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-T-8">
+      <title>Redirigiendo al Cancionero...</title>
+      <style>
+        body { font-family: sans-serif; background-color: #f0f0f0; color: #333; text-align: center; padding: 40px; }
+        h1 { color: #00695C; }
+      </style>
+      <script>
+        (function() {
+          // --- ¡CONFIGURA TUS ENLACES AQUÍ! ---
+          const FALLBACK_URL = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link"; // <-- ¡REEMPLAZA CON TU LINK DE DRIVE!
+          const APP_SCHEME = "cancionero-pst";
+          // ------------------------------------
+
+          const hash = window.location.hash.substring(1);
+          const appDeepLink = decodeURIComponent(hash);
+
+          // Verifica si el deep link es válido
+          if (appDeepLink && appDeepLink.startsWith(APP_SCHEME + "://")) {
+            // Intenta abrir la app
+            window.location.replace(appDeepLink);
+
+            // Si después de 1.5 segundos no se ha ido, asume que la app no está instalada
+            // y redirige al enlace de descarga de Google Drive.
+            setTimeout(function() {
+              window.location.replace(FALLBACK_URL);
+            }, 1500);
+          } else {
+            // Si no hay un deep link en la URL, redirige directamente a la descarga.
+            window.location.replace(FALLBACK_URL);
+          }
+        })();
+      </script>
+    </head>
+    <body>
+      <h1>Cargando cancionero...</h1>
+      <p>Serás redirigido en un momento.</p>
+    </body>
+    </html>
+    
