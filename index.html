@@ -4,16 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Misa en Vivo - Cancionero Parroquial</title>
-  
-  <!-- Firebase App y Database -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
   <style>
     :root { --primary: #00695C; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
     body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; text-align: center; }
     .container { padding: 20px; max-width: 600px; width: 90%; margin: auto; }
-    h1 { color: #4DB6AC; font-size: 1.4rem; margin-bottom: 5px; }
+    h1 { color: #4DB6AC; font-size: 1.4rem; }
     .status-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
     .zoom-controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; align-items: center; }
     .zoom-btn { background: #333; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
@@ -22,23 +19,21 @@
     .lyrics-view i { color: #b2dfdb; font-style: italic; }
     .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4DB6AC; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-size: 0.9rem; font-weight: bold; border: 1px solid #444; }
+    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-size: 0.9rem; border: 1px solid #444; }
   </style>
 </head>
 <body>
-
   <div id="portal" class="container">
     <div id="loader" class="status-card">
       <h1>Sintonizando...</h1>
       <div class="loading-spinner"></div>
-      <p id="loader-msg">Buscando señal de la comunidad.</p>
+      <p>Conectando con la comunidad.</p>
     </div>
-
     <div id="main-view" style="display:none;">
-      <h1 id="comm-name">Cargando...</h1>
+      <h1 id="comm-name">...</h1>
       <div class="zoom-controls">
         <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
-        <span style="font-size: 0.8rem; color: #888;">Tamaño</span>
+        <span style="font-size: 0.8rem; color: #888;">Zoom</span>
         <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
       </div>
       <div id="content-card" class="status-card">
@@ -48,77 +43,56 @@
         </div>
         <div id="lyrics-display" class="lyrics-view"></div>
       </div>
-      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">Descargar App Completa</a>
+      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">Descargar App</a>
     </div>
   </div>
-
   <script>
     const firebaseConfig = { databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
-
     let currentFontSize = 1.2;
     function changeZoom(delta) {
       currentFontSize = Math.min(Math.max(currentFontSize + (delta * 0.1), 0.8), 3.0);
       document.getElementById('lyrics-display').style.fontSize = currentFontSize + 'rem';
     }
-
     function formatLyrics(text) {
       if (!text) return "";
       return text.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // --- NUEVO BUSCADOR DE RUTA PARA CAPILLAS ---
-    async function findCommunityPath(targetId) {
-      const snapshot = await db.ref('comunidades').once('value');
-      const communities = snapshot.val();
-      if (!communities) return null;
-
-      // 1. ¿Es una Parroquia Sede?
-      if (communities[targetId]) return `comunidades/${targetId}`;
-
-      // 2. ¿Es una Capilla?
-      for (let parishId in communities) {
-        if (communities[parishId].sub_nodos && communities[parishId].sub_nodos[targetId]) {
-          return `comunidades/${parishId}/sub_nodos/${targetId}`;
-        }
-      }
-      return null;
-    }
-
+    // LÓGICA DE RUTA DIRECTA
     const hash = window.location.hash.substring(1);
-    if (hash && hash.includes("id=")) {
-      const commId = hash.split("id=")[1];
-      findCommunityPath(commId).then(path => {
-        if (path) startWebListener(path);
-        else {
-          document.getElementById('loader-msg').innerText = "No se encontró la comunidad.";
-          document.querySelector('.loading-spinner').style.display = 'none';
-        }
-      });
+    const params = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
+    const nodePath = params.get('path');
+    const oldId = params.get('id');
+
+    if (nodePath) {
+      startWebListener(nodePath);
+    } else if (oldId) {
+      // Compatibilidad con QRs viejos (solo Sedes)
+      startWebListener(`comunidades/${oldId}`);
     } else {
       window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
     }
 
-    function startWebListener(nodePath) {
+    function startWebListener(path) {
       document.getElementById('loader').style.display = 'none';
       document.getElementById('main-view').style.display = 'block';
-
-      db.ref(nodePath).on('value', (snapshot) => {
+      db.ref(path).on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) return;
-
+        if (!data) {
+          document.getElementById('status-text').innerText = "No se encontró información en esta ruta.";
+          return;
+        }
         document.getElementById('comm-name').innerText = data.nombre || "Comunidad";
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
         const statusText = document.getElementById('status-text');
-
         if (data.estado_vivo !== true) {
           waitingDiv.style.display = 'block'; lyricsDiv.style.display = 'none';
           statusText.innerText = "La transmisión está apagada.";
           return;
         }
-
         if (data.cancion_actual) {
           db.ref(`canciones_base/${data.cancion_actual}`).once('value', (s) => {
             if (s.exists()) {
@@ -129,8 +103,9 @@
         } else if (data.oracion_actual) {
           db.ref(`oraciones_oficiales/${data.oracion_actual}`).once('value', (o) => {
             if (o.exists()) {
+              let ora = o.val();
               waitingDiv.style.display = 'none'; lyricsDiv.style.display = 'block';
-              let rawText = o.val().contenido ? o.val().contenido.map(b => b.texto).join('\n\n') : (o.val().texto || "");
+              let rawText = ora.contenido ? ora.contenido.map(b => b.texto).join('\n\n') : (ora.texto || "");
               lyricsDiv.innerHTML = formatLyrics(rawText);
             }
           });
