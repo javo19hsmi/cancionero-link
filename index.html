@@ -1,42 +1,146 @@
-    <!DOCTYPE html>
-    <html lang="es">
-    <head>
-      <meta charset="UTF-T-8">
-      <title>Redirigiendo al Cancionero...</title>
-      <style>
-        body { font-family: sans-serif; background-color: #f0f0f0; color: #333; text-align: center; padding: 40px; }
-        h1 { color: #00695C; }
-      </style>
-      <script>
-        (function() {
-          // --- ¡CONFIGURA TUS ENLACES AQUÍ! ---
-          const FALLBACK_URL = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link"; // <-- ¡REEMPLAZA CON TU LINK DE DRIVE!
-          const APP_SCHEME = "cancionero-pst";
-          // ------------------------------------
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misa en Vivo - Cancionero Parroquial</title>
+  
+  <!-- Firebase App y Database -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
-          const hash = window.location.hash.substring(1);
-          const appDeepLink = decodeURIComponent(hash);
+  <style>
+    :root { --primary: #00695C; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; justify-content: center; align-items: center; text-align: center; }
+    .container { padding: 20px; max-width: 600px; width: 90%; }
+    h1 { color: #4DB6AC; font-size: 1.5rem; margin-bottom: 10px; }
+    .status-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4DB6AC; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .btn { display: inline-block; margin-top: 25px; padding: 12px 24px; background-color: var(--primary); color: white; text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s; }
+    .btn:hover { transform: scale(1.05); background-color: #00897B; }
+    .lyrics-view { text-align: left; background: var(--card); padding: 20px; border-radius: 15px; width: 100%; white-space: pre-wrap; line-height: 1.6; font-size: 1.1rem; display: none; }
+    .chord { color: #4DB6AC; font-weight: bold; } /* Por si en el futuro mostramos acordes en web */
+  </style>
+</head>
+<body>
 
-          // Verifica si el deep link es válido
-          if (appDeepLink && appDeepLink.startsWith(APP_SCHEME + "://")) {
-            // Intenta abrir la app
-            window.location.replace(appDeepLink);
+  <div id="portal" class="container">
+    <div id="loader" class="status-card">
+      <h1>Conectando al Vivo...</h1>
+      <div class="loading-spinner"></div>
+      <p>Buscando señal de la parroquia.</p>
+    </div>
 
-            // Si después de 1.5 segundos no se ha ido, asume que la app no está instalada
-            // y redirige al enlace de descarga de Google Drive.
-            setTimeout(function() {
-              window.location.replace(FALLBACK_URL);
-            }, 1500);
-          } else {
-            // Si no hay un deep link en la URL, redirige directamente a la descarga.
-            window.location.replace(FALLBACK_URL);
-          }
-        })();
-      </script>
-    </head>
-    <body>
-      <h1>Cargando cancionero...</h1>
-      <p>Serás redirigido en un momento.</p>
-    </body>
-    </html>
+    <div id="main-view" style="display:none;">
+      <h1 id="comm-name">Parroquia</h1>
+      <div id="content-card" class="status-card">
+        <div id="waiting-msg">
+          <span style="font-size: 50px;">⏳</span>
+          <h2>Misa en Vivo</h2>
+          <p id="status-text">Esperando la próxima canción u oración...</p>
+        </div>
+        <div id="lyrics-display" class="lyrics-view"></div>
+      </div>
+
+      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn">
+        Descargar App Completa
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // 1. CONFIGURACIÓN DE FIREBASE (TU PROYECTO)
+    const firebaseConfig = {
+      databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // 2. LÓGICA DE DETECCIÓN Y REDIRECCIÓN
+    const APP_SCHEME = "cancionero-pst";
+    const hash = window.location.hash.substring(1);
     
+    // Si viene de un QR (#vivo?id=...) o de una Playlist
+    if (hash) {
+      const decoded = decodeURIComponent(hash);
+      
+      // Intento de apertura de App
+      const appUrl = decoded.includes('://') ? decoded : `${APP_SCHEME}://${decoded}`;
+      window.location.replace(appUrl);
+
+      // Si en 2 segundos sigue aquí, procesamos la Web
+      setTimeout(() => {
+        if (decoded.includes("id=")) {
+          const commId = decoded.split("id=")[1];
+          startWebListener(commId);
+        } else {
+          // Si no es un ID de vivo, redirigir a descarga (es una playlist vieja)
+          window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
+        }
+      }, 2000);
+    } else {
+       // Sin nada en la URL, ir a descarga
+       window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
+    }
+
+    // 3. MOTOR DE TIEMPO REAL WEB
+    function startWebListener(commId) {
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('main-view').style.display = 'block';
+
+      // Escuchamos los datos de la comunidad
+      db.ref(`comunidades/${commId}`).on('value', (snapshot) => {
+        const data = snapshot.val();
+        if (!data) return;
+
+        document.getElementById('comm-name').innerText = data.nombre || "Comunidad";
+        const isLive = data.estado_vivo === true;
+        const songId = data.cancion_actual;
+        const oracionId = data.oracion_actual;
+
+        const lyricsDiv = document.getElementById('lyrics-display');
+        const waitingDiv = document.getElementById('waiting-msg');
+        const statusText = document.getElementById('status-text');
+
+        if (!isLive) {
+          waitingDiv.style.display = 'block';
+          lyricsDiv.style.display = 'none';
+          statusText.innerText = "La transmisión está apagada.";
+          return;
+        }
+
+        if (songId) {
+          // Buscar letra de la canción
+          db.ref(`canciones_base/${songId}`).once('value', (songSnap) => {
+            const song = songSnap.val();
+            if (song) {
+              waitingDiv.style.display = 'none';
+              lyricsDiv.style.display = 'block';
+              // Limpiar corchetes de acordes para el fiel web
+              lyricsDiv.innerText = song.lyrics.replace(/\[.*?\]/g, "");
+            }
+          });
+        } else if (oracionId) {
+          // Buscar oración
+          db.ref(`oraciones_oficiales/${oracionId}`).once('value', (oraSnap) => {
+            let ora = oraSnap.val();
+            if (ora) {
+              waitingDiv.style.display = 'none';
+              lyricsDiv.style.display = 'block';
+              // Mostrar texto de la oración
+              let texto = ora.contenido ? ora.contenido.map(b => b.texto).join('\n\n') : (ora.texto || "");
+              lyricsDiv.innerText = texto;
+            }
+          });
+        } else {
+          // Estado de espera
+          waitingDiv.style.display = 'block';
+          lyricsDiv.style.display = 'none';
+          statusText.innerText = "Esperando la próxima canción u oración...";
+        }
+      });
+    }
+  </script>
+</body>
+</html>
