@@ -11,132 +11,129 @@
 
   <style>
     :root { --primary: #00695C; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; height: 100vh; justify-content: center; align-items: center; text-align: center; }
-    .container { padding: 20px; max-width: 600px; width: 90%; }
-    h1 { color: #4DB6AC; font-size: 1.5rem; margin-bottom: 10px; }
-    .status-card { background: var(--card); padding: 30px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; text-align: center; }
+    .container { padding: 20px; max-width: 600px; width: 90%; margin: auto; }
+    h1 { color: #4DB6AC; font-size: 1.4rem; margin-bottom: 5px; }
+    .status-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+    
+    /* Controles de Zoom */
+    .zoom-controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; align-items: center; }
+    .zoom-btn { background: #333; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .zoom-btn:active { transform: scale(0.9); background: var(--primary); }
+
+    .lyrics-view { text-align: left; white-space: pre-wrap; line-height: 1.6; font-size: 1.2rem; transition: font-size 0.2s; }
+    
+    /* Estilos para el texto formateado */
+    .lyrics-view b { color: #ffffff; font-weight: 800; }
+    .lyrics-view i { color: #b2dfdb; font-style: italic; }
+    
     .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4DB6AC; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .btn { display: inline-block; margin-top: 25px; padding: 12px 24px; background-color: var(--primary); color: white; text-decoration: none; border-radius: 30px; font-weight: bold; transition: 0.3s; }
-    .btn:hover { transform: scale(1.05); background-color: #00897B; }
-    .lyrics-view { text-align: left; background: var(--card); padding: 20px; border-radius: 15px; width: 100%; white-space: pre-wrap; line-height: 1.6; font-size: 1.1rem; display: none; }
-    .chord { color: #4DB6AC; font-weight: bold; } /* Por si en el futuro mostramos acordes en web */
+    
+    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-size: 0.9rem; font-weight: bold; border: 1px solid #444; }
   </style>
 </head>
 <body>
 
   <div id="portal" class="container">
     <div id="loader" class="status-card">
-      <h1>Conectando al Vivo...</h1>
+      <h1>Conectando...</h1>
       <div class="loading-spinner"></div>
-      <p>Buscando señal de la parroquia.</p>
     </div>
 
     <div id="main-view" style="display:none;">
       <h1 id="comm-name">Parroquia</h1>
+      
+      <!-- Botones de Zoom -->
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="changeZoom(-2)">A-</button>
+        <span id="zoom-label" style="font-size: 0.8rem; color: #888;">Tamaño</span>
+        <button class="zoom-btn" onclick="changeZoom(2)">A+</button>
+      </div>
+
       <div id="content-card" class="status-card">
         <div id="waiting-msg">
-          <span style="font-size: 50px;">⏳</span>
-          <h2>Misa en Vivo</h2>
-          <p id="status-text">Esperando la próxima canción u oración...</p>
+          <span style="font-size: 40px;">⏳</span>
+          <p id="status-text">Esperando contenido...</p>
         </div>
         <div id="lyrics-display" class="lyrics-view"></div>
       </div>
 
-      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn">
+      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
         Descargar App Completa
       </a>
     </div>
   </div>
 
   <script>
-    // 1. CONFIGURACIÓN DE FIREBASE (TU PROYECTO)
-    const firebaseConfig = {
-      databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
-    };
+    // 1. CONFIGURACIÓN
+    const firebaseConfig = { databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // 2. LÓGICA DE DETECCIÓN Y REDIRECCIÓN
-    const APP_SCHEME = "cancionero-pst";
-    const hash = window.location.hash.substring(1);
-    
-    // Si viene de un QR (#vivo?id=...) o de una Playlist
-    if (hash) {
-      const decoded = decodeURIComponent(hash);
-      
-      // Intento de apertura de App
-      const appUrl = decoded.includes('://') ? decoded : `${APP_SCHEME}://${decoded}`;
-      window.location.replace(appUrl);
-
-      // Si en 2 segundos sigue aquí, procesamos la Web
-      setTimeout(() => {
-        if (decoded.includes("id=")) {
-          const commId = decoded.split("id=")[1];
-          startWebListener(commId);
-        } else {
-          // Si no es un ID de vivo, redirigir a descarga (es una playlist vieja)
-          window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
-        }
-      }, 2000);
-    } else {
-       // Sin nada en la URL, ir a descarga
-       window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
+    let currentFontSize = 1.2; // rem
+    function changeZoom(delta) {
+      currentFontSize = Math.min(Math.max(currentFontSize + (delta * 0.1), 0.8), 2.5);
+      document.getElementById('lyrics-display').style.fontSize = currentFontSize + 'rem';
     }
 
-    // 3. MOTOR DE TIEMPO REAL WEB
+    // 2. FORMATEO DE TEXTO (Markdown simple)
+    function formatLyrics(text) {
+      if (!text) return "";
+      let formatted = text
+        .replace(/\[.*?\]/g, "") // Quitar acordes
+        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>") // Negrita Cursiva
+        .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>") // Negrita
+        .replace(/_([\s\S]*?)_/g, "<i>$1</i>"); // Cursiva
+      return formatted;
+    }
+
+    // 3. LÓGICA DE INICIO
+    const hash = window.location.hash.substring(1);
+    if (hash && hash.includes("id=")) {
+      const commId = hash.split("id=")[1];
+      startWebListener(commId);
+    } else {
+      window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
+    }
+
     function startWebListener(commId) {
       document.getElementById('loader').style.display = 'none';
       document.getElementById('main-view').style.display = 'block';
 
-      // Escuchamos los datos de la comunidad
       db.ref(`comunidades/${commId}`).on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
 
         document.getElementById('comm-name').innerText = data.nombre || "Comunidad";
-        const isLive = data.estado_vivo === true;
-        const songId = data.cancion_actual;
-        const oracionId = data.oracion_actual;
-
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
         const statusText = document.getElementById('status-text');
 
-        if (!isLive) {
-          waitingDiv.style.display = 'block';
-          lyricsDiv.style.display = 'none';
+        if (data.estado_vivo !== true) {
+          waitingDiv.style.display = 'block'; lyricsDiv.style.display = 'none';
           statusText.innerText = "La transmisión está apagada.";
           return;
         }
 
-        if (songId) {
-          // Buscar letra de la canción
-          db.ref(`canciones_base/${songId}`).once('value', (songSnap) => {
-            const song = songSnap.val();
-            if (song) {
-              waitingDiv.style.display = 'none';
-              lyricsDiv.style.display = 'block';
-              // Limpiar corchetes de acordes para el fiel web
-              lyricsDiv.innerText = song.lyrics.replace(/\[.*?\]/g, "");
+        if (data.cancion_actual) {
+          db.ref(`canciones_base/${data.cancion_actual}`).once('value', (s) => {
+            if (s.exists()) {
+              waitingDiv.style.display = 'none'; lyricsDiv.style.display = 'block';
+              lyricsDiv.innerHTML = formatLyrics(s.val().lyrics);
             }
           });
-        } else if (oracionId) {
-          // Buscar oración
-          db.ref(`oraciones_oficiales/${oracionId}`).once('value', (oraSnap) => {
-            let ora = oraSnap.val();
-            if (ora) {
-              waitingDiv.style.display = 'none';
-              lyricsDiv.style.display = 'block';
-              // Mostrar texto de la oración
-              let texto = ora.contenido ? ora.contenido.map(b => b.texto).join('\n\n') : (ora.texto || "");
-              lyricsDiv.innerText = texto;
+        } else if (data.oracion_actual) {
+          db.ref(`oraciones_oficiales/${data.oracion_actual}`).once('value', (o) => {
+            if (o.exists()) {
+              let ora = o.val();
+              waitingDiv.style.display = 'none'; lyricsDiv.style.display = 'block';
+              let rawText = ora.contenido ? ora.contenido.map(b => b.texto).join('\n\n') : (ora.texto || "");
+              lyricsDiv.innerHTML = formatLyrics(rawText);
             }
           });
         } else {
-          // Estado de espera
-          waitingDiv.style.display = 'block';
-          lyricsDiv.style.display = 'none';
+          waitingDiv.style.display = 'block'; lyricsDiv.style.display = 'none';
           statusText.innerText = "Esperando la próxima canción u oración...";
         }
       });
