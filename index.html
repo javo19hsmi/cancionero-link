@@ -4,11 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cancionero Parroquial</title>
-  
-  <!-- Firebase Core y Database -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-
   <style>
     :root { 
       --primary: #00695C; 
@@ -17,108 +14,39 @@
       --card: #1A1A1A; 
       --surface: #222222;
       --text: #E0E0E0; 
+      --live-red: #ff5252;
     }
-    
     body { 
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
-      background-color: var(--bg); 
-      color: var(--text); 
-      margin: 0; 
-      padding: 0;
-      display: flex; 
-      flex-direction: column; 
-      align-items: center;
-      min-height: 100vh; 
+      font-family: sans-serif; background-color: var(--bg); color: var(--text); 
+      margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; 
     }
-
-    .container { 
-      padding: 16px; 
-      max-width: 500px; 
-      width: 100%; 
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .header-area {
-      text-align: center;
-      margin-top: 10px;
-    }
-    .header-area h1 {
-      font-size: 1.4rem;
-      color: var(--primary-light);
-      margin: 0;
-      text-transform: uppercase;
-    }
-    .live-badge {
-      font-size: 0.85rem;
-      color: #69F0AE;
-      font-weight: 500;
-    }
-
-    .status-card { 
-      background: var(--card); 
-      padding: 20px; 
-      border-radius: 16px; 
-      border: 1px solid #2C2C2C; 
-      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-    }
-
-    .zoom-controls { 
-      display: flex; 
-      justify-content: space-between; 
-      align-items: center; 
-      background: var(--surface);
-      padding: 8px 16px;
-      border-radius: 12px;
-      margin-bottom: 16px;
-    }
-    .zoom-btn { 
-      background: #2E2E2E; 
-      color: white; 
-      border: 1px solid #444; 
-      width: 36px; 
-      height: 36px; 
-      border-radius: 50%; 
-      cursor: pointer; 
-    }
-
-    .lyrics-view { 
-      text-align: left; 
-      white-space: pre-wrap; 
-      line-height: 1.7; 
-      font-size: 1.25rem; 
-      padding: 10px 4px;
-    }
-    .lyrics-view b { color: #ffffff; font-weight: 700; }
-    .lyrics-view i { color: #B2DFDB; font-style: italic; }
-
-    .btn-download { 
-      display: flex;
-      justify-content: center;
-      padding: 14px; 
-      background-color: var(--primary); 
-      color: white; 
-      text-decoration: none; 
-      border-radius: 12px; 
-      font-weight: bold; 
-    }
+    .container { padding: 16px; max-width: 500px; width: 100%; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px; }
+    .header-area { text-align: center; margin-top: 10px; }
+    .header-area h1 { font-size: 1.4rem; color: var(--primary-light); margin: 0; text-transform: uppercase; }
+    .live-badge { font-size: 0.85rem; color: #888; font-weight: bold; margin-top: 5px; transition: color 0.3s; }
+    .live-badge.active { color: var(--live-red); }
+    .status-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #2C2C2C; box-shadow: 0 8px 24px rgba(0,0,0,0.6); }
+    .zoom-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 8px 16px; border-radius: 12px; margin-bottom: 16px; }
+    .zoom-btn { background: #2E2E2E; color: white; border: 1px solid #444; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; }
+    .lyrics-view { text-align: left; line-height: 1.7; font-size: 1.25rem; padding: 10px 4px; }
+    
+    .bloque { padding: 12px; border-radius: 8px; margin-bottom: 8px; transition: all 0.3s ease; border-left: 4px solid transparent; white-space: pre-wrap; }
+    .bloque.active { background: rgba(77, 182, 172, 0.15); border-left-color: var(--primary-light); color: #ffffff; transform: translateX(5px); }
+    .bloque b { color: var(--primary-light); font-weight: 700; }
+    
+    .btn-download { display: flex; justify-content: center; padding: 14px; background-color: var(--primary); color: white; text-decoration: none; border-radius: 12px; font-weight: bold; }
   </style>
 </head>
 <body>
-
   <div id="portal" class="container">
-    
     <div id="loader" class="status-card" style="text-align:center; padding:60px 20px;">
       <h2>Cargando portal...</h2>
-      <p style="color: #888;">Redireccionando...</p>
+      <p style="color: #888;">Intentando abrir la App...</p>
     </div>
-
     <div id="main-view" style="display:none;">
       <div class="header-area">
         <h1 id="comm-name">Parroquia</h1>
-        <div class="live-badge">● TRANSMISIÓN EN VIVO</div>
+        <div id="live-indicator" class="live-badge">● TRANSMISIÓN INACTIVA</div>
       </div>
       <br>
       <div class="status-card">
@@ -127,30 +55,23 @@
           <span style="color:#A0A0A0; font-size:0.9rem;">Tamaño</span>
           <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
         </div>
-
         <div id="waiting-msg" style="text-align:center; padding:40px 20px;">
-          <h2 style="color:var(--primary-light)">Señal Conectada</h2>
+          <h2 id="waiting-title" style="color:var(--primary-light)">Señal Conectada</h2>
           <p id="status-text" style="color: #888;">Esperando señal...</p>
         </div>
-
         <div id="lyrics-display" class="lyrics-view" style="display:none;"></div>
       </div>
     </div>
-
-    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
-      📥 Descargar Aplicación Móvil
-    </a>
+    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">📥 Descargar Aplicación Móvil</a>
   </div>
 
   <script>
-    const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
     const SCHEME = "cancionero-pst";
+    const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
     
-    // Configuración Firebase (Ruta única del cancionero)
     firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
     const db = firebase.database();
 
-    // Redirección inteligente
     const hash = decodeURIComponent(window.location.hash.substring(1));
     if (hash) {
       window.location.replace(hash.includes('://') ? hash : `${SCHEME}://${hash}`);
@@ -170,69 +91,64 @@
         document.getElementById('comm-name').innerText = d.nombre || "Comunidad";
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
+        const liveInd = document.getElementById('live-indicator');
+        const waitTitle = document.getElementById('waiting-title');
+        const statusText = document.getElementById('status-text');
+        const blockIdx = parseInt(d.bloque_actual) || -1;
         
         if (!d.estado_vivo) { 
+          liveInd.classList.remove('active'); liveInd.innerText = "● TRANSMISIÓN INACTIVA";
           waitingDiv.style.display='block'; lyricsDiv.style.display='none'; 
-          document.getElementById('status-text').innerText = "Transmisión inactiva.";
+          waitTitle.innerText = "Paz y Bien";
+          statusText.innerText = "La celebración ha finalizado o aún no ha comenzado.";
           return; 
         }
+
+        liveInd.classList.add('active'); liveInd.innerText = "● TRANSMISIÓN EN VIVO";
         
         if (d.cancion_actual) {
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
-            if (cs.exists()) mostrarContenido(cs.val().lyrics, waitingDiv, lyricsDiv);
+            if (cs.exists()) mostrarContenido(cs.val().lyrics, -1, waitingDiv, lyricsDiv);
           });
         } else if (d.oracion_actual) {
-          const idO = d.oracion_actual;
-          // Cascada de búsqueda
-          db.ref(`${path}/oraciones/${idO}`).once('value', sl => {
-            if (sl.exists()) mostrarContenido(sl.val(), waitingDiv, lyricsDiv);
-            else db.ref(`oraciones_oficiales/${idO}`).once('value', so => {
-              if (so.exists()) mostrarContenido(so.val(), waitingDiv, lyricsDiv);
-              else db.ref(`oraciones_publicas/${idO}`).once('value', sp => {
-                if (sp.exists()) mostrarContenido(sp.val(), waitingDiv, lyricsDiv);
-              });
+          db.ref(`oraciones_oficiales/${d.oracion_actual}`).once('value', so => {
+            if (so.exists()) mostrarContenido(so.val(), blockIdx, waitingDiv, lyricsDiv);
+            else db.ref(`${path}/oraciones/${d.oracion_actual}`).once('value', sl => {
+              if (sl.exists()) mostrarContenido(sl.val(), blockIdx, waitingDiv, lyricsDiv);
             });
           });
         } else {
           waitingDiv.style.display='block'; lyricsDiv.style.display='none';
-          document.getElementById('status-text').innerText = "Esperando señal...";
+          waitTitle.innerText = "Sintonía de Fe";
+          statusText.innerText = "El coro iniciará pronto la siguiente alabanza.";
         }
       });
     }
 
-    function mostrarContenido(data, waitingDiv, lyricsDiv) {
-      waitingDiv.style.display='none'; 
-      lyricsDiv.style.display='block'; 
+    function mostrarContenido(data, blockIdx, waitingDiv, lyricsDiv) {
+      waitingDiv.style.display='none'; lyricsDiv.style.display='block'; 
       let html = "";
-      
-      if (data && typeof data === 'object') {
-        const contenido = data.contenido || data.bloques || [];
-        if (Array.isArray(contenido)) {
-          html = contenido.map(b => {
-            if (b.tipo === 'versiculo') return `<b>V.</b> ${b.texto}`;
-            if (b.tipo === 'respuesta') return `<b>R.</b> ${b.texto}`;
-            if (b.tipo === 'titulo_seccion') return `<br><b style="color:var(--primary-light)">${b.texto}</b>`;
-            return b.texto || "";
-          }).join('<br><br>');
-        } else {
-          html = data.texto || data.oracion || "";
-        }
+      if (typeof data === 'string') {
+        html = `<div class="bloque">${darFormato(data)}</div>`;
       } else {
-        html = data || "";
+        const bloques = data.contenido || [];
+        html = bloques.map((b, i) => {
+          const activeClass = (i === blockIdx) ? 'active' : '';
+          let txt = b.texto || "";
+          if (b.tipo === 'versiculo') txt = `<b>V.</b> ${txt}`;
+          if (b.tipo === 'respuesta') txt = `<b>R.</b> ${txt}`;
+          if (b.tipo === 'titulo_seccion') txt = `<b style="color:var(--primary-light)">${txt}</b>`;
+          return `<div class="bloque ${activeClass}">${darFormato(txt)}</div>`;
+        }).join('');
       }
-      
-      lyricsDiv.innerHTML = darFormato(html);
+      lyricsDiv.innerHTML = html;
+      const activeEl = document.querySelector('.bloque.active');
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function darFormato(t) {
-      return t.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>");
-    }
-
+    function darFormato(t) { return t.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>"); }
     let zoom = 1.25;
-    function changeZoom(v) { 
-      zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 2.8); 
-      document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; 
-    }
+    function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
   </script>
 </body>
 </html>
