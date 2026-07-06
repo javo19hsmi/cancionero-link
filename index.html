@@ -3,12 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Misa en Vivo - Cancionero Parroquial</title>
+  <title>Cancionero Parroquial</title>
+  
+  <!-- Firebase App y Database -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
     :root { --primary: #00695C; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-    body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; text-align: center; }
+    body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; text-align: center; justify-content: center; }
     .container { padding: 20px; max-width: 600px; width: 90%; margin: auto; }
     h1 { color: #4DB6AC; font-size: 1.4rem; }
     .status-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
@@ -19,80 +22,111 @@
     .lyrics-view i { color: #b2dfdb; font-style: italic; }
     .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid #4DB6AC; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-size: 0.9rem; border: 1px solid #444; }
+    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-size: 0.9rem; font-weight: bold; border: 1px solid #444; }
   </style>
 </head>
 <body>
+
   <div id="portal" class="container">
+    <!-- Pantalla de Transición/Carga -->
     <div id="loader" class="status-card">
-      <h1>Sintonizando...</h1>
+      <h1 id="loader-title">Abriendo el Cancionero...</h1>
       <div class="loading-spinner"></div>
-      <p>Conectando con la comunidad.</p>
+      <p id="loader-msg">Si tienes la App instalada, se abrirá en un momento.</p>
     </div>
+
+    <!-- Vista de Misa en Vivo (Solo se activa si falla la App y es un link de vivo) -->
     <div id="main-view" style="display:none;">
-      <h1 id="comm-name">...</h1>
+      <h1 id="comm-name">Parroquia</h1>
       <div class="zoom-controls">
         <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
-        <span style="font-size: 0.8rem; color: #888;">Zoom</span>
+        <span style="font-size: 0.8rem; color: #888;">Tamaño</span>
         <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
       </div>
       <div id="content-card" class="status-card">
         <div id="waiting-msg">
           <span style="font-size: 40px;">⏳</span>
-          <p id="status-text">Esperando contenido...</p>
+          <p id="status-text">Esperando contenido en vivo...</p>
         </div>
         <div id="lyrics-display" class="lyrics-view"></div>
       </div>
-      <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">Descargar App</a>
     </div>
+    
+    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
+      Descargar App Completa (Drive)
+    </a>
   </div>
+
   <script>
+    // 1. CONFIGURACIÓN
+    const FALLBACK_URL = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
+    const APP_SCHEME = "cancionero-pst";
     const firebaseConfig = { databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" };
+    
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    // 2. LÓGICA DE REDIRECCIÓN (EL PUENTE)
+    const hash = window.location.hash.substring(1);
+    const decodedHash = decodeURIComponent(hash);
+
+    if (hash) {
+      // Intentar abrir la App siempre (sea Playlist o Vivo)
+      const appUrl = decodedHash.includes('://') ? decodedHash : `${APP_SCHEME}://${decodedHash}`;
+      window.location.replace(appUrl);
+
+      // Esperar 1.5 segundos. Si el usuario sigue aquí, es que no tiene la App.
+      setTimeout(() => {
+        const params = new URLSearchParams(decodedHash.includes('?') ? decodedHash.split('?')[1] : '');
+        const nodePath = params.get('path');
+        const oldId = params.get('id');
+
+        if (nodePath || oldId || decodedHash.includes('vivo')) {
+          // Es un link de VIVO: Activar el visor web
+          const finalPath = nodePath || (oldId ? `comunidades/${oldId}` : null);
+          if (finalPath) startWebListener(finalPath);
+          else window.location.replace(FALLBACK_URL);
+        } else {
+          // Es una Playlist o link desconocido: Ir a descarga
+          window.location.replace(FALLBACK_URL);
+        }
+      }, 1500);
+    } else {
+      // No hay nada en el link: Ir a descarga
+      window.location.replace(FALLBACK_URL);
+    }
+
+    // 3. MOTOR WEB (VIVO)
     let currentFontSize = 1.2;
     function changeZoom(delta) {
       currentFontSize = Math.min(Math.max(currentFontSize + (delta * 0.1), 0.8), 3.0);
       document.getElementById('lyrics-display').style.fontSize = currentFontSize + 'rem';
     }
+
     function formatLyrics(text) {
       if (!text) return "";
       return text.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // LÓGICA DE RUTA DIRECTA
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
-    const nodePath = params.get('path');
-    const oldId = params.get('id');
-
-    if (nodePath) {
-      startWebListener(nodePath);
-    } else if (oldId) {
-      // Compatibilidad con QRs viejos (solo Sedes)
-      startWebListener(`comunidades/${oldId}`);
-    } else {
-      window.location.replace("https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link");
-    }
-
     function startWebListener(path) {
       document.getElementById('loader').style.display = 'none';
       document.getElementById('main-view').style.display = 'block';
+      
       db.ref(path).on('value', (snapshot) => {
         const data = snapshot.val();
-        if (!data) {
-          document.getElementById('status-text').innerText = "No se encontró información en esta ruta.";
-          return;
-        }
+        if (!data) return;
+
         document.getElementById('comm-name').innerText = data.nombre || "Comunidad";
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
         const statusText = document.getElementById('status-text');
+
         if (data.estado_vivo !== true) {
           waitingDiv.style.display = 'block'; lyricsDiv.style.display = 'none';
           statusText.innerText = "La transmisión está apagada.";
           return;
         }
+
         if (data.cancion_actual) {
           db.ref(`canciones_base/${data.cancion_actual}`).once('value', (s) => {
             if (s.exists()) {
