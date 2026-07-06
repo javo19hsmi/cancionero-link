@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cancionero Parroquial - En Vivo</title>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <title>Cancionero Parroquial</title>
+  <script src="https://gstatic.com"></script>
+  <script src="https://gstatic.com"></script>
   <style>
     :root { 
       --primary: #00695C; 
@@ -38,7 +38,7 @@
       gap: 16px;
     }
 
-    /* Encabezado Principal */
+    /* Encabezado */
     .header-area {
       text-align: center;
       margin-top: 10px;
@@ -65,7 +65,7 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     }
 
-    /* Barra de Zoom Integrada tipo Control Remoto */
+    /* Controles de Zoom Remotos */
     .zoom-controls { 
       display: flex; 
       justify-content: space-between; 
@@ -96,7 +96,7 @@
     }
     .zoom-btn:active { background: var(--primary); }
 
-    /* Área de Visualización de Letras */
+    /* Área de Visualización de Letras y Textos */
     .lyrics-view { 
       text-align: left; 
       white-space: pre-wrap; 
@@ -107,20 +107,18 @@
     .lyrics-view b { color: #ffffff; font-weight: 700; }
     .lyrics-view i { color: #B2DFDB; font-style: italic; }
 
-    /* Estado de Espera */
+    /* Estados Internos */
     .waiting-box {
       text-align: center;
       padding: 40px 20px;
     }
     .waiting-box h2 { color: var(--primary-light); margin-bottom: 8px; }
-
-    /* Loader Inicial Moderno */
     .loader-box {
       text-align: center;
       padding: 60px 20px;
     }
 
-    /* Botón de Descarga Unificado e Inmersivo */
+    /* Botón de Descarga Ergonómico */
     .btn-download { 
       display: flex;
       justify-content: center;
@@ -142,13 +140,13 @@
 
   <div id="portal" class="container">
     
-    <!-- VISTA INICIAL DE CARGA -->
+    <!-- PANTALLA INICIAL DE CARGA -->
     <div id="loader" class="status-card loader-box">
       <h2>Cargando portal...</h2>
       <p style="color: #888; font-size: 0.9rem;">Redireccionando a la aplicación nativa</p>
     </div>
 
-    <!-- VISTA PRINCIPAL DEL EN VIVO -->
+    <!-- PANTALLA PRINCIPAL EN VIVO -->
     <div id="main-view" style="display:none;">
       <div class="header-area">
         <h1 id="comm-name">Parroquia</h1>
@@ -158,7 +156,7 @@
       <br>
 
       <div class="status-card">
-        <!-- Control de Zoom en la cabecera interna de la tarjeta -->
+        <!-- Control de Zoom Estilizado -->
         <div class="zoom-controls">
           <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
           <span class="zoom-label">Tamaño del Texto</span>
@@ -168,24 +166,23 @@
         <!-- Pantalla de Señal en Espera -->
         <div id="waiting-msg" class="waiting-box">
           <h2>Señal Conectada</h2>
-          <p id="status-text" style="color: #888;">Esperando que el coro inicie una canción...</p>
+          <p id="status-text" style="color: #888;">Esperando señal del coro u oraciones...</p>
         </div>
 
-        <!-- Visor Reactivo de Letras -->
+        <!-- Visor Reactivo de Letras y Oraciones -->
         <div id="lyrics-display" class="lyrics-view" style="display:none;"></div>
       </div>
     </div>
 
-    <!-- BOTÓN DE INSTALACIÓN SIEMPRE DISPONIBLE ABAJO -->
-    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
+    <!-- BOTÓN DE INSTALACIÓN INFERIOR COHESIVO -->
+    <a href="https://google.com" class="btn-download">
       📥 Descargar Aplicación Móvil
     </a>
   </div>
-
   <script>
-    const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
+    const FALLBACK = "https://google.com";
     const SCHEME = "cancionero-pst";
-    const config = { databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" };
+    const config = { databaseURL: "https://firebaseio.com" };
     firebase.initializeApp(config);
     const db = firebase.database();
 
@@ -193,14 +190,14 @@
     if (hash) {
       window.location.replace(hash.includes('://') ? hash : `${SCHEME}://${hash}`);
       setTimeout(() => {
-        const p = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
+        const p = new URLSearchParams(hash.includes('?') ? hash.split('?') : '');
         const path = p.get('path') || (p.get('id') ? `comunidades/${p.get('id')}` : null);
         if (path || hash.includes('vivo')) start(path);
         else window.location.replace(FALLBACK);
       }, 1500);
     } else window.location.replace(FALLBACK);
 
-            function start(path) {
+    function start(path) {
       document.getElementById('loader').style.display='none';
       document.getElementById('main-view').style.display='block';
       db.ref(path).on('value', s => {
@@ -216,45 +213,41 @@
           return; 
         }
         
-        // =========================================================================
-        // 1. CONTROL DE CANCIÓN ACTUAL EN VIVO
-        // =========================================================================
+        // -----------------------------------------------------------------
+        // CASO A: TRANSMISIÓN DE CANCIÓN EN VIVO
+        // -----------------------------------------------------------------
         if (d.cancion_actual) {
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
             if (cs.exists()) { 
               waitingDiv.style.display='none'; 
               lyricsDiv.style.display='block'; 
               let textoPlano = cs.val().lyrics || "";
-              lyricsDiv.innerHTML = textoPlano
-                .replace(/\[.*?\]/g, "")
-                .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
-                .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
-                .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+              lyricsDiv.innerHTML = darFormatoAlTexto(textoPlano);
             }
           });
         } 
-        // =========================================================================
-        // 2. CONTROL DE ORACIÓN ACTUAL EN VIVO (Búsqueda inteligente en cascada)
-        // =========================================================================
+        // -----------------------------------------------------------------
+        // CASO B: TRANSMISIÓN DE ORACIÓN EN VIVO (Búsqueda en cascada)
+        // -----------------------------------------------------------------
         else if (d.oracion_actual) {
           const idOracion = d.oracion_actual;
 
-          // Intento 1: Buscar localmente dentro del mismo nodo activo (comunidades/.../oraciones)
+          // Intento 1: Buscar localmente en la parroquia o capilla activa (comunidades/.../oraciones)
           db.ref(`${path}/oraciones/${idOracion}`).once('value', snapshotLocal => {
             if (snapshotLocal.exists()) {
-              procesarYMostrarOracion(snapshotLocal.val(), waitingDiv, lyricsDiv);
+              mostrarTextoOracion(snapshotLocal.val(), waitingDiv, lyricsDiv);
             } else {
-              // Intento 2: Si no es local, buscar en oraciones_oficiales
+              // Intento 2: Buscar de forma global en oraciones_oficiales
               db.ref(`oraciones_oficiales/${idOracion}`).once('value', snapshotOficial => {
                 if (snapshotOficial.exists()) {
-                  procesarYMostrarOracion(snapshotOficial.val(), waitingDiv, lyricsDiv);
+                  mostrarTextoOracion(snapshotOficial.val(), waitingDiv, lyricsDiv);
                 } else {
-                  // Intento 3: Si tampoco está, buscar en oraciones_publicas
+                  // Intento 3: Buscar de forma global en oraciones_publicas
                   db.ref(`oraciones_publicas/${idOracion}`).once('value', snapshotPublico => {
                     if (snapshotPublico.exists()) {
-                      procesarYMostrarOracion(snapshotPublico.val(), waitingDiv, lyricsDiv);
+                      mostrarTextoOracion(snapshotPublico.val(), waitingDiv, lyricsDiv);
                     } else {
-                      // Fallback en caso de que el ID no exista en ningún lado
+                      // ID huérfano no encontrado en ninguna de las 3 rutas
                       waitingDiv.style.display='block'; 
                       lyricsDiv.style.display='none';
                       document.getElementById('status-text').innerText = "Oración seleccionada no encontrada.";
@@ -265,9 +258,9 @@
             }
           });
         }
-        // =========================================================================
-        // 3. ESTADO DE ESPERA EN VIVO SINO HAY NADA ACTIVO
-        // =========================================================================
+        // -----------------------------------------------------------------
+        // CASO C: SEÑAL DE VIVO CONECTADA PERO SIN NADA SELECCIONADO
+        // -----------------------------------------------------------------
         else {
           waitingDiv.style.display='block'; 
           lyricsDiv.style.display='none';
@@ -276,20 +269,25 @@
       });
     }
 
-    // Función auxiliar para extraer el texto dinámicamente y aplicar tus estilos de formato
-    function procesarYMostrarOracion(dataNodo, waitingDiv, lyricsDiv) {
+    // Procesa el nodo de la oración extraída e inicializa el visor
+    function mostrarTextoOracion(dataNodo, waitingDiv, lyricsDiv) {
       waitingDiv.style.display='none'; 
       lyricsDiv.style.display='block'; 
       
       let textoPlano = "";
-      // Si el nodo es un objeto de Firebase, busca las claves comunes de texto
       if (dataNodo && typeof dataNodo === 'object') {
+        // Mapea las estructuras posibles de texto que uses en tus nodos de oraciones
         textoPlano = dataNodo.texto || dataNodo.oracion || dataNodo.contenido || dataNodo.lyrics || "";
       } else {
-        textoPlano = dataNodo || ""; // Si guardaste el texto plano directo como String
+        textoPlano = dataNodo || ""; // Por si el nodo guarda el texto plano directamente
       }
 
-      lyricsDiv.innerHTML = textoPlano
+      lyricsDiv.innerHTML = darFormatoAlTexto(textoPlano);
+    }
+
+    // Aplica las expresiones regulares (Regex) de negritas y cursivas de forma limpia
+    function darFormatoAlTexto(texto) {
+      return texto
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
@@ -298,8 +296,8 @@
 
     let zoom = 1.25;
     function changeZoom(v) { 
-      zoom = Math.min(Math.max(zoom + (v*0.15), 0.9), 2.8); 
-      document.getElementById('lyrics-display').style.fontSize = zoom+'rem'; 
+      zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 2.8); 
+      document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; 
     }
   </script>
 </body>
