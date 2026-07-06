@@ -4,8 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cancionero Parroquial</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  
+  <!-- Firebase Core y Database -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+
   <style>
     :root { 
       --primary: #00695C; 
@@ -38,7 +41,6 @@
       gap: 16px;
     }
 
-    /* Encabezado */
     .header-area {
       text-align: center;
       margin-top: 10px;
@@ -46,9 +48,8 @@
     .header-area h1 {
       font-size: 1.4rem;
       color: var(--primary-light);
-      margin: 0 0 4px 0;
+      margin: 0;
       text-transform: uppercase;
-      letter-spacing: 1px;
     }
     .live-badge {
       font-size: 0.85rem;
@@ -56,7 +57,6 @@
       font-weight: 500;
     }
 
-    /* Tarjeta Contenedora Estilizada */
     .status-card { 
       background: var(--card); 
       padding: 20px; 
@@ -65,7 +65,6 @@
       box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     }
 
-    /* Controles de Zoom Remotos */
     .zoom-controls { 
       display: flex; 
       justify-content: space-between; 
@@ -75,10 +74,6 @@
       border-radius: 12px;
       margin-bottom: 16px;
     }
-    .zoom-label {
-      font-size: 0.9rem;
-      color: #A0A0A0;
-    }
     .zoom-btn { 
       background: #2E2E2E; 
       color: white; 
@@ -86,17 +81,9 @@
       width: 36px; 
       height: 36px; 
       border-radius: 50%; 
-      font-size: 1rem; 
-      font-weight: bold;
       cursor: pointer; 
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: background 0.2s;
     }
-    .zoom-btn:active { background: var(--primary); }
 
-    /* Área de Visualización de Letras y Textos */
     .lyrics-view { 
       text-align: left; 
       white-space: pre-wrap; 
@@ -107,103 +94,77 @@
     .lyrics-view b { color: #ffffff; font-weight: 700; }
     .lyrics-view i { color: #B2DFDB; font-style: italic; }
 
-    /* Estados Internos */
-    .waiting-box {
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .waiting-box h2 { color: var(--primary-light); margin-bottom: 8px; }
-    .loader-box {
-      text-align: center;
-      padding: 60px 20px;
-    }
-
-    /* Botón de Descarga Ergonómico */
     .btn-download { 
       display: flex;
       justify-content: center;
-      align-items: center;
       padding: 14px; 
       background-color: var(--primary); 
       color: white; 
       text-decoration: none; 
       border-radius: 12px; 
       font-weight: bold; 
-      font-size: 1rem;
-      box-shadow: 0 4px 12px rgba(0, 105, 92, 0.3);
-      transition: background 0.2s;
     }
-    .btn-download:active { background-color: #004D40; }
   </style>
 </head>
 <body>
 
   <div id="portal" class="container">
     
-    <!-- PANTALLA INICIAL DE CARGA -->
-    <div id="loader" class="status-card loader-box">
+    <div id="loader" class="status-card" style="text-align:center; padding:60px 20px;">
       <h2>Cargando portal...</h2>
-      <p style="color: #888; font-size: 0.9rem;">Redireccionando a la aplicación nativa</p>
+      <p style="color: #888;">Redireccionando...</p>
     </div>
 
-    <!-- PANTALLA PRINCIPAL EN VIVO -->
     <div id="main-view" style="display:none;">
       <div class="header-area">
         <h1 id="comm-name">Parroquia</h1>
         <div class="live-badge">● TRANSMISIÓN EN VIVO</div>
       </div>
-      
       <br>
-
       <div class="status-card">
-        <!-- Control de Zoom Estilizado -->
         <div class="zoom-controls">
           <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
-          <span class="zoom-label">Tamaño del Texto</span>
+          <span style="color:#A0A0A0; font-size:0.9rem;">Tamaño</span>
           <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
         </div>
 
-        <!-- Pantalla de Señal en Espera -->
-        <div id="waiting-msg" class="waiting-box">
-          <h2>Señal Conectada</h2>
-          <p id="status-text" style="color: #888;">Esperando señal del coro u oraciones...</p>
+        <div id="waiting-msg" style="text-align:center; padding:40px 20px;">
+          <h2 style="color:var(--primary-light)">Señal Conectada</h2>
+          <p id="status-text" style="color: #888;">Esperando señal...</p>
         </div>
 
-        <!-- Visor Reactivo de Letras y Oraciones -->
         <div id="lyrics-display" class="lyrics-view" style="display:none;"></div>
       </div>
     </div>
 
-    <!-- BOTÓN DE INSTALACIÓN INFERIOR COHESIVO -->
     <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
       📥 Descargar Aplicación Móvil
     </a>
   </div>
+
   <script>
     const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
     const SCHEME = "cancionero-pst";
-    const config = {
-    databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
-    };
-    firebase.initializeApp(config);
+    
+    // Configuración Firebase (Ruta única del cancionero)
+    firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
     const db = firebase.database();
 
-  const hash = decodeURIComponent(window.location.hash.substring(1));
+    // Redirección inteligente
+    const hash = decodeURIComponent(window.location.hash.substring(1));
     if (hash) {
       window.location.replace(hash.includes('://') ? hash : `${SCHEME}://${hash}`);
       setTimeout(() => {
-        // AQUÍ ESTÁ LA CORRECCIÓN: Volví a agregar el [1] que faltaba al hacer el split
         const p = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : '');
         const path = p.get('path') || (p.get('id') ? `comunidades/${p.get('id')}` : null);
-        if (path || hash.includes('vivo')) start(path);
-        else window.location.replace(FALLBACK);
+        if (path) start(path); else window.location.replace(FALLBACK);
       }, 1500);
     } else window.location.replace(FALLBACK);
-
 
     function start(path) {
       document.getElementById('loader').style.display='none';
       document.getElementById('main-view').style.display='block';
+      
       db.ref(path).on('value', s => {
         const d = s.val(); if (!d) return;
         document.getElementById('comm-name').innerText = d.nombre || "Comunidad";
@@ -211,91 +172,60 @@
         const waitingDiv = document.getElementById('waiting-msg');
         
         if (!d.estado_vivo) { 
-          waitingDiv.style.display='block'; 
-          lyricsDiv.style.display='none'; 
-          document.getElementById('status-text').innerText = "Transmisión finalizada o inactiva.";
+          waitingDiv.style.display='block'; lyricsDiv.style.display='none'; 
+          document.getElementById('status-text').innerText = "Transmisión inactiva.";
           return; 
         }
         
-        // -----------------------------------------------------------------
-        // CASO A: TRANSMISIÓN DE CANCIÓN EN VIVO
-        // -----------------------------------------------------------------
         if (d.cancion_actual) {
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
-            if (cs.exists()) { 
-              waitingDiv.style.display='none'; 
-              lyricsDiv.style.display='block'; 
-              let textoPlano = cs.val().lyrics || "";
-              lyricsDiv.innerHTML = darFormatoAlTexto(textoPlano);
-            }
+            if (cs.exists()) mostrarContenido(cs.val().lyrics, waitingDiv, lyricsDiv);
           });
-        } 
-        // -----------------------------------------------------------------
-        // CASO B: TRANSMISIÓN DE ORACIÓN EN VIVO (Búsqueda en cascada)
-        // -----------------------------------------------------------------
-        else if (d.oracion_actual) {
-          const idOracion = d.oracion_actual;
-
-          // Intento 1: Buscar localmente en la parroquia o capilla activa (comunidades/.../oraciones)
-          db.ref(`${path}/oraciones/${idOracion}`).once('value', snapshotLocal => {
-            if (snapshotLocal.exists()) {
-              mostrarTextoOracion(snapshotLocal.val(), waitingDiv, lyricsDiv);
-            } else {
-              // Intento 2: Buscar de forma global en oraciones_oficiales
-              db.ref(`oraciones_oficiales/${idOracion}`).once('value', snapshotOficial => {
-                if (snapshotOficial.exists()) {
-                  mostrarTextoOracion(snapshotOficial.val(), waitingDiv, lyricsDiv);
-                } else {
-                  // Intento 3: Buscar de forma global en oraciones_publicas
-                  db.ref(`oraciones_publicas/${idOracion}`).once('value', snapshotPublico => {
-                    if (snapshotPublico.exists()) {
-                      mostrarTextoOracion(snapshotPublico.val(), waitingDiv, lyricsDiv);
-                    } else {
-                      // ID huérfano no encontrado en ninguna de las 3 rutas
-                      waitingDiv.style.display='block'; 
-                      lyricsDiv.style.display='none';
-                      document.getElementById('status-text').innerText = "Oración seleccionada no encontrada.";
-                    }
-                  });
-                }
+        } else if (d.oracion_actual) {
+          const idO = d.oracion_actual;
+          // Cascada de búsqueda
+          db.ref(`${path}/oraciones/${idO}`).once('value', sl => {
+            if (sl.exists()) mostrarContenido(sl.val(), waitingDiv, lyricsDiv);
+            else db.ref(`oraciones_oficiales/${idO}`).once('value', so => {
+              if (so.exists()) mostrarContenido(so.val(), waitingDiv, lyricsDiv);
+              else db.ref(`oraciones_publicas/${idO}`).once('value', sp => {
+                if (sp.exists()) mostrarContenido(sp.val(), waitingDiv, lyricsDiv);
               });
-            }
+            });
           });
-        }
-        // -----------------------------------------------------------------
-        // CASO C: SEÑAL DE VIVO CONECTADA PERO SIN NADA SELECCIONADO
-        // -----------------------------------------------------------------
-        else {
-          waitingDiv.style.display='block'; 
-          lyricsDiv.style.display='none';
-          document.getElementById('status-text').innerText = "Esperando que el coro inicie una canción u oración...";
+        } else {
+          waitingDiv.style.display='block'; lyricsDiv.style.display='none';
+          document.getElementById('status-text').innerText = "Esperando señal...";
         }
       });
     }
 
-    // Procesa el nodo de la oración extraída e inicializa el visor
-    function mostrarTextoOracion(dataNodo, waitingDiv, lyricsDiv) {
+    function mostrarContenido(data, waitingDiv, lyricsDiv) {
       waitingDiv.style.display='none'; 
       lyricsDiv.style.display='block'; 
+      let html = "";
       
-      let textoPlano = "";
-      if (dataNodo && typeof dataNodo === 'object') {
-        // Mapea las estructuras posibles de texto que uses en tus nodos de oraciones
-        textoPlano = dataNodo.texto || dataNodo.oracion || dataNodo.contenido || dataNodo.lyrics || "";
+      if (data && typeof data === 'object') {
+        const contenido = data.contenido || data.bloques || [];
+        if (Array.isArray(contenido)) {
+          html = contenido.map(b => {
+            if (b.tipo === 'versiculo') return `<b>V.</b> ${b.texto}`;
+            if (b.tipo === 'respuesta') return `<b>R.</b> ${b.texto}`;
+            if (b.tipo === 'titulo_seccion') return `<br><b style="color:var(--primary-light)">${b.texto}</b>`;
+            return b.texto || "";
+          }).join('<br><br>');
+        } else {
+          html = data.texto || data.oracion || "";
+        }
       } else {
-        textoPlano = dataNodo || ""; // Por si el nodo guarda el texto plano directamente
+        html = data || "";
       }
-
-      lyricsDiv.innerHTML = darFormatoAlTexto(textoPlano);
+      
+      lyricsDiv.innerHTML = darFormato(html);
     }
 
-    // Aplica las expresiones regulares (Regex) de negritas y cursivas de forma limpia
-    function darFormatoAlTexto(texto) {
-      return texto
-        .replace(/\[.*?\]/g, "")
-        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
-        .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
-        .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+    function darFormato(t) {
+      return t.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
     let zoom = 1.25;
