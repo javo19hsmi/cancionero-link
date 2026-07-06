@@ -200,7 +200,7 @@
       }, 1500);
     } else window.location.replace(FALLBACK);
 
-    function start(path) {
+        function start(path) {
       document.getElementById('loader').style.display='none';
       document.getElementById('main-view').style.display='block';
       db.ref(path).on('value', s => {
@@ -216,22 +216,51 @@
           return; 
         }
         
+        // 1. COMPROBACIÓN DE CANCIÓN ACTUAL
         if (d.cancion_actual) {
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
             if (cs.exists()) { 
               waitingDiv.style.display='none'; 
               lyricsDiv.style.display='block'; 
-              lyricsDiv.innerHTML = cs.val().lyrics
+              // Busca el campo .lyrics de la canción
+              let textoPlano = cs.val().lyrics || "";
+              lyricsDiv.innerHTML = textoPlano
                 .replace(/\[.*?\]/g, "")
                 .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
                 .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
                 .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
             }
           });
-        } else {
+        } 
+        // 2. COMPROBACIÓN DE ORACIÓN ACTUAL (Soporte dinámico para el formato de oraciones)
+        else if (d.oracion_actual) {
+          // Ajusta esta ruta si en tu Firebase el nodo se llama diferente (ej: 'oraciones_base' u 'oraciones')
+          db.ref(`oraciones/${d.oracion_actual}`).once('value', os => {
+            if (os.exists()) {
+              waitingDiv.style.display='none'; 
+              lyricsDiv.style.display='block'; 
+              
+              // Detecta automáticamente si guardaste el texto en un campo específico o directo en el nodo
+              let textoPlano = "";
+              if (typeof os.val() === 'object') {
+                textoPlano = os.val().texto || os.val().oracion || os.val().contenido || "";
+              } else {
+                textoPlano = os.val(); // Si el nodo es un String directo
+              }
+
+              lyricsDiv.innerHTML = textoPlano
+                .replace(/\[.*?\]/g, "")
+                .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
+                .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
+                .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+            }
+          });
+        }
+        // 3. ESTADO DE ESPERA SI NO HAY NADA ACTIVO
+        else {
           waitingDiv.style.display='block'; 
           lyricsDiv.style.display='none';
-          document.getElementById('status-text').innerText = "Esperando que el coro inicie una canción...";
+          document.getElementById('status-text').innerText = "Esperando que el coro inicie una canción u oración...";
         }
       });
     }
