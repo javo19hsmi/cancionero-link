@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cancionero Parroquial</title>
-  <script src="https://gstatic.com"></script>
-  <script src="https://gstatic.com"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     :root { 
       --primary: #00695C; 
@@ -175,14 +175,16 @@
     </div>
 
     <!-- BOTÓN DE INSTALACIÓN INFERIOR COHESIVO -->
-    <a href="https://google.com" class="btn-download">
+    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
       📥 Descargar Aplicación Móvil
     </a>
   </div>
   <script>
-    const FALLBACK = "https://google.com";
+    const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
     const SCHEME = "cancionero-pst";
-    const config = { databaseURL: "https://firebaseio.com" };
+    const config = {
+    databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
+    };
     firebase.initializeApp(config);
     const db = firebase.database();
 
