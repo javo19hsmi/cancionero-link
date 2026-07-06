@@ -3,42 +3,185 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cancionero Parroquial</title>
+  <title>Cancionero Parroquial - En Vivo</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
-    :root { --primary: #00695C; --bg: #121212; --card: #1e1e1e; --text: #e0e0e0; }
-    body { font-family: sans-serif; background-color: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; min-height: 100vh; text-align: center; justify-content: center; }
-    .container { padding: 20px; max-width: 600px; width: 90%; margin: auto; }
-    .status-card { background: var(--card); padding: 25px; border-radius: 20px; border: 1px solid #333; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-    .zoom-controls { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; align-items: center; }
-    .zoom-btn { background: #333; color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; }
-    .lyrics-view { text-align: left; white-space: pre-wrap; line-height: 1.6; font-size: 1.2rem; }
-    .lyrics-view b { color: #ffffff; font-weight: 800; }
-    .lyrics-view i { color: #b2dfdb; font-style: italic; }
-    .btn-download { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #333; color: #4DB6AC; text-decoration: none; border-radius: 30px; font-weight: bold; border: 1px solid #444; }
+    :root { 
+      --primary: #00695C; 
+      --primary-light: #4DB6AC;
+      --bg: #121212; 
+      --card: #1A1A1A; 
+      --surface: #222222;
+      --text: #E0E0E0; 
+    }
+    
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+      background-color: var(--bg); 
+      color: var(--text); 
+      margin: 0; 
+      padding: 0;
+      display: flex; 
+      flex-direction: column; 
+      align-items: center;
+      min-height: 100vh; 
+    }
+
+    .container { 
+      padding: 16px; 
+      max-width: 500px; 
+      width: 100%; 
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Encabezado Principal */
+    .header-area {
+      text-align: center;
+      margin-top: 10px;
+    }
+    .header-area h1 {
+      font-size: 1.4rem;
+      color: var(--primary-light);
+      margin: 0 0 4px 0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .live-badge {
+      font-size: 0.85rem;
+      color: #69F0AE;
+      font-weight: 500;
+    }
+
+    /* Tarjeta Contenedora Estilizada */
+    .status-card { 
+      background: var(--card); 
+      padding: 20px; 
+      border-radius: 16px; 
+      border: 1px solid #2C2C2C; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+    }
+
+    /* Barra de Zoom Integrada tipo Control Remoto */
+    .zoom-controls { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      background: var(--surface);
+      padding: 8px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    .zoom-label {
+      font-size: 0.9rem;
+      color: #A0A0A0;
+    }
+    .zoom-btn { 
+      background: #2E2E2E; 
+      color: white; 
+      border: 1px solid #444; 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 50%; 
+      font-size: 1rem; 
+      font-weight: bold;
+      cursor: pointer; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .zoom-btn:active { background: var(--primary); }
+
+    /* Área de Visualización de Letras */
+    .lyrics-view { 
+      text-align: left; 
+      white-space: pre-wrap; 
+      line-height: 1.7; 
+      font-size: 1.25rem; 
+      padding: 10px 4px;
+    }
+    .lyrics-view b { color: #ffffff; font-weight: 700; }
+    .lyrics-view i { color: #B2DFDB; font-style: italic; }
+
+    /* Estado de Espera */
+    .waiting-box {
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .waiting-box h2 { color: var(--primary-light); margin-bottom: 8px; }
+
+    /* Loader Inicial Moderno */
+    .loader-box {
+      text-align: center;
+      padding: 60px 20px;
+    }
+
+    /* Botón de Descarga Unificado e Inmersivo */
+    .btn-download { 
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 14px; 
+      background-color: var(--primary); 
+      color: white; 
+      text-decoration: none; 
+      border-radius: 12px; 
+      font-weight: bold; 
+      font-size: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 105, 92, 0.3);
+      transition: background 0.2s;
+    }
+    .btn-download:active { background-color: #004D40; }
   </style>
 </head>
 <body>
+
   <div id="portal" class="container">
-    <div id="loader" class="status-card">
-      <h1>Cargando...</h1>
-      <p>Intentando abrir la App.</p>
+    
+    <!-- VISTA INICIAL DE CARGA -->
+    <div id="loader" class="status-card loader-box">
+      <h2>Cargando portal...</h2>
+      <p style="color: #888; font-size: 0.9rem;">Redireccionando a la aplicación nativa</p>
     </div>
+
+    <!-- VISTA PRINCIPAL DEL EN VIVO -->
     <div id="main-view" style="display:none;">
-      <h1 id="comm-name">Parroquia</h1>
-      <div class="zoom-controls">
-        <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
-        <span>Tamaño</span>
-        <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
+      <div class="header-area">
+        <h1 id="comm-name">Parroquia</h1>
+        <div class="live-badge">● TRANSMISIÓN EN VIVO</div>
       </div>
+      
+      <br>
+
       <div class="status-card">
-        <div id="waiting-msg"><h2>En Vivo</h2><p id="status-text">Esperando señal...</p></div>
-        <div id="lyrics-display" class="lyrics-view"></div>
+        <!-- Control de Zoom en la cabecera interna de la tarjeta -->
+        <div class="zoom-controls">
+          <button class="zoom-btn" onclick="changeZoom(-1)">A-</button>
+          <span class="zoom-label">Tamaño del Texto</span>
+          <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
+        </div>
+
+        <!-- Pantalla de Señal en Espera -->
+        <div id="waiting-msg" class="waiting-box">
+          <h2>Señal Conectada</h2>
+          <p id="status-text" style="color: #888;">Esperando que el coro inicie una canción...</p>
+        </div>
+
+        <!-- Visor Reactivo de Letras -->
+        <div id="lyrics-display" class="lyrics-view" style="display:none;"></div>
       </div>
     </div>
-    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">Descargar App</a>
+
+    <!-- BOTÓN DE INSTALACIÓN SIEMPRE DISPONIBLE ABAJO -->
+    <a href="https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link" class="btn-download">
+      📥 Descargar Aplicación Móvil
+    </a>
   </div>
+
   <script>
     const FALLBACK = "https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view?usp=drive_link";
     const SCHEME = "cancionero-pst";
@@ -65,18 +208,39 @@
         document.getElementById('comm-name').innerText = d.nombre || "Comunidad";
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
-        if (!d.estado_vivo) { waitingDiv.style.display='block'; lyricsDiv.style.display='none'; return; }
+        
+        if (!d.estado_vivo) { 
+          waitingDiv.style.display='block'; 
+          lyricsDiv.style.display='none'; 
+          document.getElementById('status-text').innerText = "Transmisión finalizada o inactiva.";
+          return; 
+        }
+        
         if (d.cancion_actual) {
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
-            if (cs.exists()) { waitingDiv.style.display='none'; lyricsDiv.style.display='block'; 
-              lyricsDiv.innerHTML = cs.val().lyrics.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+            if (cs.exists()) { 
+              waitingDiv.style.display='none'; 
+              lyricsDiv.style.display='block'; 
+              lyricsDiv.innerHTML = cs.val().lyrics
+                .replace(/\[.*?\]/g, "")
+                .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
+                .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
+                .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
             }
           });
+        } else {
+          waitingDiv.style.display='block'; 
+          lyricsDiv.style.display='none';
+          document.getElementById('status-text').innerText = "Esperando que el coro inicie una canción...";
         }
       });
     }
-    let zoom = 1.2;
-    function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v*0.1), 0.8), 3); document.getElementById('lyrics-display').style.fontSize = zoom+'rem'; }
+
+    let zoom = 1.25;
+    function changeZoom(v) { 
+      zoom = Math.min(Math.max(zoom + (v*0.15), 0.9), 2.8); 
+      document.getElementById('lyrics-display').style.fontSize = zoom+'rem'; 
+    }
   </script>
 </body>
 </html>
