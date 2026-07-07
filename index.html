@@ -56,8 +56,8 @@
           <button class="zoom-btn" onclick="changeZoom(1)">A+</button>
         </div>
         <div id="waiting-msg" style="text-align:center; padding:40px 20px;">
-          <h2 id="waiting-title" style="color:var(--primary-light)">Señal Conectada</h2>
-          <p id="status-text" style="color: #888;">Esperando señal...</p>
+          <h2 id="waiting-title" style="color:var(--primary-light)">Conectado 💒</h2>
+          <p id="status-text" style="color: #888;">Esperando la celebración 🕒</p>
         </div>
         <div id="lyrics-display" class="lyrics-view" style="display:none;"></div>
       </div>
@@ -99,8 +99,8 @@
         if (!d.estado_vivo) { 
           liveInd.classList.remove('active'); liveInd.innerText = "● TRANSMISIÓN INACTIVA";
           waitingDiv.style.display='block'; lyricsDiv.style.display='none'; 
-          waitTitle.innerText = "Paz y Bien";
-          statusText.innerText = "La celebración ha finalizado o aún no ha comenzado.";
+          waitTitle.innerText = "Te esperamos en la proxima celebración ⛪";
+          statusText.innerText = "Próximamente en vivo o transmisión finalizada ⏳";
           return; 
         }
 
@@ -119,8 +119,8 @@
           });
         } else {
           waitingDiv.style.display='block'; lyricsDiv.style.display='none';
-          waitTitle.innerText = "Sintonía de Fe";
-          statusText.innerText = "El coro iniciará pronto la siguiente alabanza.";
+          waitTitle.innerText = "Cantemos Juntos 🎶";
+          statusText.innerText = "🗣️ En breve iniciará el siguiente canto.";
         }
       });
     }
