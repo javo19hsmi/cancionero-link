@@ -14,7 +14,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
   
   <style>
-    :root {
+        :root {
       --primary: #4DB6AC;
       --primary-dark: #004D40;
       --bg: #0A0A0B;
@@ -31,90 +31,73 @@
       height: 100vh; display: flex; flex-direction: column; overflow: hidden;
     }
 
-    .glass { background: var(--card-bg); backdrop-filter: blur(15px); border: 1px solid var(--glass-border); }
-
-    #login-overlay {
-      position: fixed; inset: 0; background: var(--bg);
-      display: flex; align-items: center; justify-content: center; z-index: 10000;
-    }
-    .login-card { text-align: center; padding: 40px; border-radius: 30px; max-width: 400px; width: 90%; }
-
+    /* --- LAYOUT ADAPTATIVO PC (3 COLUMNAS) --- */
     .app-container { display: none; flex-direction: column; height: 100vh; }
     
     header {
-      padding: 12px 30px; display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 25px; display: flex; justify-content: space-between; align-items: center;
       border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.4);
     }
 
-    .tabs { display: flex; gap: 30px; padding: 0 30px; background: rgba(255,255,255,0.02); }
-    .tab-btn {
-      background: none; border: none; color: #777; cursor: pointer;
-      font-weight: bold; font-size: 13px; padding: 15px 0;
-      border-bottom: 3px solid transparent; transition: 0.3s;
-    }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-
     .main-grid {
-      display: grid; grid-template-columns: 280px 1fr 380px; gap: 20px;
-      padding: 20px; flex: 1; overflow: hidden;
+      display: grid; 
+      grid-template-columns: 280px 1fr 320px; /* 🚀 3 COLUMNAS CLARAS */
+      gap: 15px; padding: 15px; flex: 1; overflow: hidden;
     }
 
-    .search-panel { display: flex; flex-direction: column; gap: 15px; height: 100%; overflow: hidden; }
-    #song-search { 
-      background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-      border-radius: 12px; padding: 12px; color: white; outline: none; font-size: 14px;
+    /* --- RESPONSIVE (MODO CELULAR) --- */
+    @media (max-width: 1100px) {
+      .main-grid {
+        grid-template-columns: 1fr; /* Apilado vertical */
+        overflow-y: auto;
+      }
+      .search-panel, .editor-panel, .preview-panel { height: auto !important; }
     }
-    .song-results { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }
+
+    /* --- PANELES --- */
+    .glass-panel { 
+      background: var(--card-bg); backdrop-filter: blur(15px); 
+      border: 1px solid var(--glass-border); border-radius: 20px;
+      display: flex; flex-direction: column; padding: 15px; overflow: hidden;
+    }
+
+    .search-results { flex: 1; overflow-y: auto; margin-top: 10px; }
     .result-item {
-      padding: 10px 15px; border-radius: 10px; cursor: pointer;
-      font-size: 13px; transition: 0.2s; border: 1px solid transparent;
+      padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px;
+      font-size: 13px; border: 1px solid transparent; transition: 0.2s;
     }
     .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
     .result-item.active { background: var(--primary); color: white; }
 
-    .editor-panel { display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
-    textarea {
-      width: 100%; flex: 1; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
-      border-radius: 16px; padding: 20px; color: #fff; font-family: 'Consolas', monospace;
-      font-size: 16px; line-height: 1.6; resize: none; outline: none;
+    /* --- EDITOR CENTRAL --- */
+    #lyrics-editor-box {
+      flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 20px; color: #fff; font-family: 'Consolas', monospace;
+      font-size: 17px; line-height: 1.7; resize: none; outline: none;
     }
-    textarea:focus { border-color: var(--primary); }
 
-    .preview-panel { height: 100%; display: flex; flex-direction: column; gap: 15px; overflow: hidden; }
-    .preview-box {
-      flex: 1; background: #fff; color: #222; border-radius: 20px; padding: 25px;
-      overflow-y: auto; font-family: monospace; line-height: 2.2; font-size: 15px;
+    /* --- ACORDE MANUAL (ESTILO PRO) --- */
+    .manual-chord-box {
+      background: rgba(77, 182, 172, 0.05); border: 1px dashed var(--primary);
+      border-radius: 12px; padding: 12px; margin-top: 10px;
     }
-    .chordchip { color: var(--primary-dark); font-weight: bold; background: #E0F2F1; padding: 2px 5px; border-radius: 4px; margin-right: 2px; }
+    #input-chord-manual {
+      text-align: center; font-weight: bold; letter-spacing: 2px; color: var(--primary);
+      background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+    }
 
-    .meta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 4px; }
-    label { font-size: 10px; font-weight: bold; color: var(--primary); text-transform: uppercase; }
+    /* --- FORMULARIOS --- */
+    label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; }
     input, select {
-      background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
-      border-radius: 8px; padding: 8px 12px; color: white; font-size: 13px; outline: none;
+      width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+      border-radius: 8px; padding: 8px; color: white; font-size: 13px; margin-bottom: 10px;
     }
 
-    .chord-kbd { 
-      background: rgba(0,0,0,0.4); padding: 15px; border-radius: 16px;
-      display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px;
-    }
-    .k-btn { 
-      background: var(--glass); border: 1px solid var(--glass-border);
-      color: white; padding: 8px 2px; border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center;
-    }
-    .k-btn:hover { background: var(--primary); }
-
-    .btn { border: none; border-radius: 12px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+    .btn { border: none; border-radius: 10px; padding: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-save { background: var(--primary); color: white; }
-    .btn-publish { background: var(--warning); color: white; margin-top: auto; }
-    
-    #busy-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
-      display: none; align-items: center; justify-content: center; z-index: 20000;
-    }
+    .btn-publish { background: var(--warning); color: white; width: 100%; }
 
-    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
   </style>
 </head>
@@ -138,78 +121,74 @@
   <div id="app" class="app-container">
     <header>
       <div style="display:flex; align-items:center; gap:12px">
-        <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
-        <div style="line-height:1">
-          <b style="font-size:14px; letter-spacing:1px">CANCIONERO MAESTRO</b><br>
-          <small id="app-version" style="color:var(--primary); font-size:10px">VERSIÓN: -</small>
-        </div>
+        <span class="material-symbols-outlined" style="color:var(--primary)">edit_note</span>
+        <b style="font-size:14px; letter-spacing:1px">PORTAL DE GESTIÓN</b>
       </div>
-      <div style="display:flex; align-items:center; gap:15px">
-        <span id="user-display-email" style="font-size:11px; color:#666"></span>
-        <button class="btn" id="logout-btn-action" style="padding:5px 15px; font-size:10px; background:var(--glass)">SALIR</button>
+      <div style="display:flex; gap:10px">
+        <small id="app-version" style="color:var(--warning); align-self:center"></small>
+        <button class="btn btn-save" style="padding:5px 15px; font-size:11px" onclick="logout()">SALIR</button>
       </div>
     </header>
 
     <div class="tabs">
       <button class="tab-btn active">🎵 CANCIONERO</button>
-      <button class="tab-btn" disabled>📢 ANUNCIOS (Pronto)</button>
-      <button class="tab-btn" disabled>📜 GUIONES / ORACIONES (Pronto)</button>
+      <button class="tab-btn" disabled>📢 ANUNCIOS</button>
+      <button class="tab-btn" disabled>📜 GUIONES</button>
     </div>
 
     <main class="main-grid">
-      <!-- PANEL LISTADO -->
-      <section class="search-panel">
-        <div class="form-group">
-          <label>BUSCAR CANCIÓN</label>
-          <input type="text" id="song-search" placeholder="Título o letra...">
-        </div>
-        <div id="song-results-list" class="song-results"></div>
-        <button class="btn btn-publish" id="publish-btn-action">SUBIR VERSIÓN (PÚBLICO) 🚀</button>
+      <!-- 1. BUSCADOR (IZQUIERDA) -->
+      <section class="glass-panel search-panel">
+        <label>BUSCAR CANCIÓN (TÍTULO/LETRA)</label>
+        <input type="text" id="song-search" placeholder="Escribí para buscar...">
+        <div id="song-results-list" class="search-results"></div>
+        <button class="btn btn-publish" onclick="executePublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
       </section>
 
-      <!-- PANEL EDITOR -->
-      <section class="editor-panel">
-        <div class="glass" style="padding:15px; border-radius:20px; flex:1; display:flex; flex-direction:column; gap:10px">
-          <label id="editor-status-label">LETRA (BLINDADA)</label>
-          <textarea id="lyrics-editor-box" spellcheck="false" placeholder="Seleccioná una canción de la izquierda..."></textarea>
-          
-          <div class="chord-kbd" id="chord-keyboard-container"></div>
-          <button class="btn" id="delete-chord-btn-action" style="width:100%; background:rgba(255,0,0,0.1); color:var(--danger); font-size:10px; border:1px solid rgba(255,0,0,0.2)">BORRAR ACORDE SELECCIONADO (Alt+Bksp)</button>
+      <!-- 2. EDITOR (CENTRO) -->
+      <section class="glass-panel editor-panel" style="gap:10px">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+          <label id="editor-label">MODO ACORDES</label>
+          <div id="master-lock" style="display:none"> <!-- Solo Super Admin -->
+            <button class="btn" id="btn-toggle-master" style="background:none; color:var(--text); padding:0" title="Editar Letra">
+              <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+            </button>
+          </div>
+        </div>
+        <textarea id="lyrics-editor-box" spellcheck="false" readonly></textarea>
+        
+        <!-- BLOQUE ACORDE MANUAL -->
+        <div class="manual-chord-box">
+          <label>INSERCIÓN MANUAL AVANZADA (9, sus4, add...)</label>
+          <div style="display:flex; gap:10px">
+            <input type="text" id="input-chord-manual" placeholder="Ej: Sib9" style="margin:0; flex:1">
+            <button class="btn btn-save" onclick="insertManualAdvanced()">INSERTAR</button>
+          </div>
+          <small id="manual-error" style="color:var(--danger); font-size:9px; display:none">⚠️ Formato no válido</small>
         </div>
       </section>
 
-      <!-- PANEL METADATOS -->
-      <section class="preview-panel">
-        <div class="glass" style="padding:15px; border-radius:20px">
-          <div class="meta-grid">
-            <div class="form-group">
-              <label>TÍTULO</label>
-              <input type="text" id="meta-title" readonly>
-            </div>
-            <div class="form-group">
-              <label>TONO BASE</label>
-              <select id="meta-key"></select>
-            </div>
-            <div class="form-group">
-              <label>AUTOR</label>
-              <input type="text" id="meta-artist">
-            </div>
-            <div class="form-group">
-              <label>RITMO</label>
-              <input type="text" id="meta-rhythm">
-            </div>
-          </div>
-          <div class="form-group" style="margin-top:10px">
-            <label>AUDIO LINK (MP3 / DRIVE)</label>
-            <input type="text" id="meta-audio">
-          </div>
-          <button class="btn btn-save" id="save-draft-btn-action" style="width:100%; margin-top:15px">GUARDAR BORRADOR 💾</button>
+      <!-- 3. DATOS (DERECHA) -->
+      <section class="glass-panel preview-panel">
+        <label>DATOS DE LA CANCIÓN</label>
+        <input type="text" id="meta-title" placeholder="Título..." readonly>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
+          <div class="form-group"><label>TONO</label><select id="meta-key"></select></div>
+          <div class="form-group"><label>RITMO</label><input type="text" id="meta-rhythm"></div>
         </div>
-
-        <div style="flex:1; display:flex; flex-direction:column; overflow:hidden">
-           <label style="margin-bottom:5px">VISTA PREVIA REAL</label>
-           <div id="lyrics-preview-box" class="preview-box"></div>
-        </div>
+        <label>AUTOR / ARTISTA</label>
+        <input type="text" id="meta-artist">
+        <label>LINK AUDIO</label>
+        <input type="text" id="meta-audio">
+        
+        <button class="btn btn-save" style="margin-top:auto" onclick="executeSaveDraft()">GUARDAR BORRADOR 💾</button>
+        
+        <hr style="border:0; border-top:1px solid var(--glass-border); margin:15px 0">
+        <label>VISTA PREVIA REAL</label>
+        <div id="lyrics-preview-box" style="background:white; color:#222; border-radius:12px; padding:15px; font-size:13px; line-height:2; overflow-y:auto; flex:1"></div>
+      </section>
+    </main>
+  </div>
       </section>
     </main>
   </div>
