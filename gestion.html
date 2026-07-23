@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Portal Maestro - Gestión Cancionero</title>
   
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -14,7 +13,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
   
   <style>
-        :root {
+    :root {
       --primary: #4DB6AC;
       --primary-dark: #004D40;
       --bg: #0A0A0B;
@@ -31,7 +30,6 @@
       height: 100vh; display: flex; flex-direction: column; overflow: hidden;
     }
 
-    /* --- LAYOUT ADAPTATIVO PC (3 COLUMNAS) --- */
     .app-container { display: none; flex-direction: column; height: 100vh; }
     
     header {
@@ -40,21 +38,15 @@
     }
 
     .main-grid {
-      display: grid; 
-      grid-template-columns: 280px 1fr 320px; /* 🚀 3 COLUMNAS CLARAS */
+      display: grid; grid-template-columns: 280px 1fr 320px;
       gap: 15px; padding: 15px; flex: 1; overflow: hidden;
     }
 
-    /* --- RESPONSIVE (MODO CELULAR) --- */
     @media (max-width: 1100px) {
-      .main-grid {
-        grid-template-columns: 1fr; /* Apilado vertical */
-        overflow-y: auto;
-      }
-      .search-panel, .editor-panel, .preview-panel { height: auto !important; }
+      .main-grid { grid-template-columns: 1fr; overflow-y: auto; }
+      .app-container { overflow-y: auto; }
     }
 
-    /* --- PANELES --- */
     .glass-panel { 
       background: var(--card-bg); backdrop-filter: blur(15px); 
       border: 1px solid var(--glass-border); border-radius: 20px;
@@ -69,25 +61,22 @@
     .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
     .result-item.active { background: var(--primary); color: white; }
 
-    /* --- EDITOR CENTRAL --- */
     #lyrics-editor-box {
       flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
       border-radius: 12px; padding: 20px; color: #fff; font-family: 'Consolas', monospace;
       font-size: 17px; line-height: 1.7; resize: none; outline: none;
     }
 
-    /* --- ACORDE MANUAL (ESTILO PRO) --- */
     .manual-chord-box {
       background: rgba(77, 182, 172, 0.05); border: 1px dashed var(--primary);
       border-radius: 12px; padding: 12px; margin-top: 10px;
     }
     #input-chord-manual {
       text-align: center; font-weight: bold; letter-spacing: 2px; color: var(--primary);
-      background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+      background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); margin:0;
     }
 
-    /* --- FORMULARIOS --- */
-    label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; }
+    label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; text-transform: uppercase; }
     input, select {
       width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
       border-radius: 8px; padding: 8px; color: white; font-size: 13px; margin-bottom: 10px;
@@ -95,7 +84,18 @@
 
     .btn { border: none; border-radius: 10px; padding: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
     .btn-save { background: var(--primary); color: white; }
-    .btn-publish { background: var(--warning); color: white; width: 100%; }
+    .btn-publish { background: var(--warning); color: white; width: 100%; margin-top: auto; }
+
+    #login-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 10000;
+    }
+    .login-card { text-align: center; padding: 40px; border-radius: 30px; max-width: 400px; width: 90%; background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
+    
+    #busy-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+      display: none; align-items: center; justify-content: center; z-index: 20000;
+    }
 
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
@@ -103,9 +103,8 @@
 </head>
 <body>
 
-  <!-- LOGIN OVERLAY -->
   <div id="login-overlay">
-    <div class="login-card glass">
+    <div class="login-card">
       <img src="https://javo19hsmi.github.io/cancionero-link/assets/images/Logo_Ministerio_Musica.png" height="100" style="margin-bottom:20px" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2662/2662361.png'">
       <h2 style="margin:0">Portal Maestro</h2>
       <p style="color:#666; font-size:13px">Gestión Parroquial Unificada</p>
@@ -117,90 +116,77 @@
     </div>
   </div>
 
-  <!-- MAIN APP -->
   <div id="app" class="app-container">
     <header>
       <div style="display:flex; align-items:center; gap:12px">
-        <span class="material-symbols-outlined" style="color:var(--primary)">edit_note</span>
-        <b style="font-size:14px; letter-spacing:1px">PORTAL DE GESTIÓN</b>
+        <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
+        <b style="font-size:14px; letter-spacing:1px">CANCIONERO MAESTRO</b>
       </div>
-      <div style="display:flex; gap:10px">
-        <small id="app-version" style="color:var(--warning); align-self:center"></small>
-        <button class="btn btn-save" style="padding:5px 15px; font-size:11px" onclick="logout()">SALIR</button>
+      <div style="display:flex; gap:15px; align-items:center">
+        <small id="app-version-val" style="color:var(--warning); font-size:10px"></small>
+        <span id="user-email-val" style="font-size:11px; color:#666"></span>
+        <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:10px; background:rgba(255,255,255,0.05)">SALIR</button>
       </div>
     </header>
 
-    <div class="tabs">
-      <button class="tab-btn active">🎵 CANCIONERO</button>
-      <button class="tab-btn" disabled>📢 ANUNCIOS</button>
-      <button class="tab-btn" disabled>📜 GUIONES</button>
+    <div class="tabs" style="display:flex; gap:30px; padding:0 25px; background:rgba(255,255,255,0.02)">
+      <button class="btn" style="background:none; color:var(--primary); border-bottom:2px solid var(--primary); border-radius:0">🎵 CANCIONERO</button>
+      <button class="btn" disabled style="background:none; color:#333">📢 ANUNCIOS</button>
+      <button class="btn" disabled style="background:none; color:#333">📜 GUIONES</button>
     </div>
 
     <main class="main-grid">
-      <!-- 1. BUSCADOR (IZQUIERDA) -->
       <section class="glass-panel search-panel">
-        <label>BUSCAR CANCIÓN (TÍTULO/LETRA)</label>
-        <input type="text" id="song-search" placeholder="Escribí para buscar...">
+        <label>BUSCAR CANCIÓN</label>
+        <input type="text" id="song-search-box" placeholder="Título o frase...">
         <div id="song-results-list" class="search-results"></div>
-        <button class="btn btn-publish" onclick="executePublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
+        <button class="btn btn-publish" id="publish-official-btn">🚀 SUBIR VERSIÓN PÚBLICA</button>
       </section>
 
-      <!-- 2. EDITOR (CENTRO) -->
-      <section class="glass-panel editor-panel" style="gap:10px">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-          <label id="editor-label">MODO ACORDES</label>
-          <div id="master-lock" style="display:none"> <!-- Solo Super Admin -->
-            <button class="btn" id="btn-toggle-master" style="background:none; color:var(--text); padding:0" title="Editar Letra">
-              <span class="material-symbols-outlined" style="font-size:20px">edit</span>
-            </button>
-          </div>
+      <section class="glass-panel editor-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+          <label id="mode-status-label">MODO ACORDES</label>
+          <button id="master-pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleMasterMode()">
+            <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+          </button>
         </div>
-        <textarea id="lyrics-editor-box" spellcheck="false" readonly></textarea>
+        <textarea id="lyrics-editor-area" spellcheck="false" readonly placeholder="Seleccioná una canción..."></textarea>
         
-        <!-- BLOQUE ACORDE MANUAL -->
         <div class="manual-chord-box">
-          <label>INSERCIÓN MANUAL AVANZADA (9, sus4, add...)</label>
+          <label>INSERCIÓN MANUAL AVANZADA</label>
           <div style="display:flex; gap:10px">
-            <input type="text" id="input-chord-manual" placeholder="Ej: Sib9" style="margin:0; flex:1">
-            <button class="btn btn-save" onclick="insertManualAdvanced()">INSERTAR</button>
+            <input type="text" id="input-chord-manual" placeholder="Ej: Sib9" style="flex:1">
+            <button class="btn btn-save" onclick="insertManualChord()">INSERTAR</button>
           </div>
-          <small id="manual-error" style="color:var(--danger); font-size:9px; display:none">⚠️ Formato no válido</small>
+          <small id="chord-error-msg" style="color:var(--danger); font-size:9px; display:none">⚠️ Formato no válido</small>
         </div>
       </section>
 
-      <!-- 3. DATOS (DERECHA) -->
       <section class="glass-panel preview-panel">
-        <label>DATOS DE LA CANCIÓN</label>
-        <input type="text" id="meta-title" placeholder="Título..." readonly>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px">
-          <div class="form-group"><label>TONO</label><select id="meta-key"></select></div>
-          <div class="form-group"><label>RITMO</label><input type="text" id="meta-rhythm"></div>
+        <label>METADATOS</label>
+        <input type="text" id="meta-title-val" readonly>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div class="form-group"><label>TONO</label><select id="meta-key-sel"></select></div>
+          <div class="form-group"><label>RITMO</label><input type="text" id="meta-rhythm-val"></div>
         </div>
-        <label>AUTOR / ARTISTA</label>
-        <input type="text" id="meta-artist">
-        <label>LINK AUDIO</label>
-        <input type="text" id="meta-audio">
-        
-        <button class="btn btn-save" style="margin-top:auto" onclick="executeSaveDraft()">GUARDAR BORRADOR 💾</button>
-        
+        <label>AUTOR</label><input type="text" id="meta-artist-val">
+        <label>AUDIO LINK (MP3 / DRIVE)</label><input type="text" id="meta-audio-val">
+        <button class="btn btn-save" style="width:100%; margin-top:10px" onclick="saveBorrador()">GUARDAR BORRADOR 💾</button>
         <hr style="border:0; border-top:1px solid var(--glass-border); margin:15px 0">
         <label>VISTA PREVIA REAL</label>
-        <div id="lyrics-preview-box" style="background:white; color:#222; border-radius:12px; padding:15px; font-size:13px; line-height:2; overflow-y:auto; flex:1"></div>
-
+        <div id="lyrics-preview-render" style="background:white; color:#222; border-radius:12px; padding:15px; font-size:14px; line-height:2; overflow-y:auto; flex:1"></div>
       </section>
     </main>
   </div>
 
-  <!-- BUSY OVERLAY -->
   <div id="busy-overlay">
     <div class="glass" style="padding:30px; border-radius:20px; text-align:center">
       <div style="border:3px solid var(--primary); border-top-color:transparent; width:30px; height:30px; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px"></div>
-      <b id="busy-text-msg" style="font-size:14px">Cargando...</b>
+      <b id="busy-msg" style="font-size:14px">Conectando...</b>
     </div>
   </div>
 
   <script>
-    // --- 🔐 FIREBASE CONFIG ---
     const firebaseConfig = {
       apiKey: "AIzaSyBYAV2LTgrNQnE3-5wafXQy7H7dj7oyWtI",
       authDomain: "cancionero-parroquial-269d0.firebaseapp.com",
@@ -216,233 +202,145 @@
     const db = firebase.database();
     const auth = firebase.auth();
 
-    let allSongs = [];
-    let currentSongData = null;
-    let lastUsedChord = "Do";
-    let currentUserRole = 'fiel';
-    let currentGlobalVer = "0";
-
+    let allSongs = [], currentSong = null, lastUsedChord = "Do", userRole = 'fiel', globalVersion = "0", isMasterMode = false;
     const keys = ["Do","Dom","Do#","Do#m","Re","Rem","Mi","Mim","Fa","Fam","Fa#","Fa#m","Sol","Solm","La","Lam","Si","Sim"];
     const chordMap = {"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"};
 
-    // --- AUTH LOGIC ---
-    const triggerLogin = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
-    const triggerLogout = () => auth.signOut();
-
-    document.getElementById('login-btn-action').onclick = triggerLogin;
-    document.getElementById('logout-btn-action').onclick = triggerLogout;
+    document.getElementById('login-btn-action').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+    const logout = () => auth.signOut();
 
     auth.onAuthStateChanged(async user => {
       if (user) {
-        showBusy(true, "Validando permisos...");
-        const emailKey = user.email.replace(/\./g, '_');
-        const snap = await db.ref(`usuarios/${emailKey}`).get();
-        
+        setBusy(true, "Validando...");
+        const snap = await db.ref(`usuarios/${user.email.replace(/\./g, '_')}`).get();
         if (snap.exists()) {
           const data = snap.val();
-          currentUserRole = data.rol || 'fiel';
-          const isAllowed = data.es_editor_global || currentUserRole === 'super_admin' || currentUserRole === 'admin_local';
-
-          if (isAllowed) {
+          userRole = data.rol || 'fiel';
+          if (data.es_editor_global || userRole === 'super_admin' || userRole === 'admin_local') {
             document.getElementById('login-overlay').style.display = 'none';
             document.getElementById('app').style.display = 'flex';
-            document.getElementById('user-display-email').innerText = user.email;
-            startPortal();
-          } else {
-            alert("⚠️ Acceso denegado.");
-            auth.signOut();
-          }
-        } else {
-          alert("⚠️ Usuario no registrado.");
-          auth.signOut();
-        }
-        showBusy(false);
+            document.getElementById('user-email-val').innerText = user.email;
+            if (userRole === 'super_admin') document.getElementById('master-pencil-btn').style.display = 'block';
+            initPortal();
+          } else { alert("Acceso denegado."); auth.signOut(); }
+        } else { alert("Usuario no registrado."); auth.signOut(); }
+        setBusy(false);
       } else {
         document.getElementById('login-overlay').style.display = 'flex';
         document.getElementById('app').style.display = 'none';
       }
     });
 
-    // --- PORTAL INIT ---
-    function startPortal() {
-      const keySelect = document.getElementById('meta-key');
-      keySelect.innerHTML = '<option value="">Sin tono</option>';
-      keys.forEach(k => {
-        let val = chordMap[k.replace('m','')] + (k.includes('m')?'m':'');
-        keySelect.appendChild(new Option(k, val));
-      });
-
-      const kbd = document.getElementById('chord-keyboard-container');
-      kbd.innerHTML = "";
-      ["Do","Re","Mi","Fa","Sol","La","Si","#","b","m","7","📋","◀","▶"].forEach(item => {
-        const btn = document.createElement('button');
-        btn.className = 'k-btn'; btn.innerText = item;
-        btn.onclick = () => {
-          if (["Do","Re","Mi","Fa","Sol","La","Si"].includes(item)) handleInsChord(item);
-          else if (item === "📋") handleInsChord(lastUsedChord);
-          else if (item === "◀") handleNavChord(-1);
-          else if (item === "▶") handleNavChord(1);
-          else handleModChord(item);
-        };
-        kbd.appendChild(btn);
-      });
-
-      db.ref('version').on('value', s => {
-        currentGlobalVer = String(s.val() || "0");
-        document.getElementById('app-version').innerText = "VERSIÓN PÚBLICA: v" + currentGlobalVer;
-      });
-
-      db.ref('canciones_borrador').on('value', s => {
-        if (s.exists()) {
-          allSongs = Object.values(s.val()).sort((a,b) => a.title.localeCompare(b.title));
-          runFilter();
-        }
-      });
-
-      attachListeners();
+    function initPortal() {
+      const sel = document.getElementById('meta-key-sel');
+      sel.innerHTML = '<option value="">Sin tono</option>';
+      keys.forEach(k => sel.appendChild(new Option(k, chordMap[k.replace('m','')] + (k.includes('m')?'m':''))));
+      db.ref('version').on('value', s => { globalVersion = String(s.val() || "0"); document.getElementById('app-version-val').innerText = "V" + globalVersion; });
+      db.ref('canciones_borrador').on('value', s => { if (s.exists()) { allSongs = Object.values(s.val()).sort((a,b) => a.title.localeCompare(b.title)); runFilter(); } });
+      setupEditor();
     }
 
     function runFilter() {
-      const query = document.getElementById('song-search').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      const q = document.getElementById('song-search-box').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       const container = document.getElementById('song-results-list');
       container.innerHTML = "";
-
       allSongs.filter(s => {
         const title = s.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const lyrics = s.lyrics.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        return title.includes(query) || lyrics.includes(query);
+        return title.includes(q) || lyrics.includes(q);
       }).slice(0, 40).forEach(s => {
         const div = document.createElement('div');
-        div.className = `result-item glass ${currentSongData && currentSongData.id === s.id ? 'active' : ''}`;
+        div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
         div.innerText = s.title;
-        div.onclick = () => loadSelectedSong(s);
+        div.onclick = () => loadSong(s);
         container.appendChild(div);
       });
     }
 
-    function loadSelectedSong(song) {
-      currentSongData = JSON.parse(JSON.stringify(song));
-      document.getElementById('meta-title').value = song.title;
-      document.getElementById('meta-artist').value = song.artist || "";
-      document.getElementById('meta-key').value = song.key || "";
-      document.getElementById('meta-rhythm').value = song.rhythm || "";
-      document.getElementById('meta-audio').value = song.link || "";
-      document.getElementById('lyrics-editor-box').value = convertUsToEs(song.lyrics);
-      
-      const isMaster = (currentUserRole === 'super_admin');
-      document.getElementById('lyrics-editor-box').readOnly = !isMaster;
-      document.getElementById('editor-status-label').innerText = isMaster ? "LETRA (MODO MAESTRO)" : "LETRA (MODO ACORDES)";
-      
-      refreshPreview();
-      runFilter();
+    function loadSong(song) {
+      currentSong = JSON.parse(JSON.stringify(song));
+      document.getElementById('meta-title-val').value = song.title;
+      document.getElementById('meta-artist-val').value = song.artist || "";
+      document.getElementById('meta-key-sel').value = song.key || "";
+      document.getElementById('meta-rhythm-val').value = song.rhythm || "";
+      document.getElementById('meta-audio-val').value = song.link || "";
+      document.getElementById('lyrics-editor-area').value = usToEs(song.lyrics);
+      isMasterMode = false;
+      document.getElementById('lyrics-editor-area').readOnly = true;
+      document.getElementById('mode-status-label').innerText = "MODO ACORDES";
+      document.getElementById('master-pencil-btn').style.color = "#555";
+      updateRender(); runFilter();
     }
 
-    function attachListeners() {
-      const area = document.getElementById('lyrics-editor-box');
+    function toggleMasterMode() {
+      if (userRole !== 'super_admin') return;
+      isMasterMode = !isMasterMode;
+      const area = document.getElementById('lyrics-editor-area');
+      area.readOnly = !isMasterMode;
+      document.getElementById('mode-status-label').innerText = isMasterMode ? "MODO MAESTRO" : "MODO ACORDES";
+      document.getElementById('master-pencil-btn').style.color = isMasterMode ? "#4DB6AC" : "#555";
+      if (isMasterMode) area.focus();
+    }
+
+    function setupEditor() {
+      const area = document.getElementById('lyrics-editor-area');
       area.onkeydown = (e) => {
-        if (currentUserRole !== 'super_admin' && !e.altKey && !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) {
-           if (!e.ctrlKey) e.preventDefault();
-        }
-        const keys = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
-        const key = e.key.toLowerCase();
-        if (e.altKey && keys[key]) { e.preventDefault(); handleInsChord(keys[key]); }
-        if (e.altKey && e.key === "Backspace") { e.preventDefault(); handleDeleteChord(); }
+        if (!isMasterMode && !e.altKey && !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) { if (!e.ctrlKey) e.preventDefault(); }
+        const map = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
+        const k = e.key.toLowerCase();
+        if (e.altKey && map[k]) { e.preventDefault(); insChord(map[k]); }
+        if (e.altKey && e.key === "Backspace") { e.preventDefault(); delChord(); }
       };
-      area.oninput = refreshPreview;
-      document.getElementById('song-search').oninput = runFilter;
-      document.getElementById('save-draft-btn-action').onclick = executeSaveDraft;
-      document.getElementById('publish-btn-action').onclick = executePublish;
-      document.getElementById('delete-chord-btn-action').onclick = handleDeleteChord;
+      area.oninput = updateRender;
+      document.getElementById('song-search-box').oninput = runFilter;
     }
 
-    function handleInsChord(token) {
-      const ta = document.getElementById('lyrics-editor-box');
+    function insChord(token) {
+      const ta = document.getElementById('lyrics-editor-area');
       const start = ta.selectionStart;
       const chord = `[${token}]`;
       ta.value = ta.value.slice(0, start) + chord + ta.value.slice(ta.selectionEnd);
       ta.selectionStart = start; ta.selectionEnd = start + chord.length;
-      lastUsedChord = token;
-      refreshPreview(); ta.focus();
+      lastUsedChord = token; updateRender(); ta.focus();
     }
 
-    function handleModChord(mod) {
-      const ta = document.getElementById('lyrics-editor-box');
-      const txt = ta.value;
-      const start = ta.selectionStart;
-      const open = txt.lastIndexOf('[', start);
-      const close = txt.indexOf(']', start);
-      if (open !== -1 && close !== -1 && open < start && close >= start-1) {
-        let chord = txt.slice(open + 1, close);
-        if (mod === 'm') chord = chord.includes('m') ? chord.replace('m','') : chord + 'm';
-        else if (mod === '7') chord = chord.includes('7') ? chord.replace('7','') : chord + '7';
-        else if (mod === '#') chord = chord.includes('#') ? chord.replace('#','') : chord.replace('b','') + '#';
-        else if (mod === 'b') chord = chord.includes('b') ? chord.replace('b','') : chord.replace('#','') + 'b';
-        ta.value = txt.slice(0, open + 1) + chord + txt.slice(close);
-        ta.selectionStart = open; ta.selectionEnd = open + chord.length + 2;
-        refreshPreview();
-      }
+    function insertManualChord() {
+      const input = document.getElementById('input-chord-manual'), error = document.getElementById('chord-error-msg'), val = input.value.trim();
+      const regex = /^[A-Ga-gDoReMiFaSolLaSi#bm79s u4a d13()\/]+$/;
+      if (val && regex.test(val)) { insChord(val); input.value = ""; error.style.display = "none"; }
+      else { error.style.display = "block"; }
+    }
+
+    function delChord() {
+      const ta = document.getElementById('lyrics-editor-area'), text = ta.value, start = ta.selectionStart;
+      const open = text.lastIndexOf('[', start), close = text.indexOf(']', start);
+      if (open !== -1 && close !== -1 && open < start && close >= start-1) { ta.value = text.slice(0, open) + text.slice(close + 1); ta.selectionStart = ta.selectionEnd = open; updateRender(); }
       ta.focus();
     }
 
-    function handleNavChord(dir) {
-      const ta = document.getElementById('lyrics-editor-box');
-      const pos = dir > 0 ? ta.selectionEnd : ta.selectionStart - 1;
-      const next = dir > 0 ? ta.value.indexOf('[', pos) : ta.value.lastIndexOf('[', pos);
-      if (next !== -1) {
-        const end = ta.value.indexOf(']', next);
-        ta.selectionStart = next; ta.selectionEnd = end + 1;
-      }
-      ta.focus();
+    async function saveBorrador() {
+      if (!currentSong) return alert("Seleccioná canción.");
+      setBusy(true, "Guardando...");
+      const update = { ...currentSong, lyrics: esToUs(document.getElementById('lyrics-editor-area').value), artist: document.getElementById('meta-artist-val').value, key: document.getElementById('meta-key-sel').value, rhythm: document.getElementById('meta-rhythm-val').value, link: document.getElementById('meta-audio-val').value };
+      try { await db.ref(`canciones_borrador/${currentSong.id}`).update(update); await logAudit("EDICIÓN WEB", `Borrador: ${currentSong.title}`); alert("✅ Guardado."); }
+      catch (e) { alert("Error: " + e.message); }
+      setBusy(false);
     }
 
-    function handleDeleteChord() {
-      const ta = document.getElementById('lyrics-editor-box');
-      const text = ta.value;
-      const open = text.lastIndexOf('[', ta.selectionStart);
-      const close = text.indexOf(']', ta.selectionStart);
-      if (open !== -1 && close !== -1 && open < ta.selectionStart && close >= ta.selectionStart-1) {
-        ta.value = text.slice(0, open) + text.slice(close + 1);
-        ta.selectionStart = ta.selectionEnd = open;
-        refreshPreview();
-      }
-      ta.focus();
-    }
-
-    async function executeSaveDraft() {
-      if (!currentSongData) return alert("Elegí una canción.");
-      showBusy(true, "Guardando...");
-      const update = {
-        ...currentSongData,
-        lyrics: convertEsToUs(document.getElementById('lyrics-editor-box').value),
-        artist: document.getElementById('meta-artist').value,
-        key: document.getElementById('meta-key').value,
-        rhythm: document.getElementById('meta-rhythm').value,
-        link: document.getElementById('meta-audio').value
-      };
-      try {
-        await db.ref(`canciones_borrador/${currentSongData.id}`).update(update);
-        await logAudit("EDICIÓN WEB", `Borrador: ${currentSongData.title}`);
-        alert("✅ Guardado.");
-      } catch (e) { alert("❌ Error: " + e.message); }
-      showBusy(false);
-    }
-
-    async function executePublish() {
+    async function confirmPublish() {
       if (!confirm("🚀 ¿Publicar Versión Oficial?")) return;
-      showBusy(true, "Publicando...");
+      setBusy(true, "Publicando...");
       try {
         const snap = await db.ref('canciones_borrador').get();
-        let parts = currentGlobalVer.split('.');
-        if (parts.length < 2) parts = [currentGlobalVer, "000"];
+        let parts = globalVersion.split('.');
+        if (parts.length < 2) parts = [globalVersion, "000"];
         const nextVer = parts[0] + "." + String(parseInt(parts[parts.length - 1]) + 1).padStart(3, '0');
         const pubSnap = await db.ref('canciones_base').get();
-        await db.ref(`backups/v${currentGlobalVer.replace(/\./g,'_')}`).set({ timestamp: firebase.database.ServerValue.timestamp, songs: pubSnap.val() });
-        await db.ref('canciones_base').set(snap.val());
-        await db.ref('version').set(nextVer);
-        await logAudit("PUBLICACIÓN WEB", `Versión: v${nextVer}`);
-        alert(`🎉 ¡ÉXITO! v${nextVer}`);
-      } catch (e) { alert("❌ Error: " + e.message); }
-      showBusy(false);
+        await db.ref(`backups/v${globalVersion.replace(/\./g,'_')}`).set({ timestamp: firebase.database.ServerValue.timestamp, songs: pubSnap.val() });
+        await db.ref('canciones_base').set(snap.val()); await db.ref('version').set(nextVer);
+        await logAudit("PUBLICACIÓN WEB", `Versión: v${nextVer}`); alert(`🎉 Éxito: v${nextVer}`);
+      } catch (e) { alert("Error: " + e.message); }
+      setBusy(false);
     }
 
     async function logAudit(accion, detalle) {
@@ -451,17 +349,17 @@
       await db.ref('auditoria').push().set(log);
     }
 
-    function refreshPreview() {
-      const raw = document.getElementById('lyrics-editor-box').value;
+    function updateRender() {
+      const raw = document.getElementById('lyrics-editor-area').value;
       const fmt = raw.replace(/\{([\s\S]*?)\}/g, '<span style="color:#888; font-style:italic">$1</span>')
                      .replace(/\*\*_([\s\S]*?)_\*\*/g, '<b><i>$1</i></b>').replace(/\*\*([\s\S]*?)\*\*/g, '<b>$1</b>')
                      .replace(/_([\s\S]*?)_/g, '<i>$1</i>').replace(/\[([^\]]+)\]/g, '<span class="chordchip">$1</span>');
-      document.getElementById('lyrics-preview-box').innerHTML = fmt.replace(/\n/g, '<br>');
+      document.getElementById('lyrics-preview-render').innerHTML = fmt.replace(/\n/g, '<br>');
     }
 
-    function convertUsToEs(t) { return t.replace(/\[([^\]]+)\]/g, (m, c) => { const r = c.match(/^([A-G])([#b]?)(.*)/); if (!r) return m; return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; }); }
-    function convertEsToUs(t) { const roots = ["Sol", "Do", "Re", "Mi", "Fa", "La", "Si"]; return t.replace(/\[([^\]]+)\]/g, (m, c) => { for (let r of roots) { if (c.startsWith(r)) { let acc = "", rest = c.slice(r.length); if (rest.startsWith("#") || rest.startsWith("b")) { acc = rest[0]; rest = rest.slice(1); } return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${acc}${rest}]`; } } return m; }); }
-    function showBusy(on, text) { document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none'; if (text) document.getElementById('busy-text-msg').innerText = text; }
+    function usToEs(t) { return t.replace(/\[([^\]]+)\]/g, (m, c) => { const r = c.match(/^([A-G])([#b]?)(.*)/); if (!r) return m; return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; }); }
+    function esToUs(t) { const roots = ["Sol", "Do", "Re", "Mi", "Fa", "La", "Si"]; return t.replace(/\[([^\]]+)\]/g, (m, c) => { for (let r of roots) { if (c.startsWith(r)) { let acc = "", rest = c.slice(r.length); if (rest.startsWith("#") || rest.startsWith("b")) { acc = rest[0]; rest = rest.slice(1); } return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${acc}${rest}]`; } } return m; }); }
+    function setBusy(on, text) { document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none'; if (text) document.getElementById('busy-msg').innerText = text; }
   </script>
 </body>
 </html>
