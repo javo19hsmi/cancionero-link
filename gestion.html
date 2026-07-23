@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal Maestro - Gestión Cancionero</title>
+  
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+  
+  <!-- Icons & Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+  
+  <style>
+    :root {
+      --primary: #4DB6AC;
+      --primary-dark: #00695C;
+      --bg: #0F0F0F;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.15);
+      --text: #E0E0E0;
+      --danger: #ff5252;
+      --warning: #ffa726;
+    }
+
+    body {
+      margin: 0; font-family: 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* --- LOGIN OVERLAY --- */
+    #login-overlay {
+      position: fixed; inset: 0; background: var(--bg);
+      display: flex; align-items: center; justify-content: center; z-index: 10000;
+    }
+    .login-card {
+      background: var(--glass); backdrop-filter: blur(20px);
+      padding: 40px; border-radius: 30px; border: 1px solid var(--glass-border);
+      text-align: center; max-width: 400px; width: 90%;
+    }
+
+    /* --- MAIN LAYOUT --- */
+    .app-container { display: none; min-height: 100vh; }
+    
+    header {
+      padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
+      background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--glass-border);
+      position: sticky; top: 0; z-index: 1000; backdrop-filter: blur(10px);
+    }
+
+    .tabs { display: flex; gap: 20px; padding: 10px 30px; background: rgba(255,255,255,0.02); }
+    .tab-btn {
+      background: none; border: none; color: #888; cursor: pointer;
+      font-weight: bold; font-size: 14px; padding: 10px 0;
+      border-bottom: 3px solid transparent; transition: 0.3s;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* --- MODULES --- */
+    .module { padding: 30px; display: none; max-width: 1200px; margin: 0 auto; }
+    .module.active { display: block; }
+
+    /* --- GLASS CARDS --- */
+    .glass-card {
+      background: var(--glass); backdrop-filter: blur(15px);
+      border-radius: 24px; border: 1px solid var(--glass-border);
+      padding: 24px; margin-bottom: 20px;
+    }
+
+    /* --- FORM ELEMENTS --- */
+    label { font-size: 12px; font-weight: bold; color: var(--primary); letter-spacing: 1px; }
+    input, textarea, select {
+      width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border);
+      border-radius: 12px; padding: 12px; color: white; margin-top: 5px; margin-bottom: 15px;
+      font-size: 14px; outline: none; transition: 0.3s;
+    }
+    input:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(77,182,172,0.2); }
+    input[readonly] { color: #888; cursor: default; }
+
+    button {
+      background: var(--primary); color: white; border: none; padding: 12px 24px;
+      border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;
+    }
+    button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+    /* --- CANCIONERO GRID --- */
+    .editor-grid { display: grid; grid-template-columns: 1fr 320px 1fr; gap: 20px; }
+    #lyrics-editor { height: 500px; font-family: monospace; font-size: 16px; line-height: 1.6; resize: none; }
+    
+    /* --- KEYBOARD --- */
+    .chord-keyboard { background: rgba(0,0,0,0.2); border-radius: 16px; padding: 15px; }
+    .kbd-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+    .key-btn { 
+      background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); 
+      padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-size: 12px;
+    }
+    .key-btn:active { background: var(--primary); }
+
+    /* --- PREVIEW --- */
+    .preview-box {
+      background: #fdfdfd; border-radius: 16px; color: #333; padding: 20px;
+      height: 500px; overflow-y: auto; line-height: 2.2; font-family: monospace;
+    }
+    .chordchip { color: var(--primary-dark); font-weight: bold; background: #e0f2f1; padding: 2px 4px; border-radius: 4px; margin-right: 2px; }
+
+    /* --- BUSY OVERLAY --- */
+    #busy-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px);
+      display: none; align-items: center; justify-content: center; z-index: 11000;
+    }
+
+    @media (max-width: 900px) {
+      .editor-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. LOGIN -->
+  <div id="login-overlay">
+    <div class="login-card">
+      <img src="https://javo19hsmi.github.io/cancionero-link/assets/images/Logo_Ministerio_Musica.png" height="120" style="margin-bottom:20px" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2662/2662361.png'">
+      <h2>Portal Maestro</h2>
+      <p style="color:#888; font-size:14px">Gestión unificada de Canciones, Anuncios y Guiones</p>
+      <br>
+      <button onclick="login()" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px">
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18">
+        Entrar con Google
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. APP MAIN -->
+  <div id="app" class="app-container">
+    <header>
+      <div style="display:flex; align-items:center; gap:15px">
+        <span class="material-symbols-outlined" style="color:var(--primary)">church</span>
+        <h3 style="margin:0">CANCIONERO MAESTRO</h3>
+      </div>
+      <div id="user-info" style="display:flex; align-items:center; gap:10px">
+        <span id="user-email" style="font-size:12px; color:#888"></span>
+        <button onclick="logout()" style="padding:5px 12px; font-size:11px; background:var(--glass)">SALIR</button>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="switchTab('songs')">🎵 CANCIONERO</button>
+      <button class="tab-btn" onclick="switchTab('announcements')">📢 ANUNCIOS</button>
+      <button class="tab-btn" onclick="switchTab('scripts')">📜 GUIONES / ORACIONES</button>
+    </div>
+
+    <!-- MODULO CANCIONERO -->
+    <main id="mod-songs" class="module active">
+      <div class="glass-card">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end">
+          <div style="flex:1">
+            <label>BUSCAR CANCIÓN</label>
+            <input type="text" id="song-search" placeholder="Buscar por título o letra..." oninput="filterSongs()">
+          </div>
+          <div style="padding-bottom:15px; margin-left:20px">
+            <button onclick="publishChanges()" style="background:var(--warning)">SUBIR VERSIÓN (PÚBLICO)</button>
+          </div>
+        </div>
+        <div id="song-list-mini" style="max-height:150px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:8px"></div>
+      </div>
+
+      <div class="editor-grid">
+        <!-- Col 1: Datos -->
+        <div class="glass-card">
+          <label>TÍTULO (Solo lectura)</label>
+          <input type="text" id="song-title" readonly>
+          <label>TONALIDAD</label>
+          <select id="song-key" onchange="updatePreview()">
+             <option value="">Sin tono</option>
+          </select>
+          <label>AUTOR</label>
+          <input type="text" id="song-artist">
+          <label>RITMO</label>
+          <input type="text" id="song-rhythm">
+          <label>AUDIO LINK (MP3/Drive)</label>
+          <input type="text" id="song-audio">
+          <button onclick="saveBorrador()" style="width:100%">GUARDAR BORRADOR 💾</button>
+        </div>
+
+        <!-- Col 2: Letra y Teclado -->
+        <div class="glass-card" style="padding:15px">
+          <label>LETRA (Alt + Letra para insertar)</label>
+          <textarea id="lyrics-editor" spellcheck="false"></textarea>
+          
+          <div class="chord-keyboard">
+            <div style="font-size:11px; color:var(--primary); font-weight:bold">TECLADO DE ACORDES</div>
+            <div class="kbd-grid" id="roots-grid"></div>
+            <div class="kbd-grid">
+              <button class="key-btn" onclick="modSelected('#')">#</button>
+              <button class="key-btn" onclick="modSelected('b')">b</button>
+              <button class="key-btn" onclick="modSelected('m')">m</button>
+              <button class="key-btn" onclick="modSelected('7')">7</button>
+            </div>
+            <button onclick="deleteChord()" style="width:100%; margin-top:10px; background:var(--danger); font-size:11px">BORRAR ACORDE (Alt+Bksp)</button>
+          </div>
+        </div>
+
+        <!-- Col 3: Vista Previa -->
+        <div class="glass-card">
+          <label>VISTA PREVIA REAL</label>
+          <div id="lyrics-preview" class="preview-box"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- OTROS MODULOS (PROXIMAMENTE) -->
+    <main id="mod-announcements" class="module">
+       <div class="glass-card"><h2>Módulo Anuncios</h2><p>En construcción...</p></div>
+    </main>
+    <main id="mod-scripts" class="module">
+       <div class="glass-card"><h2>Módulo Guiones y Oraciones</h2><p>En construcción...</p></div>
+    </main>
+  </div>
+
+  <div id="busy-overlay">
+    <div class="login-card" style="width:auto">
+      <div style="border:3px solid var(--primary); border-top-color:transparent; width:30px; height:30px; border-radius:50%; animation:spin 1s linear infinite; margin:0 auto 15px"></div>
+      <b id="busy-text">Procesando...</b>
+    </div>
+  </div>
+
+  <script>
+    // --- FIREBASE CONFIG (SE USA LA MISMA QUE LA APP) ---
+    const firebaseConfig = {
+      databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    let allSongs = [];
+    let currentSongId = null;
+    let userRole = 'fiel';
+
+    // --- LOGIN / LOGOUT ---
+    function login() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider);
+    }
+    function logout() { auth.signOut(); }
+
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        checkPermissions(user);
+      } else {
+        document.getElementById('login-overlay').style.display = 'flex';
+        document.getElementById('app').style.display = 'none';
+      }
+    });
+
+    async function checkPermissions(user) {
+      const emailKey = user.email.replace(/\./g, '_');
+      const snap = await db.ref(`usuarios/${emailKey}`).get();
+      
+      if (snap.exists()) {
+        const data = snap.val();
+        userRole = data.rol || 'fiel';
+        const isEditor = data.es_editor_global || userRole === 'super_admin' || userRole === 'admin_local';
+
+        if (isEditor) {
+          document.getElementById('login-overlay').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+          document.getElementById('user-email').innerText = user.email;
+          initCancionero();
+        } else {
+          alert("Acceso denegado: No tienes permisos de editor.");
+          auth.signOut();
+        }
+      } else {
+        alert("Usuario no registrado en la base de datos.");
+        auth.signOut();
+      }
+    }
+
+    // --- MODULO CANCIONERO ---
+    const roots = ["Do","Re","Mi","Fa","Sol","La","Si"];
+    const usMap = {"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"};
+    const keyOptions = ["Do","Dom","Do#","Do#m","Re","Rem","Mi","Mim","Fa","Fam","Fa#","Fa#m","Sol","Solm","La","Lam","Si","Sim"];
+
+    function initCancionero() {
+      // Poblar tonos
+      const keySel = document.getElementById('song-key');
+      keyOptions.forEach(k => keySel.appendChild(new Option(k, usMap[k.replace('m','')] + (k.includes('m')?'m':''))));
+      
+      // Poblar teclado
+      const grid = document.getElementById('roots-grid');
+      roots.forEach(r => {
+        const btn = document.createElement('button');
+        btn.className = 'key-btn'; btn.innerText = r;
+        btn.onclick = () => insertChord(r);
+        grid.appendChild(btn);
+      });
+
+      loadSongs();
+      setupEditor();
+    }
+
+    async function loadSongs() {
+      setBusy(true, "Cargando cancionero...");
+      const snap = await db.ref('canciones_borrador').get();
+      if (snap.exists()) {
+        allSongs = Object.values(snap.val());
+        filterSongs();
+      }
+      setBusy(false);
+    }
+
+    function filterSongs() {
+      const q = document.getElementById('song-search').value.toLowerCase();
+      const list = document.getElementById('song-list-mini');
+      list.innerHTML = "";
+      allSongs.filter(s => s.title.toLowerCase().includes(q)).slice(0, 20).forEach(s => {
+        const btn = document.createElement('button');
+        btn.className = 'key-btn'; btn.innerText = s.title;
+        btn.style.width = "auto";
+        btn.onclick = () => openSong(s.id);
+        list.appendChild(btn);
+      });
+    }
+
+    async function openSong(id) {
+      currentSongId = id;
+      const snap = await db.ref(`canciones_borrador/${id}`).get();
+      const s = snap.val();
+      document.getElementById('song-title').value = s.title;
+      document.getElementById('song-artist').value = s.artist || "";
+      document.getElementById('song-key').value = s.key || "";
+      document.getElementById('song-rhythm').value = s.rhythm || "";
+      document.getElementById('song-audio').value = s.link || "";
+      document.getElementById('lyrics-editor').value = usToEs(s.lyrics);
+      
+      // BLINDAJE: Solo el super_admin puede editar la letra (quitar el readonly)
+      document.getElementById('lyrics-editor').readOnly = (userRole !== 'super_admin');
+      
+      updatePreview();
+    }
+
+    // --- LOGICA DE ACORDES (TUS HOTKEYS) ---
+    function setupEditor() {
+      const editor = document.getElementById('lyrics-editor');
+      
+      editor.onkeydown = (e) => {
+        // Bloquear escritura normal si no es super_admin
+        if (userRole !== 'super_admin' && !e.altKey && !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End"].includes(e.key)) {
+           e.preventDefault();
+        }
+
+        const hotkeys = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
+        const key = e.key.toLowerCase();
+
+        // Alt + Letra = Insertar Acorde
+        if (e.altKey && hotkeys[key]) {
+          e.preventDefault(); insertChord(hotkeys[key]);
+        }
+        // Alt + Backspace = Borrar Acorde
+        if (e.altKey && e.key === "Backspace") {
+          e.preventDefault(); deleteChord();
+        }
+      };
+
+      editor.oninput = updatePreview;
+    }
+
+    function insertChord(token) {
+      const ta = document.getElementById('lyrics-editor');
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const chord = `[${token}]`;
+      ta.value = ta.value.slice(0, start) + chord + ta.value.slice(end);
+      ta.selectionStart = start; ta.selectionEnd = start + chord.length;
+      updatePreview();
+    }
+
+    function modSelected(mod) {
+       // Lógica de modificación de acorde seleccionado (m, 7, #, b)
+       // Simil a la de tu script original
+    }
+
+    function deleteChord() {
+      const ta = document.getElementById('lyrics-editor');
+      const text = ta.value;
+      const start = ta.selectionStart;
+      const open = text.lastIndexOf('[', start);
+      const close = text.indexOf(']', start);
+      if (open !== -1 && close !== -1 && open < start && close >= start-1) {
+        ta.value = text.slice(0, open) + text.slice(close + 1);
+        ta.selectionStart = ta.selectionEnd = open;
+        updatePreview();
+      }
+    }
+
+    function updatePreview() {
+      const raw = document.getElementById('lyrics-editor').value;
+      let html = raw.replace(/\[([^\]]+)\]/g, '<span class="chordchip">$1</span>');
+      document.getElementById('lyrics-preview').innerHTML = html.replace(/\n/g, '<br>');
+    }
+
+    function usToEs(t) { 
+      return t.replace(/\[([^\]]+)\]/g, (m, c) => {
+        const root = c.match(/^([A-G])([#b]?)(.*)/);
+        if (!root) return m;
+        const esRoot = {"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[root[1]];
+        return `[${esRoot}${root[2]}${root[3]}]`;
+      });
+    }
+
+    function setBusy(on, text) {
+      document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none';
+      document.getElementById('busy-text').innerText = text || "Procesando...";
+    }
+
+    function switchTab(mod) {
+      document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.getElementById(`mod-${mod}`).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // LÓGICA DE PUBLICAR Y GUARDAR (PRÓXIMAMENTE...)
+  </script>
+</body>
+</html>
