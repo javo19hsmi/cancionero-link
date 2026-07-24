@@ -52,8 +52,8 @@
         <div id="song-results-list" class="search-results"></div>
       </section>
 
-      <!-- PANEL EDITOR (CHAU TEXTAREA, HOLA DIV VISUAL) -->
-      <section class="glass-panel" style="grid-column: span 2;">
+      <!-- PANEL EDITOR VISUAL -->
+      <section class="glass-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
           <label id="mode-text">MODO ACORDES</label>
           <button id="pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleEditMode()" title="Lápiz Maestro">
@@ -63,12 +63,23 @@
         
         <div id="lyrics-editor" contenteditable="true" spellcheck="false" placeholder="Elegí una canción para empezar a editar..."></div>
         
-        <!-- AYUDA MEMORIA -->
         <div style="margin-top:10px; font-size:11px; color:#777; text-align:center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-          <b>Atajos de teclado rápidos (No hace falta Alt):</b><br>
-          <span style="color:var(--primary)">D</span>=Do | <span style="color:var(--primary)">R</span>=Re | <span style="color:var(--primary)">M</span>=Mi | <span style="color:var(--primary)">F</span>=Fa | <span style="color:var(--primary)">S</span>=Sol | <span style="color:var(--primary)">L</span>=La | <span style="color:var(--primary)">I</span>=Si <br>
-          <i>Modificadores automáticos:</i> <b>-</b> (menor) | <b>#</b> (sostenido) | <b>b</b> (bemol) | <b>7</b> (séptima) | <b>Retroceso</b> (borrar acorde)
+          <b>Atajos:</b> <span style="color:var(--primary)">D</span>=Do | <span style="color:var(--primary)">R</span>=Re | <span style="color:var(--primary)">M</span>=Mi | <span style="color:var(--primary)">F</span>=Fa | <span style="color:var(--primary)">S</span>=Sol | <span style="color:var(--primary)">L</span>=La | <span style="color:var(--primary)">I</span>=Si <br>
+          <i>Modificadores:</i> <b>-</b> (menor) | <b>#</b> (sostenido) | <b>b</b> (bemol) | <b>7</b> (séptima) | <b>Retroceso</b> (borrar)
         </div>
+      </section>
+
+      <!-- PANEL METADATOS (Restaurado) -->
+      <section class="glass-panel">
+        <label>METADATOS</label>
+        <input type="text" id="m-title-in" readonly>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div class="form-group"><label>TONO</label><select id="m-key-sel"></select></div>
+          <div class="form-group"><label>RITMO</label><input type="text" id="m-rhythm-in"></div>
+        </div>
+        <label>AUTOR</label><input type="text" id="m-artist-in">
+        <label>AUDIO LINK</label><input type="text" id="m-audio-in">
+        <button class="btn btn-save" style="width:100%; margin-top:10px" onclick="saveBorrador()">GUARDAR BORRADOR 💾</button>
       </section>
     </main>
 
@@ -84,11 +95,10 @@
     </div>
   </div>
 
-  <!-- Scripts modulares en orden correcto -->
+  <!-- Scripts -->
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/render.js"></script> <!-- El nuevo motor de renderizado -->
+  <script src="js/render.js"></script> 
   <script src="js/editor.js"></script>
-
 </body>
 </html>
