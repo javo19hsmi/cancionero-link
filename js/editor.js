@@ -461,18 +461,43 @@ async function uploadFile(input, folder, targetInputId) {
 }
 
 function updateAudioPreview() {
-  const link = document.getElementById("m-audio-in").value.trim();
+  let link = document.getElementById("m-audio-in").value.trim();
   const container = document.getElementById("audioPreviewContainer");
   const wrapper = document.getElementById("playerWrapper");
+  
+  if (!link) { 
+    if (container) container.style.display = "none"; 
+    if (wrapper) wrapper.innerHTML = ""; 
+    return; 
+  }
 
-  if (!link) { container.style.display = "none"; wrapper.innerHTML = ""; return; }
+  if (container) container.style.display = "block";
+  if (wrapper) wrapper.innerHTML = ""; 
 
-  container.style.display = "block";
+  // 🚀 CONVERTIDOR INTELIGENTE PARA GOOGLE DRIVE
+  if (link.includes('drive.google.com')) {
+    const match = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+      const fileId = match[1];
+      link = `https://docs.google.com/uc?export=download&id=${fileId}`;
+    }
+  }
+
+  // 📺 SI ES YOUTUBE
   if (link.includes("youtube.com") || link.includes("youtu.be")) {
     let videoId = link.includes("v=") ? link.split("v=")[1].split("&")[0] : link.split("/").pop().split("?")[0];
-    wrapper.innerHTML = `<iframe width="100%" height="80" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
-  } else {
-    wrapper.innerHTML = `<audio controls style="width:100%; height: 30px;"><source src="${link}"></audio>`;
+    wrapper.innerHTML = `<iframe width="100%" height="150" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
+  } 
+  // 🎵 SI ES AUDIO DIRECTO (Firebase o Drive Corregido)
+  else {
+    wrapper.innerHTML = `
+      <audio controls style="width:100%; height: 35px;">
+        <source src="${link}" type="audio/mpeg">
+        Tu navegador no soporta el reproductor.
+      </audio>
+    `;
+    const audio = wrapper.querySelector('audio');
+    if (audio) audio.load();
   }
 }
 
