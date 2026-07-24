@@ -3,8 +3,8 @@ let currentSong = null;
 let globalVer = "0";
 let isEditMode = false;
 let hasUnsavedChanges = false;
+let editorListenersAttached = false; // Candado para evitar eventos duplicados
 
-// La misma lista de momentos de tu Script original
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
   "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
@@ -12,7 +12,8 @@ const MOMENTS_LIST = [
   "Virgen María", "Espíritu Santo", "Animación", "Adoración Eucarística",
   "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés","Santo Rosario",
   "Via Crucis", "Pesebre", "Juveniles", "Acción de Gracia", "Misioneros / Vocacionales",
-  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Varios"
+  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Propios del Ordinario",
+  "Varios"
 ];
 
 function initApp() {
@@ -59,7 +60,6 @@ function filterSongs() {
 function loadSong(s) {
   currentSong = JSON.parse(JSON.stringify(s));
   
-  // Cargar TODOS los metadatos
   document.getElementById('m-title-in').value = s.title || "";
   document.getElementById('m-key-sel').value = s.key || "";
   document.getElementById('m-rhythm-in').value = s.rhythm || "";
@@ -71,10 +71,8 @@ function loadSong(s) {
   document.getElementById('m-sheet-in').value = s.sheetMusicLink || "";
   document.getElementById('m-audio-in').value = s.link || "";
 
-  // Renderizar chips de Momentos
   renderMomentsChips(s.moments || ["Varios"]);
 
-  // Render Visual
   const editor = document.getElementById('lyrics-editor');
   editor.innerHTML = Render.toVisual(usToEs(s.lyrics));
   
@@ -103,7 +101,7 @@ function renderMomentsChips(selectedArr) {
       d.classList.toggle("on");
       markUnsavedChanges();
       const cur = getSelectedMoments();
-      if (cur.length === 0) d.classList.add("on"); // Siempre mínimo 1
+      if (cur.length === 0) d.classList.add("on"); 
     };
     el.appendChild(d);
   });
@@ -172,6 +170,9 @@ function toggleEditMode() {
 }
 
 function setupEditorListeners() {
+  if (editorListenersAttached) return; 
+  editorListenersAttached = true;
+  
   const area = document.getElementById('lyrics-editor');
   area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
 
@@ -181,6 +182,8 @@ function setupEditorListeners() {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
     e.preventDefault(); 
+    e.stopPropagation(); // Frena propagación para evitar doble tipeo
+    
     const k = e.key.toLowerCase();
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
     
@@ -205,7 +208,9 @@ function toggleAcordes() {
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
   area.focus();
-  const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}">${chordText}</span>\u200B`;
+  // El span ahora va VACÍO por dentro. El CSS se encarga del contenido vía data-chord.
+  // El &#8203; (Zero-width space) asegura que el cursor se posicione después del acorde sin empujar letras.
+  const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>&#8203;`;
   document.execCommand('insertHTML', false, html);
   markUnsavedChanges();
   if(navigator.vibrate) navigator.vibrate(10); 
@@ -242,7 +247,7 @@ function modMob(mod) {
         
         const newChord = root + acc + minor + sev;
         prevNode.setAttribute('data-chord', newChord);
-        prevNode.innerText = newChord; 
+        // NO cambiamos innerText porque el span ahora está vacío. Solo actualizamos el atributo.
         markUnsavedChanges();
     }
 }
