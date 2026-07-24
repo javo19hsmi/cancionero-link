@@ -61,10 +61,20 @@
     .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
     .result-item.active { background: var(--primary); color: white; }
 
-    #lyrics-editor-box {
-      flex: 1; background: rgba(0,0,0,0.2); border: 1px solid var(--glass-border);
-      border-radius: 12px; padding: 20px; color: #fff; font-family: 'Consolas', monospace;
-      font-size: 17px; line-height: 1.7; resize: none; outline: none;
+        #lyrics-editor-area {
+      width: 100%;
+      min-height: 500px; /* 🚀 Altura generosa para ver mucha letra */
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 20px;
+      color: #fff;
+      font-family: 'Consolas', monospace;
+      font-size: 17px;
+      line-height: 1.8; /* Espaciado cómodo */
+      resize: vertical; /* Te deja estirarlo si querés */
+      outline: none;
+      overflow-y: auto;
     }
 
     .manual-chord-box {
@@ -151,7 +161,24 @@
           </button>
         </div>
         <textarea id="lyrics-editor-area" spellcheck="false" readonly placeholder="Seleccioná una canción..."></textarea>
-        
+
+                <!-- 🚀 AYUDA MEMORIA HOTKEYS -->
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; padding:10px; background:rgba(255,255,255,0.02); border-radius:10px; border:1px solid var(--glass-border);">
+          <small style="color:var(--primary); font-weight:bold; font-size:9px;">ATAJOS PC:</small>
+          <small style="color:#888; font-size:9px;">D = <b>Do</b></small>
+          <small style="color:#888; font-size:9px;">R = <b>Re</b></small>
+          <small style="color:#888; font-size:9px;">M = <b>Mi</b></small>
+          <small style="color:#888; font-size:9px;">F = <b>Fa</b></small>
+          <small style="color:#888; font-size:9px;">S = <b>Sol</b></small>
+          <small style="color:#888; font-size:9px;">L = <b>La</b></small>
+          <small style="color:#888; font-size:9px;">I = <b>Si</b></small>
+          <span style="border-left:1px solid #333; margin:0 5px;"></span>
+          <small style="color:#888; font-size:9px;"># = <b>#</b></small>
+          <small style="color:#888; font-size:9px;">B = <b>bmol</b></small>
+          <small style="color:#888; font-size:9px;">- = <b>menor</b></small>
+          <small style="color:#888; font-size:9px;">7 = <b>7ma</b></small>
+        </div>
+       
         <div class="manual-chord-box">
           <label>INSERCIÓN MANUAL AVANZADA</label>
           <div style="display:flex; gap:10px">
@@ -282,19 +309,52 @@
       if (isMasterMode) area.focus();
     }
 
-    function setupEditor() {
+        function setupEditor() {
       const area = document.getElementById('lyrics-editor-area');
+      
       area.onkeydown = (e) => {
-        if (!isMasterMode && !e.altKey && !["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) { if (!e.ctrlKey) e.preventDefault(); }
-        const map = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
-        const k = e.key.toLowerCase();
-        if (e.altKey && map[k]) { e.preventDefault(); insChord(map[k]); }
-        if (e.altKey && e.key === "Backspace") { e.preventDefault(); delChord(); }
-      };
-      area.oninput = updateRender;
-      document.getElementById('song-search-box').oninput = runFilter;
-    }
+        // 🛡️ Si NO estamos en modo maestro, bloqueamos casi todo
+        if (!isMasterMode) {
+          const allowedKeys = ["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown","Control","a","c","v"];
+          const hotkeys = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
+          const modifiers = {"#":"#","b":"b","-":"m","7":"7"};
+          
+          const k = e.key.toLowerCase();
 
+          // 1. Permitir navegación y copiado
+          if (allowedKeys.includes(e.key) || (e.ctrlKey && (k === 'c' || k === 'a' || k === 'v'))) {
+            return; 
+          }
+
+          // 2. Ejecutar Hotkeys de Acordes (D, R, M...)
+          if (hotkeys[k]) {
+            e.preventDefault();
+            insChord(hotkeys[k]);
+            return;
+          }
+
+          // 3. Ejecutar Modificadores (#, b, -, 7)
+          if (modifiers[e.key]) {
+            e.preventDefault();
+            const modMap = {"#":"#","b":"b","-":"m","7":"7"};
+            modChord(modMap[e.key]);
+            return;
+          }
+
+          // 4. Borrado de acorde
+          if (e.key === "Backspace") {
+            e.preventDefault();
+            delChord();
+            return;
+          }
+
+          // 🚫 Bloquear todo lo demás para proteger la letra
+          e.preventDefault();
+        }
+      };
+      
+      area.oninput = updateRender;
+    }
     function insChord(token) {
       const ta = document.getElementById('lyrics-editor-area');
       const start = ta.selectionStart;
