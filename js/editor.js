@@ -3,7 +3,7 @@ let currentSong = null;
 let globalVer = "0";
 let isEditMode = false;
 let hasUnsavedChanges = false;
-let editorListenersAttached = false; // Candado para evitar eventos duplicados
+let editorListenersAttached = false; 
 
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
@@ -12,8 +12,7 @@ const MOMENTS_LIST = [
   "Virgen María", "Espíritu Santo", "Animación", "Adoración Eucarística",
   "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés","Santo Rosario",
   "Via Crucis", "Pesebre", "Juveniles", "Acción de Gracia", "Misioneros / Vocacionales",
-  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Propios del Ordinario",
-  "Varios"
+  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Varios"
 ];
 
 function initApp() {
@@ -178,11 +177,23 @@ function setupEditorListeners() {
 
   area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
-    if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) return;
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+    // BLOQUEO DE NAVEGACIÓN NATIVA (Para que Alt + Flecha no vuelva atrás)
+    if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Backspace")) {
+        e.preventDefault();
+        e.stopPropagation();
+        // Nota: Si usabas esto para desplazar el acorde, lo programamos luego. Por ahora lo frenamos.
+        return;
+    }
+
+    // Permitir navegación normal con flechas (sin Alt)
+    if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) return;
+    
+    // Permitir atajos del sistema (Ctrl+C, Ctrl+V)
+    if (e.ctrlKey || e.metaKey) return;
 
     e.preventDefault(); 
-    e.stopPropagation(); // Frena propagación para evitar doble tipeo
+    e.stopPropagation(); 
     
     const k = e.key.toLowerCase();
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
@@ -208,8 +219,6 @@ function toggleAcordes() {
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
   area.focus();
-  // El span ahora va VACÍO por dentro. El CSS se encarga del contenido vía data-chord.
-  // El &#8203; (Zero-width space) asegura que el cursor se posicione después del acorde sin empujar letras.
   const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>&#8203;`;
   document.execCommand('insertHTML', false, html);
   markUnsavedChanges();
@@ -226,14 +235,37 @@ function insManual() {
   }
 }
 
-function modMob(mod) {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    let node = selection.focusNode;
-    let prevNode = getPreviousNode(node, selection.focusOffset);
+// NUEVA FUNCIÓN: Rastrea hacia atrás esquivando el espacio invisible
+function getClosestChordNode() {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return null;
+    let node = sel.focusNode;
 
-    if (prevNode && prevNode.classList && prevNode.classList.contains('chord-chip')) {
-        let chord = prevNode.getAttribute('data-chord');
+    // Si estamos parados en el texto al lado del acorde
+    if (node.nodeType === Node.TEXT_NODE) {
+        let prev = node.previousSibling;
+        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) {
+            return prev;
+        }
+    } 
+    // Si estamos parados en el contenedor principal (div)
+    else if (node.nodeType === Node.ELEMENT_NODE) {
+        let prev = node.childNodes[sel.focusOffset - 1];
+        // Si chocamos con el texto vacío (&#8203;), retrocedemos uno más
+        if (prev && prev.nodeType === Node.TEXT_NODE) {
+            prev = prev.previousSibling;
+        }
+        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) {
+            return prev;
+        }
+    }
+    return null;
+}
+
+function modMob(mod) {
+    let targetNode = getClosestChordNode();
+    if (targetNode) {
+        let chord = targetNode.getAttribute('data-chord');
         const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(7?)$/i);
         if (!m) return;
         
@@ -246,28 +278,17 @@ function modMob(mod) {
         if (acc === 'b') acc = (mod === '#') ? '#' : 'b';
         
         const newChord = root + acc + minor + sev;
-        prevNode.setAttribute('data-chord', newChord);
-        // NO cambiamos innerText porque el span ahora está vacío. Solo actualizamos el atributo.
+        targetNode.setAttribute('data-chord', newChord);
         markUnsavedChanges();
     }
 }
 
 function delMob() {
-    const selection = window.getSelection();
-    if (!selection.rangeCount) return;
-    let node = selection.focusNode;
-    let prevNode = getPreviousNode(node, selection.focusOffset);
-
-    if (prevNode && prevNode.classList && prevNode.classList.contains('chord-chip')) {
-        prevNode.remove();
+    let targetNode = getClosestChordNode();
+    if (targetNode) {
+        targetNode.remove();
         markUnsavedChanges();
     }
-}
-
-function getPreviousNode(node, offset) {
-    if (node.nodeType === Node.TEXT_NODE && offset === 0) return node.previousSibling;
-    else if (node.nodeType === Node.ELEMENT_NODE && offset > 0) return node.childNodes[offset - 1];
-    return null;
 }
 
 async function uploadFile(input, folder, targetInputId) {
