@@ -178,12 +178,23 @@ function setupEditorListeners() {
   area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
 
-    // BLOQUEO DE NAVEGACIÓN NATIVA (Para que Alt + Flecha no vuelva atrás)
-    if (e.altKey && (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "Backspace")) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Nota: Si usabas esto para desplazar el acorde, lo programamos luego. Por ahora lo frenamos.
-        return;
+    // ATAJOS CON ALT: Saltar entre acordes o Borrar el actual
+    if (e.altKey) {
+        if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            jumpToChord(-1);
+            return;
+        }
+        if (e.key === "ArrowRight") {
+            e.preventDefault();
+            jumpToChord(1);
+            return;
+        }
+        if (e.key === "Backspace") {
+            e.preventDefault();
+            delMob();
+            return;
+        }
     }
 
     // Permitir navegación normal con flechas (sin Alt)
@@ -235,29 +246,55 @@ function insManual() {
   }
 }
 
-// NUEVA FUNCIÓN: Rastrea hacia atrás esquivando el espacio invisible
+// ------------------------------------------------------------------
+// FUNCIÓN PARA SALTAR DE ACORDE EN ACORDE (ALT + FLECHAS)
+// ------------------------------------------------------------------
+function jumpToChord(dir) {
+    const editor = document.getElementById('lyrics-editor');
+    const chords = Array.from(editor.querySelectorAll('.chord-chip'));
+    if (chords.length === 0) return;
+
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+
+    let currentIndex = -1;
+    let activeChord = getClosestChordNode();
+    
+    if (activeChord) {
+        currentIndex = chords.indexOf(activeChord);
+    }
+
+    let nextIndex = currentIndex + dir;
+    if (nextIndex >= chords.length) nextIndex = 0; // Vuelve al principio
+    if (nextIndex < 0) nextIndex = chords.length - 1; // Vuelve al final
+
+    const targetChord = chords[nextIndex];
+    
+    // Ponemos el cursor inmediatamente después del acorde objetivo
+    const range = document.createRange();
+    range.setStartAfter(targetChord);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    // Efecto visual: Hace parpadear el acorde para que sepas dónde estás parado
+    targetChord.style.transition = 'all 0.2s';
+    targetChord.style.transform = 'scale(1.2)';
+    setTimeout(() => { targetChord.style.transform = ''; }, 200);
+}
+
 function getClosestChordNode() {
     const sel = window.getSelection();
     if (!sel.rangeCount) return null;
     let node = sel.focusNode;
 
-    // Si estamos parados en el texto al lado del acorde
     if (node.nodeType === Node.TEXT_NODE) {
         let prev = node.previousSibling;
-        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) {
-            return prev;
-        }
-    } 
-    // Si estamos parados en el contenedor principal (div)
-    else if (node.nodeType === Node.ELEMENT_NODE) {
+        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) return prev;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
         let prev = node.childNodes[sel.focusOffset - 1];
-        // Si chocamos con el texto vacío (&#8203;), retrocedemos uno más
-        if (prev && prev.nodeType === Node.TEXT_NODE) {
-            prev = prev.previousSibling;
-        }
-        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) {
-            return prev;
-        }
+        if (prev && prev.nodeType === Node.TEXT_NODE) prev = prev.previousSibling;
+        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) return prev;
     }
     return null;
 }
