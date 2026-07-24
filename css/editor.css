@@ -73,7 +73,7 @@ header { background: rgba(0,0,0,0.4); }
   position: relative;
   display: inline-block;
   width: 0;
-  height: 40px; /* AUMENTADO: Crea un pilar más alto que empuja el renglón superior */
+  height: 44px; /* SUBIMOS EL PILAR: Esto aleja más el renglón de arriba para que no se pegue a la letra */
   vertical-align: baseline; 
   font-size: 0; 
   color: transparent; 
@@ -86,33 +86,49 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 8px; /* Aterriza el globito */
+  bottom: 12px; /* LEVANTAMOS EL GLOBO: 4 píxeles más arriba para que respire de la letra */
   left: 50%;
   transform: translateX(-50%);
   background-color: #0b1a1c;
   color: #4DB6AC;
   border: 1px solid #4DB6AC;
   border-radius: 12px;
-  padding: 3px 8px;
+  padding: 3px 7px;
   font-size: 11px; 
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
   transition: all 0.2s ease;
-  pointer-events: auto; /* Permite que el ::before reciba los clics del mouse */
+  pointer-events: auto; 
 }
 
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 3px; /* Aterriza el piquito */
+  bottom: 7px; /* Acomodamos el piquito a la nueva altura */
   left: 50%;
   transform: translateX(-50%);
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 5px solid #4DB6AC;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 4px solid #4DB6AC;
   z-index: 10;
   transition: all 0.2s ease;
+}
+
+/* ==========================================================
+   SOLUCIÓN PARA ACORDES AMONTONADOS ("Ac[Do]u[Mi]erdate...")
+   ========================================================== */
+.chord-chip:hover::before,
+.chord-chip.active::before {
+  z-index: 50; /* Cuando pasás el mouse o está naranja, se pone al frente de todos */
+}
+
+/* Si hay acordes pegados, el navegador los va escalonando hacia arriba automáticamente */
+.chord-chip + .chord-chip::before {
+  bottom: 25px; /* Si hay dos seguidos, el segundo sube un escalón para no pisar al primero */
+}
+.chord-chip + .chord-chip::after {
+  bottom: 20px;
 }
 
 /* ESTADO SELECCIONADO (NARANJA) */
@@ -120,8 +136,7 @@ header { background: rgba(0,0,0,0.4); }
   background-color: #e65100;
   color: #ffffff;
   border-color: #ffb74d;
-  transform: translateX(-50%) scale(1.15); /* Crece un poquito al seleccionarlo */
-  z-index: 20;
+  transform: translateX(-50%) scale(1.15); 
   box-shadow: 0 4px 8px rgba(230, 81, 0, 0.4);
 }
 
