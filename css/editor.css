@@ -56,12 +56,13 @@ header { background: rgba(0,0,0,0.4); }
 .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
 .result-item.active { background: var(--primary); color: white; }
 
-/* EDITOR VISUAL CON GLOBS */
+/* EL EDITOR VISUAL */
 #lyrics-editor {
   flex: 1; min-height: 450px; background: #000000; 
   border: 1px solid var(--glass-border); border-radius: 12px; 
   padding: 25px 25px 60px 25px; color: #ffffff; 
-  font-family: 'Consolas', monospace; font-size: 16px; line-height: 2.6; 
+  font-family: 'Consolas', monospace; font-size: 16px; 
+  line-height: 1.8; /* REDUCIDO: Las líneas sin acordes ahora se ven juntas y naturales */
   outline: none; overflow-y: auto; white-space: pre-wrap;
 }
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
@@ -72,14 +73,14 @@ header { background: rgba(0,0,0,0.4); }
   position: relative;
   display: inline-block;
   width: 0;
-  height: 35px; /* Crea el pilar vertical que empuja el renglón de arriba */
-  vertical-align: baseline; /* Se ancla perfecto a la letra sin cortarla */
+  height: 40px; /* AUMENTADO: Crea un pilar más alto que empuja el renglón superior */
+  vertical-align: baseline; 
   font-size: 0; 
   color: transparent; 
   overflow: visible;
   direction: ltr;
-  user-select: none; /* Evita que el mouse seleccione texto fantasma */
-  cursor: pointer; /* Muestra la manito al pasar el mouse */
+  user-select: none; 
+  cursor: pointer; 
 }
 
 .chord-chip::before {
