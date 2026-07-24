@@ -28,9 +28,8 @@
   </div>
 
   <div id="app" class="app-container">
-    <!-- NUEVA BARRA SUPERIOR (DOS FILAS) -->
+    <!-- BARRA SUPERIOR -->
     <header style="flex-direction: column; padding: 0;">
-      <!-- Fila 1: Título y Usuario -->
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 25px; border-bottom: 1px solid var(--glass-border); box-sizing: border-box;">
         <div style="display:flex; align-items:center; gap:12px">
           <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
@@ -41,7 +40,6 @@
           <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:10px; background:rgba(255,255,255,0.05)">SALIR</button>
         </div>
       </div>
-      <!-- Fila 2: Pestañas y Publicación -->
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 25px; box-sizing: border-box; background: rgba(0,0,0,0.2);">
         <div id="nav-tabs" style="display:flex; gap:20px">
            <button id="tab-songs" class="tab-btn active" onclick="switchMod('songs')">🎵 CANCIONERO</button>
@@ -61,7 +59,7 @@
         <div id="song-results-list" class="search-results"></div>
       </section>
 
-      <!-- COLUMNA 2: EDITOR + TECLADO PC -->
+      <!-- COLUMNA 2: EDITOR VISUAL -->
       <section class="glass-panel" style="overflow-y: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
           <label id="mode-text">MODO ACORDES</label>
@@ -74,10 +72,8 @@
         </div>
         
         <div style="display:flex; gap:15px; align-items: flex-start;">
-          <!-- Editor Visual -->
           <div id="lyrics-editor" contenteditable="true" spellcheck="false" placeholder="Elegí una canción para empezar a editar..." oninput="markUnsavedChanges()"></div>
           
-          <!-- Teclado Visual PC y Acordes Manuales -->
           <div id="acordesCol" style="width: 220px; flex-shrink: 0;">
              <div class="kbd">
                <label style="text-align:center;">Acordes Rápidos</label>
@@ -95,7 +91,6 @@
                <div class="key" style="margin-top:10px; text-align:center; background:rgba(255,82,82,0.1); color:var(--danger); border-color:var(--danger);" onclick="delMob()">Borrar Acorde</div>
              </div>
 
-             <!-- Caja Acordes Manuales -->
              <div class="manual-chord-box" style="margin-top: 15px; background: rgba(77, 182, 172, 0.05); border: 1px dashed var(--primary); border-radius: 12px; padding: 12px;">
                <label style="text-align: center;">Acorde Manual (Ej: Dosus9)</label>
                <input type="text" id="manual-chord-in" placeholder="Escribí acá..." style="text-align:center; margin-bottom: 8px;">
@@ -105,25 +100,47 @@
         </div>
       </section>
 
-      <!-- COLUMNA 3: METADATOS Y AUDIO -->
-      <section class="glass-panel">
-        <label>METADATOS</label>
+      <!-- COLUMNA 3: METADATOS COMPLETOS (RESTAURADA) -->
+      <section class="glass-panel" style="overflow-y: auto;">
+        <label>TÍTULO</label>
         <input type="text" id="m-title-in" readonly oninput="markUnsavedChanges()">
+        
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
           <div class="form-group"><label>TONO</label><select id="m-key-sel" onchange="markUnsavedChanges()"></select></div>
           <div class="form-group"><label>RITMO</label><input type="text" id="m-rhythm-in" oninput="markUnsavedChanges()"></div>
         </div>
-        <label>AUTOR</label><input type="text" id="m-artist-in" oninput="markUnsavedChanges()">
         
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div class="form-group"><label>AUTOR / ARTISTA</label><input type="text" id="m-artist-in" oninput="markUnsavedChanges()"></div>
+          <div class="form-group"><label>ÁLBUM</label><input type="text" id="m-album-in" oninput="markUnsavedChanges()"></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div class="form-group"><label>AÑO</label><input type="number" id="m-year-in" oninput="markUnsavedChanges()"></div>
+          <div class="form-group"><label>COPYRIGHT</label><input type="text" id="m-copyright-in" oninput="markUnsavedChanges()"></div>
+        </div>
+
+        <label>BIOGRAFÍA / RESEÑA</label>
+        <textarea id="m-biography-in" rows="2" style="background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 8px; color: white; font-size: 13px; margin-bottom: 10px; width: 100%; box-sizing: border-box; resize: none;" oninput="markUnsavedChanges()"></textarea>
+
+        <label>MOMENTOS LITÚRGICOS</label>
+        <div id="moments-container" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 15px;"></div>
+
+        <label>PARTITURA (LINK O SUBIR PDF)</label>
+        <div style="display: flex; gap: 5px;">
+          <input type="text" id="m-sheet-in" placeholder="Link de partitura..." oninput="markUnsavedChanges()" style="flex:1;">
+          <button class="btn btn-save" onclick="document.getElementById('fileInputSheet').click()" style="padding: 5px 10px;" title="Subir a Storage">📁</button>
+        </div>
+        <input type="file" id="fileInputSheet" accept=".pdf,image/*" style="display:none" onchange="uploadFile(this, 'partituras', 'm-sheet-in')">
+
         <label>AUDIO LINK O SUBIR MP3</label>
         <div style="display: flex; gap: 5px;">
           <input type="text" id="m-audio-in" placeholder="Link de audio..." oninput="updateAudioPreview(); markUnsavedChanges();" style="flex:1;">
-          <button class="btn btn-save" onclick="document.getElementById('fileInput').click()" style="padding: 5px 10px;" title="Subir a Firebase Storage">📁</button>
+          <button class="btn btn-save" onclick="document.getElementById('fileInputAudio').click()" style="padding: 5px 10px;" title="Subir a Storage">📁</button>
         </div>
-        <input type="file" id="fileInput" accept="audio/*" style="display:none" onchange="uploadAudioFile(this)">
+        <input type="file" id="fileInputAudio" accept="audio/*" style="display:none" onchange="uploadFile(this, 'audios', 'm-audio-in')">
         <small id="uploadStatus" style="color: var(--primary); display: block; margin-bottom: 10px;"></small>
 
-        <!-- Mini Reproductor -->
         <div id="audioPreviewContainer" style="display: none; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
           <label style="font-size: 10px;">VISTA PREVIA</label>
           <div id="playerWrapper"></div>
@@ -133,16 +150,10 @@
       </section>
     </main>
 
-    <!-- Módulo Anuncios (Ejemplo vacío) -->
-    <main id="mod-announcements" class="main-grid" style="display:none;">
-      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Anuncios</h2></section>
-    </main>
-    <main id="mod-prayers" class="main-grid" style="display:none;">
-      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Oraciones</h2></section>
-    </main>
-    <main id="mod-scripts" class="main-grid" style="display:none;">
-      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Guiones</h2></section>
-    </main>
+    <!-- MÓDULOS EN CONSTRUCCIÓN -->
+    <main id="mod-announcements" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📢 Anuncios</h2></section></main>
+    <main id="mod-prayers" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">🙏 Oraciones</h2></section></main>
+    <main id="mod-scripts" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📜 Guiones</h2></section></main>
   </div>
 
   <!-- TECLADO MÓVIL (OCULTO EN PC) -->
@@ -174,6 +185,7 @@
 
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/render.js"></script> 
   <script src="js/editor.js"></script>
 </body>
 </html>
