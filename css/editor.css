@@ -56,25 +56,13 @@ header { background: rgba(0,0,0,0.4); }
 .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
 .result-item.active { background: var(--primary); color: white; }
 
-/* 🚀 1. AJUSTE DE TECHO PARA EL EDITOR (INTERLINEADO) */
+/* 🚀 1. EDITOR Y LÍNEA DE TECHO UNIFICADA */
 #lyrics-editor {
   flex: 1; min-height: 450px; background: #000000; 
   border: 1px solid var(--glass-border); border-radius: 12px; 
   padding: 25px 25px 60px 25px; color: #ffffff; 
   font-family: 'Consolas', monospace; font-size: 16px; 
-  line-height: 2.5 !important; 
-  outline: none; overflow-y: auto; white-space: pre-wrap;
-}
-#lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
-#lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
-
-/* 🚀 1. INTERLINEADO JUSTO PARA TRABAJAR */
-#lyrics-editor {
-  flex: 1; min-height: 450px; background: #000000; 
-  border: 1px solid var(--glass-border); border-radius: 12px; 
-  padding: 25px 25px 60px 25px; color: #ffffff; 
-  font-family: 'Consolas', monospace; font-size: 16px; 
-  line-height: 2.0 !important; 
+  line-height: 2.2 !important; /* Equilibrio perfecto para la escalera de acordes */
   outline: none; overflow-y: auto; white-space: pre-wrap;
 }
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
@@ -84,7 +72,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip {
   position: relative;
   display: inline-block;
-  width: 0; /* No empuja las letras */
+  width: 0; 
   height: 0;
   vertical-align: baseline; 
   overflow: visible;
@@ -102,7 +90,7 @@ header { background: rgba(0,0,0,0.4); }
   border: 1px solid #4DB6AC;
   border-radius: 12px;
   padding: 1px 5px;
-  font-size: 10px; /* Tamaño optimizado */
+  font-size: 10px; 
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
@@ -184,7 +172,7 @@ header { background: rgba(0,0,0,0.4); }
 .key { padding: 8px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; font-size: 13px; background: rgba(255,255,255,0.05); text-align: center; transition: 0.2s; color: white; }
 .key:hover { background: var(--primary); color: black; }
 
-/* TECLADO MÓVIL (CELULAR) */
+/* TECLADO MÓVIL (CELULAR) - Ajustado para que no tape la letra abajo */
 #mobileChordBar { display: none; }
 @media (max-width: 768px) {
   #acordesCol { display: none !important; } 
@@ -198,7 +186,9 @@ header { background: rgba(0,0,0,0.4); }
     border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; font-weight: bold; cursor: pointer;
   }
   #mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
-  #lyrics-editor { margin-bottom: 100px; }
+  
+  /* MARGEN EXTRA EN CELULAR PARA QUE LA BARRA MÓVIL NO TAPE EL FINAL DEL TEXTO */
+  #lyrics-editor { margin-bottom: 140px !important; }
 }
 
 label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; text-transform: uppercase; }
