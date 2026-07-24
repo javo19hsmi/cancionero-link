@@ -70,18 +70,25 @@ header { background: rgba(0,0,0,0.4); }
 
 /* 🚀 1. INTERLINEADO JUSTO PARA TRABAJAR */
 #lyrics-editor {
-  line-height: 2.0 !important;
+  flex: 1; min-height: 450px; background: #000000; 
+  border: 1px solid var(--glass-border); border-radius: 12px; 
+  padding: 25px 25px 60px 25px; color: #ffffff; 
+  font-family: 'Consolas', monospace; font-size: 16px; 
+  line-height: 2.0 !important; 
+  outline: none; overflow-y: auto; white-space: pre-wrap;
 }
+#lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
+#lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
 
 /* 🪜 2. GLOBLITOS SIN ESTIRAR LA PALABRA */
 .chord-chip {
   position: relative;
   display: inline-block;
-  width: 0; /* ⬅️ VUELVE A CERO: No empuja las letras */
+  width: 0; /* No empuja las letras */
   height: 0;
-  vertical-align: baseline;
+  vertical-align: baseline; 
   overflow: visible;
-  cursor: pointer;
+  cursor: pointer; 
 }
 
 .chord-chip::before {
@@ -95,33 +102,36 @@ header { background: rgba(0,0,0,0.4); }
   border: 1px solid #4DB6AC;
   border-radius: 12px;
   padding: 1px 5px;
-  font-size: 10px; /* Un toque más chico para que entre mejor */
+  font-size: 10px; /* Tamaño optimizado */
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
+  transition: all 0.2s ease;
+  pointer-events: auto; 
 }
 
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 6px;
+  bottom: 6px; 
   left: 50%;
   transform: translateX(-50%);
   border-left: 3px solid transparent;
   border-right: 3px solid transparent;
   border-top: 3px solid #4DB6AC;
   z-index: 10;
+  transition: all 0.2s ease;
 }
 
-/*  escalera NIVEL 2 */
+/* 🚀 ESCALERA NIVEL 2 (Si un acorde sigue a otro) */
 .chord-chip + .chord-chip::before {
-  bottom: 24px;
+  bottom: 24px; 
 }
 .chord-chip + .chord-chip::after {
-  bottom: 20px;
+  bottom: 20px; 
 }
 
-/* escalera NIVEL 3 */
+/* 🚀 ESCALERA NIVEL 3 (Si hay tres seguidos) */
 .chord-chip + .chord-chip + .chord-chip::before {
   bottom: 38px;
 }
