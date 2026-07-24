@@ -2,9 +2,20 @@ let allSongs = [];
 let currentSong = null;
 let globalVer = "0";
 let isEditMode = false;
+let hasUnsavedChanges = false;
+
+// La misma lista de momentos de tu Script original
+const MOMENTS_LIST = [
+  "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
+  "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
+  "Padre Nuestro/Tuyo es el Reino", "Cordero de Dios", "Comunión", "Meditación", "Salida",
+  "Virgen María", "Espíritu Santo", "Animación", "Adoración Eucarística",
+  "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés","Santo Rosario",
+  "Via Crucis", "Pesebre", "Juveniles", "Acción de Gracia", "Misioneros / Vocacionales",
+  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Varios"
+];
 
 function initApp() {
-  // 1. Cargar el selector de Tonos
   const sel = document.getElementById('m-key-sel');
   if (sel) {
     sel.innerHTML = '<option value="">Sin tono</option>';
@@ -37,7 +48,10 @@ function filterSongs() {
     const div = document.createElement('div'); 
     div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
     div.innerText = s.title; 
-    div.onclick = () => loadSong(s); 
+    div.onclick = () => {
+        if (hasUnsavedChanges && !confirm("Tenés cambios sin guardar. ¿Querés salir perdiendo los cambios?")) return;
+        loadSong(s);
+    }; 
     res.appendChild(div);
   });
 }
@@ -45,22 +59,99 @@ function filterSongs() {
 function loadSong(s) {
   currentSong = JSON.parse(JSON.stringify(s));
   
-  // Llenar metadatos
+  // Cargar TODOS los metadatos
   document.getElementById('m-title-in').value = s.title || "";
-  document.getElementById('m-artist-in').value = s.artist || "";
   document.getElementById('m-key-sel').value = s.key || "";
   document.getElementById('m-rhythm-in').value = s.rhythm || "";
+  document.getElementById('m-artist-in').value = s.artist || "";
+  document.getElementById('m-album-in').value = s.album || "";
+  document.getElementById('m-year-in').value = s.year || "";
+  document.getElementById('m-copyright-in').value = s.copyright || "";
+  document.getElementById('m-biography-in').value = s.biography || "";
+  document.getElementById('m-sheet-in').value = s.sheetMusicLink || "";
   document.getElementById('m-audio-in').value = s.link || "";
+
+  // Renderizar chips de Momentos
+  renderMomentsChips(s.moments || ["Varios"]);
 
   // Render Visual
   const editor = document.getElementById('lyrics-editor');
   editor.innerHTML = Render.toVisual(usToEs(s.lyrics));
   
   isEditMode = false; 
+  hasUnsavedChanges = false;
+  
   document.getElementById('mode-text').innerText = "MODO ACORDES";
   if (document.getElementById('pencil-btn')) document.getElementById('pencil-btn').style.color = "#555";
   
+  updateAudioPreview();
   filterSongs();
+}
+
+function renderMomentsChips(selectedArr) {
+  const sel = new Set((Array.isArray(selectedArr) ? selectedArr : []).filter(Boolean));
+  if (sel.size === 0) sel.add("Varios");
+  const el = document.getElementById("moments-container");
+  el.innerHTML = "";
+  
+  MOMENTS_LIST.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "chip" + (sel.has(m) ? " on" : "");
+    d.textContent = m;
+    d.dataset.value = m;
+    d.onclick = () => {
+      d.classList.toggle("on");
+      markUnsavedChanges();
+      const cur = getSelectedMoments();
+      if (cur.length === 0) d.classList.add("on"); // Siempre mínimo 1
+    };
+    el.appendChild(d);
+  });
+}
+
+function getSelectedMoments() {
+  const selected = [];
+  document.querySelectorAll("#moments-container .chip.on").forEach(ch => selected.push(ch.dataset.value));
+  return selected.length ? selected : ["Varios"];
+}
+
+function markUnsavedChanges() {
+    hasUnsavedChanges = true;
+}
+
+function applyPermissions(permissionsArray) {
+    const permMap = { 'canciones': 'tab-songs', 'anuncios': 'tab-announcements', 'oraciones': 'tab-prayers', 'guiones': 'tab-scripts' };
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.style.display = 'none');
+    
+    let firstTab = null;
+    permissionsArray.forEach(perm => {
+        if (permMap[perm]) {
+            const btn = document.getElementById(permMap[perm]);
+            if (btn) {
+                btn.style.display = 'block';
+                if (!firstTab) firstTab = permMap[perm];
+            }
+        }
+    });
+
+    if (permissionsArray.includes('super_admin')) {
+        document.getElementById('global-pub-btn').style.display = 'block';
+        document.getElementById('pencil-btn').style.display = 'block';
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.style.display = 'block');
+    } else {
+        document.getElementById('global-pub-btn').style.display = 'none';
+        document.getElementById('pencil-btn').style.display = 'none';
+    }
+
+    if (firstTab) document.getElementById(firstTab).click();
+}
+
+function switchMod(mod) {
+  document.querySelectorAll('main').forEach(m => m.style.display = 'none');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const targetMain = document.getElementById(`mod-${mod}`);
+  if (targetMain) targetMain.style.display = 'grid';
+  if(event && event.target) event.target.classList.add('active');
 }
 
 function toggleEditMode() {
@@ -82,30 +173,33 @@ function toggleEditMode() {
 
 function setupEditorListeners() {
   const area = document.getElementById('lyrics-editor');
-  
-  area.addEventListener('beforeinput', (e) => {
-    if (!isEditMode) e.preventDefault(); 
-  });
+  area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
 
   area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
-
     if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
     e.preventDefault(); 
-
     const k = e.key.toLowerCase();
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
     
-    if (rootMap[k]) {
-        insChordVisual(rootMap[k]);
-    } else if (["#", "b", "-", "7"].includes(k)) {
-        modifyLastChordVisual(k);
-    } else if (e.key === "Backspace" || e.key === "Delete") {
-        deleteLastChordVisual();
-    }
+    if (rootMap[k]) { insMob(rootMap[k]); } 
+    else if (["#", "b", "-", "7"].includes(k)) { modMob(k); } 
+    else if (e.key === "Backspace" || e.key === "Delete") { delMob(); }
   });
+}
+
+function toggleAcordes() {
+  const col = document.getElementById("acordesCol");
+  const btn = document.getElementById("toggleAcordesBtn");
+  if (col.style.display === "none") {
+    col.style.display = "block";
+    btn.innerText = "Ocultar Teclado";
+  } else {
+    col.style.display = "none";
+    btn.innerText = "Mostrar Teclado";
+  }
 }
 
 function insChordVisual(chordText) {
@@ -113,9 +207,21 @@ function insChordVisual(chordText) {
   area.focus();
   const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}">${chordText}</span>\u200B`;
   document.execCommand('insertHTML', false, html);
+  markUnsavedChanges();
+  if(navigator.vibrate) navigator.vibrate(10); 
 }
 
-function modifyLastChordVisual(mod) {
+function insMob(chordText) { insChordVisual(chordText); }
+
+function insManual() {
+  const v = document.getElementById('manual-chord-in').value.trim();
+  if (v) { 
+    insChordVisual(v); 
+    document.getElementById('manual-chord-in').value = ""; 
+  }
+}
+
+function modMob(mod) {
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
     let node = selection.focusNode;
@@ -127,22 +233,21 @@ function modifyLastChordVisual(mod) {
         if (!m) return;
         
         let root = m[1], acc = m[2] || "", minor = m[3] || "", sev = m[4] || "";
-        
         if (mod === "#") acc = (acc === "#") ? "" : "#";
         else if (mod === "b") acc = (acc === "b") ? "" : "b";
         else if (mod === "-") minor = (minor === "m") ? "" : "m";
         else if (mod === "7") sev = (sev === "7") ? "" : "7";
-        
         if (acc === '#') acc = (mod === 'b') ? 'b' : '#';
         if (acc === 'b') acc = (mod === '#') ? '#' : 'b';
         
         const newChord = root + acc + minor + sev;
         prevNode.setAttribute('data-chord', newChord);
         prevNode.innerText = newChord; 
+        markUnsavedChanges();
     }
 }
 
-function deleteLastChordVisual() {
+function delMob() {
     const selection = window.getSelection();
     if (!selection.rangeCount) return;
     let node = selection.focusNode;
@@ -150,6 +255,7 @@ function deleteLastChordVisual() {
 
     if (prevNode && prevNode.classList && prevNode.classList.contains('chord-chip')) {
         prevNode.remove();
+        markUnsavedChanges();
     }
 }
 
@@ -159,26 +265,75 @@ function getPreviousNode(node, offset) {
     return null;
 }
 
+async function uploadFile(input, folder, targetInputId) {
+  const file = input.files[0];
+  if (!file || !currentSong) return;
+
+  const status = document.getElementById("uploadStatus");
+  const linkInput = document.getElementById(targetInputId);
+  
+  status.textContent = "⏳ Subiendo archivo a Storage...";
+  setBusy(true, "Subiendo archivo...");
+
+  try {
+    const fileName = `${currentSong.id}_${Date.now()}_${file.name}`;
+    const ref = storage.ref(`canciones/${folder}/${fileName}`);
+    await ref.put(file);
+    const downloadUrl = await ref.getDownloadURL();
+    
+    linkInput.value = downloadUrl;
+    status.textContent = "✅ Archivo subido con éxito.";
+    markUnsavedChanges();
+    if(folder === 'audios') updateAudioPreview();
+  } catch (error) {
+    status.textContent = `❌ Error: ${error.message}`;
+  } finally {
+    setBusy(false);
+  }
+}
+
+function updateAudioPreview() {
+  const link = document.getElementById("m-audio-in").value.trim();
+  const container = document.getElementById("audioPreviewContainer");
+  const wrapper = document.getElementById("playerWrapper");
+
+  if (!link) { container.style.display = "none"; wrapper.innerHTML = ""; return; }
+
+  container.style.display = "block";
+  if (link.includes("youtube.com") || link.includes("youtu.be")) {
+    let videoId = link.includes("v=") ? link.split("v=")[1].split("&")[0] : link.split("/").pop().split("?")[0];
+    wrapper.innerHTML = `<iframe width="100%" height="80" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
+  } else {
+    wrapper.innerHTML = `<audio controls style="width:100%; height: 30px;"><source src="${link}"></audio>`;
+  }
+}
+
 async function saveBorrador() {
   if (!currentSong) return; 
   setBusy(true, "Guardando...");
   
-  // Extraemos el texto crudo según el modo (Visual o Maestro)
   const editorArea = document.getElementById('lyrics-editor');
   const rawText = isEditMode ? editorArea.innerText : Render.toRaw(editorArea);
 
   const upd = { 
     ...currentSong, 
     lyrics: esToUs(rawText), 
-    artist: document.getElementById('m-artist-in').value, 
     key: document.getElementById('m-key-sel').value, 
     rhythm: document.getElementById('m-rhythm-in').value, 
-    link: document.getElementById('m-audio-in').value 
+    artist: document.getElementById('m-artist-in').value, 
+    album: document.getElementById('m-album-in').value, 
+    year: parseInt(document.getElementById('m-year-in').value) || "", 
+    copyright: document.getElementById('m-copyright-in').value, 
+    biography: document.getElementById('m-biography-in').value, 
+    sheetMusicLink: document.getElementById('m-sheet-in').value, 
+    link: document.getElementById('m-audio-in').value,
+    moments: getSelectedMoments()
   };
   
   try { 
     await db.ref(`canciones_borrador/${currentSong.id}`).update(upd); 
-    alert("✅ Guardado en Borrador."); 
+    hasUnsavedChanges = false;
+    alert("✅ Cambios guardados en Borrador."); 
   } catch (e) { 
     alert("Error al guardar."); 
   } 
@@ -186,7 +341,7 @@ async function saveBorrador() {
 }
 
 async function confirmPublish() {
-  if (!confirm("🚀 ¿Publicar Versión Oficial?")) return; 
+  if (!confirm("🚀 ¿Publicar Versión Oficial para todos los usuarios?")) return; 
   setBusy(true, "Publicando...");
   try {
     const snap = await db.ref('canciones_borrador').get();
@@ -196,9 +351,9 @@ async function confirmPublish() {
     
     await db.ref('canciones_base').set(snap.val()); 
     await db.ref('version').set(v); 
-    alert("🎉 Éxito: v" + v);
+    alert("🎉 Publicación Exitosa. Nueva versión: v" + v);
   } catch (e) { 
-    alert("Error."); 
+    alert("Error en la publicación."); 
   } 
   setBusy(false);
 }
@@ -209,11 +364,4 @@ function esToUs(t) { return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { const r
 function setBusy(on, t) { 
   document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none'; 
   document.getElementById('busy-text').innerText = t || "Cargando..."; 
-}
-
-function switchMod(mod) {
-  document.querySelectorAll('main').forEach(m => m.style.display = 'none');
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById(`mod-${mod}`).style.display = 'grid';
-  event.target.classList.add('active');
 }
