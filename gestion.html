@@ -3,89 +3,166 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portal Maestro - Gestión Cancionero</title>
+  <title>Portal de Edición - Gestión Parroquial</title>
+  
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+  
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
   <link rel="stylesheet" href="css/editor.css" />
 </head>
 <body>
 
+  <!-- PANTALLA DE INGRESO -->
   <div id="login-overlay">
     <div class="login-card">
-      <img src="https://javo19hsmi.github.io/cancionero-link/assets/images/Logo_Ministerio_Musica.png" height="100" style="margin-bottom:20px" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2662/2662361.png'">
-      <h2 style="margin:0">Portal Maestro</h2>
+      <img src="https://javo19hsmi.github.io/cancionero-link/assets/images/Logo_Ministerio_Musica.png" height="100" style="margin-bottom:20px" alt="Logo">
+      <h2 style="margin:0">Portal de Edición</h2>
       <p style="color:#666; font-size:13px">Gestión Parroquial Unificada</p><br><br>
       <button class="btn btn-save" id="login-trigger" style="width:100%; display:flex; align-items:center; justify-content:center; gap:10px">
-        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16"> Entrar con Google
+        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="16" alt="Google"> Entrar con Google
       </button>
     </div>
   </div>
 
   <div id="app" class="app-container">
-    <header>
-      <div style="display:flex; align-items:center; gap:12px">
-        <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
-        <b style="font-size:14px; letter-spacing:1px">PORTAL MAESTRO</b>
+    <!-- NUEVA BARRA SUPERIOR (DOS FILAS) -->
+    <header style="flex-direction: column; padding: 0;">
+      <!-- Fila 1: Título y Usuario -->
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 25px; border-bottom: 1px solid var(--glass-border); box-sizing: border-box;">
+        <div style="display:flex; align-items:center; gap:12px">
+          <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
+          <b style="font-size:14px; letter-spacing:1px">PORTAL DE EDICIÓN</b>
+        </div>
+        <div style="display:flex; gap:15px; align-items:center">
+          <span id="header-email" style="font-size:11px; color:#666"></span>
+          <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:10px; background:rgba(255,255,255,0.05)">SALIR</button>
+        </div>
       </div>
-      <div style="display:flex; gap:25px; align-items:center">
+      <!-- Fila 2: Pestañas y Publicación -->
+      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 25px; box-sizing: border-box; background: rgba(0,0,0,0.2);">
         <div id="nav-tabs" style="display:flex; gap:20px">
            <button id="tab-songs" class="tab-btn active" onclick="switchMod('songs')">🎵 CANCIONERO</button>
            <button id="tab-announcements" class="tab-btn" onclick="switchMod('announcements')">📢 ANUNCIOS</button>
            <button id="tab-prayers" class="tab-btn" onclick="switchMod('prayers')">🙏 ORACIONES</button>
            <button id="tab-scripts" class="tab-btn" onclick="switchMod('scripts')">📜 GUIONES</button>
         </div>
-        <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
-        <div style="border-left:1px solid var(--glass-border); height:25px"></div>
-        <span id="header-email" style="font-size:11px; color:#666"></span>
-        <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:10px; background:rgba(255,255,255,0.05)">SALIR</button>
+        <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
       </div>
     </header>
 
     <main id="mod-songs" class="main-grid">
-      <!-- PANEL BUSCADOR -->
+      <!-- COLUMNA 1: BUSCADOR -->
       <section class="glass-panel">
         <label>BUSCAR CANCIÓN</label>
         <input type="text" id="song-search-box" placeholder="Título o frase..." oninput="filterSongs()">
         <div id="song-results-list" class="search-results"></div>
       </section>
 
-      <!-- PANEL EDITOR VISUAL -->
-      <section class="glass-panel">
+      <!-- COLUMNA 2: EDITOR + TECLADO PC -->
+      <section class="glass-panel" style="overflow-y: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
           <label id="mode-text">MODO ACORDES</label>
-          <button id="pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleEditMode()" title="Lápiz Maestro">
-            <span class="material-symbols-outlined" style="font-size:20px">edit</span>
-          </button>
+          <div style="display:flex; gap:8px;">
+            <button id="toggleAcordesBtn" class="btn" style="padding:5px 10px; font-size:11px; background: rgba(255,255,255,0.05); color: var(--text);" onclick="toggleAcordes()">Ocultar Teclado</button>
+            <button id="pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleEditMode()" title="Lápiz Maestro">
+              <span class="material-symbols-outlined" style="font-size:20px">edit</span>
+            </button>
+          </div>
         </div>
         
-        <div id="lyrics-editor" contenteditable="true" spellcheck="false" placeholder="Elegí una canción para empezar a editar..."></div>
-        
-        <div style="margin-top:10px; font-size:11px; color:#777; text-align:center; padding: 10px; background: rgba(255,255,255,0.02); border-radius: 8px;">
-          <b>Atajos:</b> <span style="color:var(--primary)">D</span>=Do | <span style="color:var(--primary)">R</span>=Re | <span style="color:var(--primary)">M</span>=Mi | <span style="color:var(--primary)">F</span>=Fa | <span style="color:var(--primary)">S</span>=Sol | <span style="color:var(--primary)">L</span>=La | <span style="color:var(--primary)">I</span>=Si <br>
-          <i>Modificadores:</i> <b>-</b> (menor) | <b>#</b> (sostenido) | <b>b</b> (bemol) | <b>7</b> (séptima) | <b>Retroceso</b> (borrar)
+        <div style="display:flex; gap:15px; align-items: flex-start;">
+          <!-- Editor Visual -->
+          <div id="lyrics-editor" contenteditable="true" spellcheck="false" placeholder="Elegí una canción para empezar a editar..." oninput="markUnsavedChanges()"></div>
+          
+          <!-- Teclado Visual PC y Acordes Manuales -->
+          <div id="acordesCol" style="width: 220px; flex-shrink: 0;">
+             <div class="kbd">
+               <label style="text-align:center;">Acordes Rápidos</label>
+               <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                 <div class="key" onclick="insMob('Do')">Do</div><div class="key" onclick="insMob('Re')">Re</div>
+                 <div class="key" onclick="insMob('Mi')">Mi</div><div class="key" onclick="insMob('Fa')">Fa</div>
+                 <div class="key" onclick="insMob('Sol')">Sol</div><div class="key" onclick="insMob('La')">La</div>
+                 <div class="key" style="grid-column: span 2;" onclick="insMob('Si')">Si</div>
+               </div>
+               <label style="text-align:center; margin-top:10px;">Modificadores</label>
+               <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                 <div class="key" onclick="modMob('#')">#</div><div class="key" onclick="modMob('b')">b</div>
+                 <div class="key" onclick="modMob('m')">m</div><div class="key" onclick="modMob('7')">7</div>
+               </div>
+               <div class="key" style="margin-top:10px; text-align:center; background:rgba(255,82,82,0.1); color:var(--danger); border-color:var(--danger);" onclick="delMob()">Borrar Acorde</div>
+             </div>
+
+             <!-- Caja Acordes Manuales -->
+             <div class="manual-chord-box" style="margin-top: 15px; background: rgba(77, 182, 172, 0.05); border: 1px dashed var(--primary); border-radius: 12px; padding: 12px;">
+               <label style="text-align: center;">Acorde Manual (Ej: Dosus9)</label>
+               <input type="text" id="manual-chord-in" placeholder="Escribí acá..." style="text-align:center; margin-bottom: 8px;">
+               <button class="btn btn-save" style="width:100%; font-size:11px;" onclick="insManual()">INSERTAR</button>
+             </div>
+          </div>
         </div>
       </section>
 
-      <!-- PANEL METADATOS (Restaurado) -->
+      <!-- COLUMNA 3: METADATOS Y AUDIO -->
       <section class="glass-panel">
         <label>METADATOS</label>
-        <input type="text" id="m-title-in" readonly>
+        <input type="text" id="m-title-in" readonly oninput="markUnsavedChanges()">
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
-          <div class="form-group"><label>TONO</label><select id="m-key-sel"></select></div>
-          <div class="form-group"><label>RITMO</label><input type="text" id="m-rhythm-in"></div>
+          <div class="form-group"><label>TONO</label><select id="m-key-sel" onchange="markUnsavedChanges()"></select></div>
+          <div class="form-group"><label>RITMO</label><input type="text" id="m-rhythm-in" oninput="markUnsavedChanges()"></div>
         </div>
-        <label>AUTOR</label><input type="text" id="m-artist-in">
-        <label>AUDIO LINK</label><input type="text" id="m-audio-in">
-        <button class="btn btn-save" style="width:100%; margin-top:10px" onclick="saveBorrador()">GUARDAR BORRADOR 💾</button>
+        <label>AUTOR</label><input type="text" id="m-artist-in" oninput="markUnsavedChanges()">
+        
+        <label>AUDIO LINK O SUBIR MP3</label>
+        <div style="display: flex; gap: 5px;">
+          <input type="text" id="m-audio-in" placeholder="Link de audio..." oninput="updateAudioPreview(); markUnsavedChanges();" style="flex:1;">
+          <button class="btn btn-save" onclick="document.getElementById('fileInput').click()" style="padding: 5px 10px;" title="Subir a Firebase Storage">📁</button>
+        </div>
+        <input type="file" id="fileInput" accept="audio/*" style="display:none" onchange="uploadAudioFile(this)">
+        <small id="uploadStatus" style="color: var(--primary); display: block; margin-bottom: 10px;"></small>
+
+        <!-- Mini Reproductor -->
+        <div id="audioPreviewContainer" style="display: none; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-bottom: 10px;">
+          <label style="font-size: 10px;">VISTA PREVIA</label>
+          <div id="playerWrapper"></div>
+        </div>
+
+        <button class="btn btn-save" style="width:100%; margin-top:auto" onclick="saveBorrador()">GUARDAR CAMBIOS 💾</button>
       </section>
     </main>
 
-    <main id="mod-announcements" class="main-grid" style="display:none"><div class="glass-panel" style="grid-column: span 3"><h2>📢 Anuncios</h2><p>En construcción...</p></div></main>
-    <main id="mod-prayers" class="main-grid" style="display:none"><div class="glass-panel" style="grid-column: span 3"><h2>🙏 Oraciones</h2><p>En construcción...</p></div></main>
-    <main id="mod-scripts" class="main-grid" style="display:none"><div class="glass-panel" style="grid-column: span 3"><h2>📜 Guiones</h2><p>En construcción...</p></div></main>
+    <!-- Módulo Anuncios (Ejemplo vacío) -->
+    <main id="mod-announcements" class="main-grid" style="display:none;">
+      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Anuncios</h2></section>
+    </main>
+    <main id="mod-prayers" class="main-grid" style="display:none;">
+      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Oraciones</h2></section>
+    </main>
+    <main id="mod-scripts" class="main-grid" style="display:none;">
+      <section class="glass-panel"><h2 style="text-align:center;">Módulo de Guiones</h2></section>
+    </main>
+  </div>
+
+  <!-- TECLADO MÓVIL (OCULTO EN PC) -->
+  <div id="mobileChordBar">
+    <div class="mb-row">
+      <div class="mb-btn btn-root" onclick="insMob('Do')">Do</div>
+      <div class="mb-btn btn-root" onclick="insMob('Re')">Re</div>
+      <div class="mb-btn btn-root" onclick="insMob('Mi')">Mi</div>
+      <div class="mb-btn btn-root" onclick="insMob('Fa')">Fa</div>
+      <div class="mb-btn btn-root" onclick="insMob('Sol')">Sol</div>
+      <div class="mb-btn btn-root" onclick="insMob('La')">La</div>
+      <div class="mb-btn btn-root" onclick="insMob('Si')">Si</div>
+    </div>
+    <div class="mb-row">
+      <div class="mb-btn btn-mod" onclick="modMob('#')">#</div>
+      <div class="mb-btn btn-mod" onclick="modMob('b')">b</div>
+      <div class="mb-btn btn-mod" onclick="modMob('m')">m</div>
+      <div class="mb-btn btn-mod" onclick="modMob('7')">7</div>
+      <div class="mb-btn btn-action" style="color:var(--danger);" onclick="delMob()">⌫</div>
+    </div>
   </div>
 
   <div id="busy-overlay">
@@ -95,10 +172,8 @@
     </div>
   </div>
 
-  <!-- Scripts -->
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
-  <script src="js/render.js"></script> 
   <script src="js/editor.js"></script>
 </body>
 </html>
