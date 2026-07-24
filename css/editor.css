@@ -1,32 +1,51 @@
 :root {
-  --primary: #4DB6AC; --primary-dark: #004D40; --bg: #0A0A0B;
-  --card-bg: rgba(255, 255, 255, 0.04); --glass-border: rgba(255, 255, 255, 0.12);
-  --text: #E0E0E0; --danger: #ff5252; --warning: #ffa726;
+  --primary: #4DB6AC; 
+  --primary-dark: #004D40; 
+  --bg: #0A0A0B;
+  --card-bg: rgba(255, 255, 255, 0.04); 
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --text: #E0E0E0; 
+  --danger: #ff5252; 
+  --warning: #ffa726;
 }
 
 body {
-  margin: 0; font-family: 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text);
-  height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  margin: 0; 
+  font-family: 'Segoe UI', Roboto, sans-serif; 
+  background: var(--bg); 
+  color: var(--text);
+  height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  overflow: hidden;
 }
 
 .app-container { display: none; flex-direction: column; height: 100vh; }
 
-header {
-  padding: 10px 25px; display: flex; justify-content: space-between; align-items: center;
-  border-bottom: 1px solid var(--glass-border); background: rgba(0,0,0,0.4);
-}
+header { background: rgba(0,0,0,0.4); }
 
 .main-grid {
-  display: grid; grid-template-columns: 280px 1fr 320px; /* ¡Restaurado a 3 columnas! */
-  gap: 15px; padding: 15px; flex: 1; overflow: hidden;
+  display: grid; 
+  grid-template-columns: 280px 1fr 320px; 
+  gap: 15px; 
+  padding: 15px; 
+  flex: 1; 
+  overflow: hidden;
 }
 
-@media (max-width: 1100px) { .main-grid { grid-template-columns: 1fr; overflow-y: auto; } }
+@media (max-width: 1100px) { 
+  .main-grid { grid-template-columns: 1fr; overflow-y: auto; } 
+}
 
 .glass-panel { 
-  background: var(--card-bg); backdrop-filter: blur(15px); 
-  border: 1px solid var(--glass-border); border-radius: 20px;
-  display: flex; flex-direction: column; padding: 15px; overflow: hidden;
+  background: var(--card-bg); 
+  backdrop-filter: blur(15px); 
+  border: 1px solid var(--glass-border); 
+  border-radius: 20px;
+  display: flex; 
+  flex-direction: column; 
+  padding: 15px; 
+  overflow: hidden;
 }
 
 .search-results { flex: 1; overflow-y: auto; margin-top: 10px; }
@@ -37,9 +56,9 @@ header {
 .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
 .result-item.active { background: var(--primary); color: white; }
 
-/* 🚀 EL NUEVO EDITOR VISUAL */
+/* EDITOR VISUAL CON GLOBS */
 #lyrics-editor {
-  flex: 1; min-height: 550px; background: #000000; 
+  flex: 1; min-height: 450px; background: #000000; 
   border: 1px solid var(--glass-border); border-radius: 12px; 
   padding: 25px 25px 60px 25px; color: #ffffff; 
   font-family: 'Consolas', monospace; font-size: 16px; line-height: 2.6; 
@@ -48,7 +67,6 @@ header {
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
 #lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
 
-/* ✨ ESTILO DE LOS GLOBITOS DE ACORDES */
 .chord-chip {
   display: inline-block; background: var(--primary); color: #000000;
   font-weight: 800; font-family: 'Segoe UI', sans-serif; font-size: 12px;
@@ -58,6 +76,28 @@ header {
   box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s ease;
 }
 .chord-chip:hover { background: var(--warning); transform: translateY(-2px); }
+
+/* TECLADOS VISUALES (PC) */
+.kbd { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; background: rgba(255,255,255,0.02); }
+.key { padding: 8px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; font-size: 13px; background: rgba(255,255,255,0.05); text-align: center; transition: 0.2s; color: white; }
+.key:hover { background: var(--primary); color: black; }
+
+/* TECLADO MÓVIL (CELULAR) */
+#mobileChordBar { display: none; }
+@media (max-width: 768px) {
+  #acordesCol { display: none !important; } /* Oculta el de PC en el celu */
+  #mobileChordBar {
+    display: block; position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
+    border-top: 1px solid var(--glass-border); padding: 8px; z-index: 1000;
+  }
+  #mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
+  #mobileChordBar .mb-btn {
+    flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
+    border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; font-weight: bold; cursor: pointer;
+  }
+  #mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
+  #lyrics-editor { margin-bottom: 100px; }
+}
 
 label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; text-transform: uppercase; }
 input, select {
@@ -73,6 +113,4 @@ input, select {
 #login-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
 .login-card { text-align: center; padding: 40px; border-radius: 30px; max-width: 400px; width: 90%; background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
 #busy-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
 @keyframes spin { to { transform: rotate(360deg); } }
