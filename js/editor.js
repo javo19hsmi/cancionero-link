@@ -340,17 +340,57 @@ function jumpToChord(dir) {
     const chords = Array.from(editor.querySelectorAll('.chord-chip'));
     if (chords.length === 0) return;
 
-    let currentIndex = activeChordNode ? chords.indexOf(activeChordNode) : -1;
+    let targetChord = null;
 
-    if (currentIndex === -1) {
-        currentIndex = dir > 0 ? 0 : chords.length - 1;
-    } else {
-        currentIndex += dir;
+    // 1. Si ya hay un acorde naranja, saltamos al siguiente/anterior en la lista
+    if (activeChordNode) {
+        let currentIndex = chords.indexOf(activeChordNode) + dir;
         if (currentIndex >= chords.length) currentIndex = 0;
         if (currentIndex < 0) currentIndex = chords.length - 1;
+        targetChord = chords[currentIndex];
+    } 
+    // 2. Si NO hay acorde seleccionado, usamos la ubicación actual del cursor de texto
+    else {
+        const sel = window.getSelection();
+        if (!sel.rangeCount) {
+            targetChord = chords[dir > 0 ? 0 : chords.length - 1];
+        } else {
+            const cursorNode = sel.focusNode;
+            if (dir > 0) {
+                // Buscar el primer acorde DESPUÉS del cursor de texto
+                for (let chord of chords) {
+                    if (cursorNode.compareDocumentPosition(chord) & Node.DOCUMENT_POSITION_FOLLOWING) {
+                        targetChord = chord;
+                        break;
+                    }
+                }
+                if (!targetChord) targetChord = chords[0]; // Si no hay más, vuelve al primero
+            } else {
+                // Buscar el primer acorde ANTES del cursor de texto
+                for (let i = chords.length - 1; i >= 0; i--) {
+                    let chord = chords[i];
+                    if (cursorNode.compareDocumentPosition(chord) & Node.DOCUMENT_POSITION_PRECEDING) {
+                        targetChord = chord;
+                        break;
+                    }
+                }
+                if (!targetChord) targetChord = chords[chords.length - 1]; // Si no hay más, va al último
+            }
+        }
     }
 
-    selectChord(chords[currentIndex]);
+    if (!targetChord) return;
+
+    // 3. Pintamos de naranja el acorde encontrado
+    selectChord(targetChord);
+
+    // 4. Traemos el cursor de texto al lado del acorde (para que no quede tirado lejos)
+    const sel = window.getSelection();
+    const range = document.createRange();
+    range.setStartAfter(targetChord);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
 function modMob(mod) {
