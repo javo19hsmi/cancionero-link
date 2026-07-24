@@ -114,3 +114,21 @@ input, select {
 .login-card { text-align: center; padding: 40px; border-radius: 30px; max-width: 400px; width: 90%; background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
 #busy-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ESTILOS PARA LOS CHIPS DE MOMENTOS LITÚRGICOS */
+.chip { 
+  padding: 4px 10px; 
+  border-radius: 999px; 
+  border: 1px solid var(--glass-border); 
+  font-size: 11px; 
+  cursor: pointer; 
+  transition: 0.2s; 
+  background: rgba(255,255,255,0.05); 
+  color: white; 
+}
+.chip.on { 
+  background: var(--primary); 
+  border-color: var(--primary); 
+  color: #000000; 
+  font-weight: bold; 
+}
