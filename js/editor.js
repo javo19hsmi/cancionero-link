@@ -6,6 +6,23 @@ let hasUnsavedChanges = false;
 let editorListenersAttached = false; 
 let activeChordNode = null; // NUEVO: Guarda el acorde actualmente seleccionado
 
+const Render = {
+    toVisual: function(rawText) {
+        if (!rawText) return "";
+        let html = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        html = html.replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>");
+        html = html.replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>");
+        html = html.replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+        html = html.replace(/\{([\s\S]*?)\}/g, "<span style='color:#888; font-style:italic'>$1</span>");
+        
+        // CORRECCIÓN: Ahora los acordes de la base de datos se generan vacíos por dentro
+        // para no romper el CSS, dejando que el 'data-chord' haga la magia visual.
+        html = html.replace(/\[([^\]]+)\]/g, (match, chord) => {
+            return `<span class="chord-chip" contenteditable="false" data-chord="${chord}"></span>`;
+        });
+        return html.replace(/\n/g, "<br>");
+    },
+  
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
   "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
@@ -278,7 +295,16 @@ function insChordVisual(chordText) {
   }, 10);
 }
 
-function insMob(chordText) { insChordVisual(chordText); }
+function insMob(chordText) {
+    // Si hay un acorde seleccionado (naranja), lo transformamos.
+    if (activeChordNode) {
+        activeChordNode.setAttribute('data-chord', chordText);
+        markUnsavedChanges();
+    } else {
+        // Si no hay ninguno seleccionado, creamos uno nuevo.
+        insChordVisual(chordText);
+    }
+}
 
 function insManual() {
   const v = document.getElementById('manual-chord-in').value.trim();
