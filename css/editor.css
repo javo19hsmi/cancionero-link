@@ -71,8 +71,10 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip {
   position: relative;
   display: inline-block;
-  width: 0; /* Clave: No ocupa espacio horizontal, no corta palabras */
+  width: 0;
   height: 0;
+  font-size: 0; /* MAGIA: Desaparece el texto interno que rompía todo */
+  color: transparent; 
   vertical-align: baseline;
   overflow: visible;
   direction: ltr;
@@ -81,25 +83,24 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 12px; /* Distancia sobre la letra */
+  bottom: 14px; /* Aterrizamos el globo */
   left: 50%;
   transform: translateX(-50%);
-  background-color: #0b1a1c; /* Fondo oscuro */
-  color: #4DB6AC; /* Texto verde agua */
+  background-color: #0b1a1c;
+  color: #4DB6AC;
   border: 1px solid #4DB6AC;
   border-radius: 12px;
   padding: 3px 8px;
-  font-size: 11px;
+  font-size: 11px; /* Le devolvemos el tamaño de fuente SOLO a la burbuja */
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
 }
 
 .chord-chip::after {
-  /* El piquito apuntando hacia abajo */
   content: '';
   position: absolute;
-  bottom: 7px;
+  bottom: 9px; /* Aterrizamos el piquito */
   left: 50%;
   transform: translateX(-50%);
   border-left: 5px solid transparent;
@@ -107,7 +108,6 @@ header { background: rgba(0,0,0,0.4); }
   border-top: 5px solid #4DB6AC;
   z-index: 10;
 }
-
 /* BOTÓN CERRAR TECLADO MÓVIL */
 .close-mobile-btn {
   position: absolute;
