@@ -461,10 +461,10 @@ async function uploadFile(input, folder, targetInputId) {
 }
 
 function updateAudioPreview() {
-  let link = document.getElementById("m-audio-in").value.trim();
+  const link = document.getElementById("m-audio-in").value.trim();
   const container = document.getElementById("audioPreviewContainer");
   const wrapper = document.getElementById("playerWrapper");
-  
+
   if (!link) { 
     if (container) container.style.display = "none"; 
     if (wrapper) wrapper.innerHTML = ""; 
@@ -472,28 +472,47 @@ function updateAudioPreview() {
   }
 
   if (container) container.style.display = "block";
-  if (wrapper) wrapper.innerHTML = ""; 
+  wrapper.innerHTML = ""; // Limpiamos anterior
 
-  // 🚀 CONVERTIDOR INTELIGENTE PARA GOOGLE DRIVE
-  if (link.includes('drive.google.com')) {
-    const match = link.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      const fileId = match[1];
-      link = `https://docs.google.com/uc?export=download&id=${fileId}`;
-    }
-  }
-
-  // 📺 SI ES YOUTUBE
+  // 1. LÓGICA YOUTUBE
   if (link.includes("youtube.com") || link.includes("youtu.be")) {
-    let videoId = link.includes("v=") ? link.split("v=")[1].split("&")[0] : link.split("/").pop().split("?")[0];
-    wrapper.innerHTML = `<iframe width="100%" height="150" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
+    let videoId = "";
+    try {
+      if (link.includes("v=")) videoId = link.split("v=")[1].split("&")[0];
+      else videoId = link.split("/").pop().split("?")[0];
+      wrapper.innerHTML = `<iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
+    } catch (e) {
+      wrapper.innerHTML = '<p style="color:red; font-size:12px;">Error en link de YouTube</p>';
+    }
   } 
-  // 🎵 SI ES AUDIO DIRECTO (Firebase o Drive Corregido)
+  // 2. LÓGICA GOOGLE DRIVE (TU BOTÓN AZUL ORIGINAL)
+  else if (link.includes("drive.google.com")) {
+    let fileId = "";
+    try {
+      const match = link.match(/[-\w]{25,}/);
+      fileId = match ? match[0] : "";
+      if (fileId) {
+        wrapper.innerHTML = `
+          <div style="background:rgba(255,255,255,0.05); border:1px dashed #4DB6AC; padding:15px; border-radius:8px; text-align:center;">
+            <div style="margin-bottom:10px; color:#aaa; font-size:11px;">
+              Archivo de Google Drive detectado
+            </div>
+            <a href="${link}" target="_blank" 
+               style="display:inline-block; background:#2196F3; color:white; padding:8px 16px; border-radius:20px; text-decoration:none; font-size:12px; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+               ▶️ REPRODUCIR EN DRIVE
+            </a>
+            <p style="font-size:9px; color:#666; margin-top:8px; line-height:1.2;">
+              Por seguridad de Google, el audio se abre en pestaña nueva.
+            </p>
+          </div>`;
+      }
+    } catch (e) { wrapper.innerHTML = '<p style="color:red; font-size:11px;">Error al procesar Drive</p>'; }
+  }
+  // 3. LÓGICA STORAGE / MP3 DIRECTO (REPRODUCTOR NATIVO)
   else {
     wrapper.innerHTML = `
-      <audio controls style="width:100%; height: 35px;">
+      <audio controls style="width:100%; height:35px;">
         <source src="${link}" type="audio/mpeg">
-        Tu navegador no soporta el reproductor.
       </audio>
     `;
     const audio = wrapper.querySelector('audio');
