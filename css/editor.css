@@ -72,8 +72,8 @@ header { background: rgba(0,0,0,0.4); }
   position: relative;
   display: inline-block;
   width: 0;
-  height: 38px; /* LA MAGIA: Pilar invisible que empuja el texto de arriba */
-  vertical-align: baseline; /* Se ancla a la base del texto */
+  padding-top: 35px; /* LA MAGIA: Crea un pilar invisible que empuja el renglón superior */
+  vertical-align: bottom;
   font-size: 0; 
   color: transparent; 
   overflow: visible;
@@ -83,7 +83,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 14px; 
+  bottom: 12px; /* Alineación del globito sobre la letra */
   left: 50%;
   transform: translateX(-50%);
   background-color: #0b1a1c;
@@ -100,7 +100,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 9px;
+  bottom: 7px; /* Alineación del piquito */
   left: 50%;
   transform: translateX(-50%);
   border-left: 5px solid transparent;
