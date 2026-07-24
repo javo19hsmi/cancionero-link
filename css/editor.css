@@ -72,10 +72,10 @@ header { background: rgba(0,0,0,0.4); }
   position: relative;
   display: inline-block;
   width: 0;
-  height: 0;
-  font-size: 0; /* MAGIA: Desaparece el texto interno que rompía todo */
+  height: 38px; /* LA MAGIA: Pilar invisible que empuja el texto de arriba */
+  vertical-align: baseline; /* Se ancla a la base del texto */
+  font-size: 0; 
   color: transparent; 
-  vertical-align: baseline;
   overflow: visible;
   direction: ltr;
 }
@@ -83,7 +83,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 14px; /* Aterrizamos el globo */
+  bottom: 14px; 
   left: 50%;
   transform: translateX(-50%);
   background-color: #0b1a1c;
@@ -91,7 +91,7 @@ header { background: rgba(0,0,0,0.4); }
   border: 1px solid #4DB6AC;
   border-radius: 12px;
   padding: 3px 8px;
-  font-size: 11px; /* Le devolvemos el tamaño de fuente SOLO a la burbuja */
+  font-size: 11px; 
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
@@ -100,7 +100,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 9px; /* Aterrizamos el piquito */
+  bottom: 9px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 5px solid transparent;
@@ -108,6 +108,7 @@ header { background: rgba(0,0,0,0.4); }
   border-top: 5px solid #4DB6AC;
   z-index: 10;
 }
+
 /* BOTÓN CERRAR TECLADO MÓVIL */
 .close-mobile-btn {
   position: absolute;
