@@ -68,67 +68,65 @@ header { background: rgba(0,0,0,0.4); }
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
 #lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
 
-/* 🪜 2. LÓGICA DE ESCALERA E INTELIGENCIA DE ESPACIO */
+/* 🚀 1. INTERLINEADO JUSTO PARA TRABAJAR */
+#lyrics-editor {
+  line-height: 2.0 !important;
+}
+
+/* 🪜 2. GLOBLITOS SIN ESTIRAR LA PALABRA */
 .chord-chip {
   position: relative;
   display: inline-block;
-  min-width: 15px; /* Estira la letra sutilmente para dar espacio */
+  width: 0; /* ⬅️ VUELVE A CERO: No empuja las letras */
   height: 0;
-  vertical-align: baseline; 
-  font-size: 0; 
-  color: transparent; 
+  vertical-align: baseline;
   overflow: visible;
-  direction: ltr;
-  user-select: none; 
-  cursor: pointer; 
+  cursor: pointer;
 }
 
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 12px; 
+  bottom: 10px; /* Altura Nivel 1 */
   left: 50%;
   transform: translateX(-50%);
   background-color: #0b1a1c;
   color: #4DB6AC;
   border: 1px solid #4DB6AC;
   border-radius: 12px;
-  padding: 2px 6px;
-  font-size: 11px; 
+  padding: 1px 5px;
+  font-size: 10px; /* Un toque más chico para que entre mejor */
   font-weight: bold;
   white-space: nowrap;
   z-index: 10;
-  transition: all 0.2s ease;
-  pointer-events: auto; 
 }
 
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 7px; 
+  bottom: 6px;
   left: 50%;
   transform: translateX(-50%);
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 4px solid #4DB6AC;
+  border-left: 3px solid transparent;
+  border-right: 3px solid transparent;
+  border-top: 3px solid #4DB6AC;
   z-index: 10;
-  transition: all 0.2s ease;
 }
 
-/* 🚀 NIVEL 2 DE ESCALERA (Si un acorde sigue a otro) */
+/*  escalera NIVEL 2 */
 .chord-chip + .chord-chip::before {
-  bottom: 30px; 
+  bottom: 24px;
 }
 .chord-chip + .chord-chip::after {
-  bottom: 25px; 
+  bottom: 20px;
 }
 
-/* 🚀 NIVEL 3 DE ESCALERA (Si hay tres seguidos) */
+/* escalera NIVEL 3 */
 .chord-chip + .chord-chip + .chord-chip::before {
-  bottom: 48px;
+  bottom: 38px;
 }
 .chord-chip + .chord-chip + .chord-chip::after {
-  bottom: 43px;
+  bottom: 34px;
 }
 
 /* PRIORIDAD DE CAPAS PARA HOVER Y SELECCIÓN */
