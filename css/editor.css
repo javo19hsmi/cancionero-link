@@ -17,7 +17,7 @@ header {
 }
 
 .main-grid {
-  display: grid; grid-template-columns: 280px 1fr; /* Simplificado a 2 columnas */
+  display: grid; grid-template-columns: 280px 1fr 320px; /* ¡Restaurado a 3 columnas! */
   gap: 15px; padding: 15px; flex: 1; overflow: hidden;
 }
 
@@ -54,7 +54,7 @@ header {
   font-weight: 800; font-family: 'Segoe UI', sans-serif; font-size: 12px;
   padding: 2px 8px; border-radius: 12px; margin: 0 4px;
   cursor: pointer; user-select: none; position: relative;
-  top: -12px; /* Eleva el globito por encima de la sílaba */
+  top: -12px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.2s ease;
 }
 .chord-chip:hover { background: var(--warning); transform: translateY(-2px); }
