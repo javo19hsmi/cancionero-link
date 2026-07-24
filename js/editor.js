@@ -6,6 +6,7 @@ let hasUnsavedChanges = false;
 let editorListenersAttached = false; 
 let activeChordNode = null; // NUEVO: Guarda el acorde actualmente seleccionado
 
+// EL MOTOR DE RENDERIZADO COMPLETO
 const Render = {
     toVisual: function(rawText) {
         if (!rawText) return "";
@@ -22,7 +23,27 @@ const Render = {
         });
         return html.replace(/\n/g, "<br>");
     },
-  
+    toRaw: function(htmlElement) {
+        let clone = htmlElement.cloneNode(true);
+        // Recuperar los corchetes
+        clone.querySelectorAll('.chord-chip').forEach(chip => {
+            chip.replaceWith(`[${chip.getAttribute('data-chord')}]`);
+        });
+        // Recuperar formato markdown
+        clone.querySelectorAll('b').forEach(b => {
+            if(b.querySelector('i')) { b.replaceWith(`**_${b.innerText}_**`); } 
+            else { b.replaceWith(`**${b.innerText}**`); }
+        });
+        clone.querySelectorAll('i').forEach(i => i.replaceWith(`_${i.innerText}_`));
+
+        clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+        clone.querySelectorAll('div').forEach(div => { div.prepend('\n'); div.replaceWith(...div.childNodes); });
+        
+        let rawText = clone.textContent || clone.innerText || "";
+        return rawText.replace(/\n\n/g, '\n');
+    }
+};
+
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
   "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
