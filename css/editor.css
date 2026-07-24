@@ -56,24 +56,24 @@ header { background: rgba(0,0,0,0.4); }
 .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
 .result-item.active { background: var(--primary); color: white; }
 
-/* EL EDITOR VISUAL */
+/* 🚀 1. AJUSTE DE TECHO PARA EL EDITOR (INTERLINEADO) */
 #lyrics-editor {
   flex: 1; min-height: 450px; background: #000000; 
   border: 1px solid var(--glass-border); border-radius: 12px; 
   padding: 25px 25px 60px 25px; color: #ffffff; 
   font-family: 'Consolas', monospace; font-size: 16px; 
-  line-height: 1.8; /* REDUCIDO: Las líneas sin acordes ahora se ven juntas y naturales */
+  line-height: 2.5 !important; 
   outline: none; overflow-y: auto; white-space: pre-wrap;
 }
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
 #lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
 
-/* GLOBLITOS DE ACORDES FLOTANTES */
+/* 🪜 2. LÓGICA DE ESCALERA E INTELIGENCIA DE ESPACIO */
 .chord-chip {
   position: relative;
   display: inline-block;
-  width: 0;
-  height: 44px; /* SUBIMOS EL PILAR: Esto aleja más el renglón de arriba para que no se pegue a la letra */
+  min-width: 15px; /* Estira la letra sutilmente para dar espacio */
+  height: 0;
   vertical-align: baseline; 
   font-size: 0; 
   color: transparent; 
@@ -86,14 +86,14 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::before {
   content: attr(data-chord);
   position: absolute;
-  bottom: 12px; /* LEVANTAMOS EL GLOBO: 4 píxeles más arriba para que respire de la letra */
+  bottom: 12px; 
   left: 50%;
   transform: translateX(-50%);
   background-color: #0b1a1c;
   color: #4DB6AC;
   border: 1px solid #4DB6AC;
   border-radius: 12px;
-  padding: 3px 7px;
+  padding: 2px 6px;
   font-size: 11px; 
   font-weight: bold;
   white-space: nowrap;
@@ -105,7 +105,7 @@ header { background: rgba(0,0,0,0.4); }
 .chord-chip::after {
   content: '';
   position: absolute;
-  bottom: 7px; /* Acomodamos el piquito a la nueva altura */
+  bottom: 7px; 
   left: 50%;
   transform: translateX(-50%);
   border-left: 4px solid transparent;
@@ -115,20 +115,26 @@ header { background: rgba(0,0,0,0.4); }
   transition: all 0.2s ease;
 }
 
-/* ==========================================================
-   SOLUCIÓN PARA ACORDES AMONTONADOS ("Ac[Do]u[Mi]erdate...")
-   ========================================================== */
-.chord-chip:hover::before,
-.chord-chip.active::before {
-  z-index: 50; /* Cuando pasás el mouse o está naranja, se pone al frente de todos */
-}
-
-/* Si hay acordes pegados, el navegador los va escalonando hacia arriba automáticamente */
+/* 🚀 NIVEL 2 DE ESCALERA (Si un acorde sigue a otro) */
 .chord-chip + .chord-chip::before {
-  bottom: 25px; /* Si hay dos seguidos, el segundo sube un escalón para no pisar al primero */
+  bottom: 30px; 
 }
 .chord-chip + .chord-chip::after {
-  bottom: 20px;
+  bottom: 25px; 
+}
+
+/* 🚀 NIVEL 3 DE ESCALERA (Si hay tres seguidos) */
+.chord-chip + .chord-chip + .chord-chip::before {
+  bottom: 48px;
+}
+.chord-chip + .chord-chip + .chord-chip::after {
+  bottom: 43px;
+}
+
+/* PRIORIDAD DE CAPAS PARA HOVER Y SELECCIÓN */
+.chord-chip:hover::before,
+.chord-chip.active::before {
+  z-index: 50; 
 }
 
 /* ESTADO SELECCIONADO (NARANJA) */
@@ -173,7 +179,7 @@ header { background: rgba(0,0,0,0.4); }
 /* TECLADO MÓVIL (CELULAR) */
 #mobileChordBar { display: none; }
 @media (max-width: 768px) {
-  #acordesCol { display: none !important; } /* Oculta el de PC en el celu */
+  #acordesCol { display: none !important; } 
   #mobileChordBar {
     display: block; position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
     border-top: 1px solid var(--glass-border); padding: 8px; z-index: 1000;
