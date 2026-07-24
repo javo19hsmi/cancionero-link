@@ -4,6 +4,7 @@ let globalVer = "0";
 let isEditMode = false;
 let hasUnsavedChanges = false;
 let editorListenersAttached = false; 
+let activeChordNode = null; // NUEVO: Guarda el acorde actualmente seleccionado
 
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
@@ -77,6 +78,7 @@ function loadSong(s) {
   
   isEditMode = false; 
   hasUnsavedChanges = false;
+  clearChordSelection();
   
   document.getElementById('mode-text').innerText = "MODO ACORDES";
   if (document.getElementById('pencil-btn')) document.getElementById('pencil-btn').style.color = "#555";
@@ -157,6 +159,7 @@ function toggleEditMode() {
   const area = document.getElementById('lyrics-editor'); 
   
   if (isEditMode) {
+      clearChordSelection();
       area.innerText = Render.toRaw(area);
       document.getElementById('mode-text').innerText = "MODO LETRA (MAESTRO)";
       document.getElementById('pencil-btn').style.color = "#4DB6AC";
@@ -168,17 +171,44 @@ function toggleEditMode() {
   area.focus();
 }
 
+// ==========================================
+// NUEVO SISTEMA DE SELECCIÓN DE ACORDES
+// ==========================================
+function clearChordSelection() {
+    if (activeChordNode) {
+        activeChordNode.classList.remove('active');
+        activeChordNode = null;
+    }
+}
+
+function selectChord(node) {
+    clearChordSelection();
+    activeChordNode = node;
+    activeChordNode.classList.add('active');
+}
+
 function setupEditorListeners() {
   if (editorListenersAttached) return; 
   editorListenersAttached = true;
   
   const area = document.getElementById('lyrics-editor');
+  
+  // Detectar clics con el mouse para seleccionar el acorde naranja
+  area.addEventListener('click', (e) => {
+      if (isEditMode) return;
+      if (e.target.classList.contains('chord-chip')) {
+          selectChord(e.target);
+      } else {
+          clearChordSelection();
+      }
+  });
+
   area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
 
   area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
 
-    // ATAJOS CON ALT: Saltar entre acordes o Borrar el actual
+    // NAVEGACIÓN Y BORRADO CON ALT
     if (e.altKey) {
         if (e.key === "ArrowLeft") {
             e.preventDefault();
@@ -190,7 +220,7 @@ function setupEditorListeners() {
             jumpToChord(1);
             return;
         }
-        if (e.key === "Backspace") {
+        if (e.key === "Backspace" || e.key === "Delete") {
             e.preventDefault();
             delMob();
             return;
@@ -198,7 +228,10 @@ function setupEditorListeners() {
     }
 
     // Permitir navegación normal con flechas (sin Alt)
-    if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) return;
+    if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) {
+        clearChordSelection(); // Si movés el cursor manualmente, se deselecciona el acorde
+        return;
+    }
     
     // Permitir atajos del sistema (Ctrl+C, Ctrl+V)
     if (e.ctrlKey || e.metaKey) return;
@@ -211,7 +244,8 @@ function setupEditorListeners() {
     
     if (rootMap[k]) { insMob(rootMap[k]); } 
     else if (["#", "b", "-", "7"].includes(k)) { modMob(k); } 
-    else if (e.key === "Backspace" || e.key === "Delete") { delMob(); }
+    // Si tocan backspace y hay un acorde naranja seleccionado, lo borra directo
+    else if ((e.key === "Backspace" || e.key === "Delete") && activeChordNode) { delMob(); }
   });
 }
 
@@ -230,10 +264,18 @@ function toggleAcordes() {
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
   area.focus();
-  const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>&#8203;`;
+  const id = 'chord-' + Date.now();
+  // Eliminamos el &#8203; invisible que rompía la palabra, y le ponemos ID para seleccionarlo al nacer
+  const html = `<span id="${id}" class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>`;
   document.execCommand('insertHTML', false, html);
   markUnsavedChanges();
   if(navigator.vibrate) navigator.vibrate(10); 
+  
+  // Seleccionamos automáticamente el acorde recién creado para que quede naranja
+  setTimeout(() => {
+      const newNode = document.getElementById(id);
+      if (newNode) selectChord(newNode);
+  }, 10);
 }
 
 function insMob(chordText) { insChordVisual(chordText); }
@@ -246,63 +288,28 @@ function insManual() {
   }
 }
 
-// ------------------------------------------------------------------
-// FUNCIÓN PARA SALTAR DE ACORDE EN ACORDE (ALT + FLECHAS)
-// ------------------------------------------------------------------
 function jumpToChord(dir) {
     const editor = document.getElementById('lyrics-editor');
     const chords = Array.from(editor.querySelectorAll('.chord-chip'));
     if (chords.length === 0) return;
 
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return;
+    let currentIndex = activeChordNode ? chords.indexOf(activeChordNode) : -1;
 
-    let currentIndex = -1;
-    let activeChord = getClosestChordNode();
-    
-    if (activeChord) {
-        currentIndex = chords.indexOf(activeChord);
+    if (currentIndex === -1) {
+        currentIndex = dir > 0 ? 0 : chords.length - 1;
+    } else {
+        currentIndex += dir;
+        if (currentIndex >= chords.length) currentIndex = 0;
+        if (currentIndex < 0) currentIndex = chords.length - 1;
     }
 
-    let nextIndex = currentIndex + dir;
-    if (nextIndex >= chords.length) nextIndex = 0; // Vuelve al principio
-    if (nextIndex < 0) nextIndex = chords.length - 1; // Vuelve al final
-
-    const targetChord = chords[nextIndex];
-    
-    // Ponemos el cursor inmediatamente después del acorde objetivo
-    const range = document.createRange();
-    range.setStartAfter(targetChord);
-    range.collapse(true);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    
-    // Efecto visual: Hace parpadear el acorde para que sepas dónde estás parado
-    targetChord.style.transition = 'all 0.2s';
-    targetChord.style.transform = 'scale(1.2)';
-    setTimeout(() => { targetChord.style.transform = ''; }, 200);
-}
-
-function getClosestChordNode() {
-    const sel = window.getSelection();
-    if (!sel.rangeCount) return null;
-    let node = sel.focusNode;
-
-    if (node.nodeType === Node.TEXT_NODE) {
-        let prev = node.previousSibling;
-        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) return prev;
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-        let prev = node.childNodes[sel.focusOffset - 1];
-        if (prev && prev.nodeType === Node.TEXT_NODE) prev = prev.previousSibling;
-        if (prev && prev.nodeType === Node.ELEMENT_NODE && prev.classList.contains('chord-chip')) return prev;
-    }
-    return null;
+    selectChord(chords[currentIndex]);
 }
 
 function modMob(mod) {
-    let targetNode = getClosestChordNode();
-    if (targetNode) {
-        let chord = targetNode.getAttribute('data-chord');
+    // Ahora modifica directamente el acorde naranja (activeChordNode)
+    if (activeChordNode) {
+        let chord = activeChordNode.getAttribute('data-chord');
         const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(7?)$/i);
         if (!m) return;
         
@@ -315,15 +322,20 @@ function modMob(mod) {
         if (acc === 'b') acc = (mod === '#') ? '#' : 'b';
         
         const newChord = root + acc + minor + sev;
-        targetNode.setAttribute('data-chord', newChord);
+        activeChordNode.setAttribute('data-chord', newChord);
         markUnsavedChanges();
     }
 }
 
 function delMob() {
-    let targetNode = getClosestChordNode();
-    if (targetNode) {
-        targetNode.remove();
+    if (activeChordNode) {
+        const nodeToDelete = activeChordNode;
+        // Salta al anterior para no perder la selección
+        jumpToChord(-1); 
+        if (activeChordNode === nodeToDelete) {
+            clearChordSelection();
+        }
+        nodeToDelete.remove();
         markUnsavedChanges();
     }
 }
