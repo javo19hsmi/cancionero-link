@@ -243,47 +243,43 @@ function setupEditorListeners() {
 
   area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
 
-  area.addEventListener('keydown', (e) => {
+    area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
 
-    // NAVEGACIÓN Y BORRADO CON ALT
+    const k = e.key.toLowerCase();
+    const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
+    const mods = {"#":"#","b":"b","-":"-","7":"7"};
+
+    // 1. NAVEGACIÓN Y BORRADO CON ALT (Tu código original)
     if (e.altKey) {
-        if (e.key === "ArrowLeft") {
-            e.preventDefault();
-            jumpToChord(-1);
-            return;
-        }
-        if (e.key === "ArrowRight") {
-            e.preventDefault();
-            jumpToChord(1);
-            return;
-        }
-        if (e.key === "Backspace" || e.key === "Delete") {
-            e.preventDefault();
-            delMob();
-            return;
-        }
+        if (e.key === "ArrowLeft") { e.preventDefault(); jumpToChord(-1); return; }
+        if (e.key === "ArrowRight") { e.preventDefault(); jumpToChord(1); return; }
+        if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); delMob(); return; }
     }
 
-    // Permitir navegación normal con flechas (sin Alt)
+    // 2. NAVEGACIÓN NORMAL (Tu código original: deselecciona si movés el cursor)
     if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) {
-        clearChordSelection(); // Si movés el cursor manualmente, se deselecciona el acorde
+        clearChordSelection(); 
         return;
     }
     
-    // Permitir atajos del sistema (Ctrl+C, Ctrl+V)
+    // 3. ATAJOS DEL SISTEMA (Tu código original)
     if (e.ctrlKey || e.metaKey) return;
 
+    // 🚀 4. BLOQUEO DE LETRA + TECLAS MÚSICA LIBRES
     e.preventDefault(); 
     e.stopPropagation(); 
     
-    const k = e.key.toLowerCase();
-    const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
-    
-    if (rootMap[k]) { insMob(rootMap[k]); } 
-    else if (["#", "b", "-", "7"].includes(k)) { modMob(k); } 
-    // Si tocan backspace y hay un acorde naranja seleccionado, lo borra directo
-    else if ((e.key === "Backspace" || e.key === "Delete") && activeChordNode) { delMob(); }
+    if (rootMap[k]) { 
+        insMob(rootMap[k]); 
+    } 
+    else if (mods[k]) { 
+        modMob(mods[k]); 
+    } 
+    // Borrado directo si hay un acorde naranja seleccionado
+    else if ((e.key === "Backspace" || e.key === "Delete") && activeChordNode) { 
+        delMob(); 
+    }
   });
 }
 
@@ -312,8 +308,16 @@ function insChordVisual(chordText) {
   // Seleccionamos automáticamente el acorde recién creado para que quede naranja
   setTimeout(() => {
       const newNode = document.getElementById(id);
-      if (newNode) selectChord(newNode);
-  }, 10);
+      if (newNode) {
+          selectChord(newNode); // Lo ponemos naranja para que sepas que está activo
+          
+          // Traemos el cursor de texto al lado
+          const sel = window.getSelection();
+          const range = document.createRange();
+          range.setStartAfter(newNode);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
 }
 
 function insMob(chordText) {
