@@ -250,20 +250,20 @@ function setupEditorListeners() {
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
     const mods = {"#":"#","b":"b","-":"-","7":"7"};
 
-    // 1. NAVEGACIÓN Y BORRADO CON ALT (Tu código original)
+    // 1. NAVEGACIÓN Y BORRADO CON ALT
     if (e.altKey) {
         if (e.key === "ArrowLeft") { e.preventDefault(); jumpToChord(-1); return; }
         if (e.key === "ArrowRight") { e.preventDefault(); jumpToChord(1); return; }
         if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); delMob(); return; }
     }
 
-    // 2. NAVEGACIÓN NORMAL (Tu código original: deselecciona si movés el cursor)
+    // 2. NAVEGACIÓN NORMAL 
     if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) {
         clearChordSelection(); 
         return;
     }
     
-    // 3. ATAJOS DEL SISTEMA (Tu código original)
+    // 3. ATAJOS DEL SISTEMA
     if (e.ctrlKey || e.metaKey) return;
 
     // 🚀 4. BLOQUEO DE LETRA + TECLAS MÚSICA LIBRES
@@ -318,6 +318,8 @@ function insChordVisual(chordText) {
           range.collapse(true);
           sel.removeAllRanges();
           sel.addRange(range);
+      }
+  }, 10);
 }
 
 function insMob(chordText) {
