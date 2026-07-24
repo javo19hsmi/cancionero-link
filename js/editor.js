@@ -4,6 +4,16 @@ let globalVer = "0";
 let isEditMode = false;
 
 function initApp() {
+  // 1. Cargar el selector de Tonos
+  const sel = document.getElementById('m-key-sel');
+  if (sel) {
+    sel.innerHTML = '<option value="">Sin tono</option>';
+    ["Do","Dom","Do#","Do#m","Re","Rem","Mi","Mim","Fa","Fam","Fa#","Fa#m","Sol","Solm","La","Lam","Si","Sim"].forEach(k => {
+      let v = {"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[k.replace('m','')] + (k.includes('m')?'m':'');
+      sel.appendChild(new Option(k, v));
+    });
+  }
+  
   db.ref('version').on('value', s => { globalVer = String(s.val() || "0"); });
   db.ref('canciones_borrador').on('value', s => { 
     if (s.exists()) { 
@@ -34,14 +44,21 @@ function filterSongs() {
 
 function loadSong(s) {
   currentSong = JSON.parse(JSON.stringify(s));
-  const editor = document.getElementById('lyrics-editor');
   
-  // Transformamos el código de Firebase en la magia visual
+  // Llenar metadatos
+  document.getElementById('m-title-in').value = s.title || "";
+  document.getElementById('m-artist-in').value = s.artist || "";
+  document.getElementById('m-key-sel').value = s.key || "";
+  document.getElementById('m-rhythm-in').value = s.rhythm || "";
+  document.getElementById('m-audio-in').value = s.link || "";
+
+  // Render Visual
+  const editor = document.getElementById('lyrics-editor');
   editor.innerHTML = Render.toVisual(usToEs(s.lyrics));
   
   isEditMode = false; 
   document.getElementById('mode-text').innerText = "MODO ACORDES";
-  document.getElementById('pencil-btn').style.color = "#555";
+  if (document.getElementById('pencil-btn')) document.getElementById('pencil-btn').style.color = "#555";
   
   filterSongs();
 }
@@ -52,12 +69,10 @@ function toggleEditMode() {
   const area = document.getElementById('lyrics-editor'); 
   
   if (isEditMode) {
-      // ✏️ Entra el Super Admin: Desarmamos los globitos a texto crudo [Do] para que pueda corregir faltas de ortografía
       area.innerText = Render.toRaw(area);
       document.getElementById('mode-text').innerText = "MODO LETRA (MAESTRO)";
       document.getElementById('pencil-btn').style.color = "#4DB6AC";
   } else {
-      // 🔒 Sale el Super Admin: Renderizamos todo hermoso de nuevo
       area.innerHTML = Render.toVisual(area.innerText);
       document.getElementById('mode-text').innerText = "MODO ACORDES";
       document.getElementById('pencil-btn').style.color = "#555";
@@ -68,32 +83,26 @@ function toggleEditMode() {
 function setupEditorListeners() {
   const area = document.getElementById('lyrics-editor');
   
-  // 🛡️ BARRERA DE SEGURIDAD 1: Bloquea todo intento de escribir, borrar o pegar si no es Maestro
   area.addEventListener('beforeinput', (e) => {
     if (!isEditMode) e.preventDefault(); 
   });
 
-  // 🛡️ BARRERA DE SEGURIDAD 2: El teclado inteligente para insertar acordes en vivo
   area.addEventListener('keydown', (e) => {
-    if (isEditMode) return; // Si el lápiz está activo, dejamos que el admin escriba normal
+    if (isEditMode) return; 
 
-    // Teclas permitidas (Navegación)
     if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key)) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
 
-    e.preventDefault(); // Bloqueamos cualquier otra tecla por seguridad
+    e.preventDefault(); 
 
     const k = e.key.toLowerCase();
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
     
     if (rootMap[k]) {
-        // Inserta un nuevo acorde
         insChordVisual(rootMap[k]);
     } else if (["#", "b", "-", "7"].includes(k)) {
-        // Modifica el acorde en el que está el cursor
         modifyLastChordVisual(k);
-    } else if (e.key === "Backspace") {
-        // Borra el acorde
+    } else if (e.key === "Backspace" || e.key === "Delete") {
         deleteLastChordVisual();
     }
   });
@@ -102,7 +111,6 @@ function setupEditorListeners() {
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
   area.focus();
-  // El \u200B (Zero-width space) permite que el cursor "salga" del globito para seguir navegando
   const html = `<span class="chord-chip" contenteditable="false" data-chord="${chordText}">${chordText}</span>\u200B`;
   document.execCommand('insertHTML', false, html);
 }
@@ -130,7 +138,7 @@ function modifyLastChordVisual(mod) {
         
         const newChord = root + acc + minor + sev;
         prevNode.setAttribute('data-chord', newChord);
-        prevNode.innerText = newChord; // Actualiza el texto visual del globito
+        prevNode.innerText = newChord; 
     }
 }
 
@@ -151,8 +159,52 @@ function getPreviousNode(node, offset) {
     return null;
 }
 
-function usToEs(t) { return t.replace(/\[([^\]]+)\]/g, (m, c) => { const r = c.match(/^([A-G])([#b]?)(.*)/); if (!r) return m; return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; }); }
-function esToUs(t) { return t.replace(/\[([^\]]+)\]/g, (m, c) => { const roots = ["Sol","Do","Re","Mi","Fa","La","Si"]; for (let r of roots) { if (c.startsWith(r)) { let a = "", rest = c.slice(r.length); if (rest.startsWith("#") || rest.startsWith("b")) { a = rest[0]; rest = rest.slice(1); } return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${a}${rest}]`; } } return m; }); }
+async function saveBorrador() {
+  if (!currentSong) return; 
+  setBusy(true, "Guardando...");
+  
+  // Extraemos el texto crudo según el modo (Visual o Maestro)
+  const editorArea = document.getElementById('lyrics-editor');
+  const rawText = isEditMode ? editorArea.innerText : Render.toRaw(editorArea);
+
+  const upd = { 
+    ...currentSong, 
+    lyrics: esToUs(rawText), 
+    artist: document.getElementById('m-artist-in').value, 
+    key: document.getElementById('m-key-sel').value, 
+    rhythm: document.getElementById('m-rhythm-in').value, 
+    link: document.getElementById('m-audio-in').value 
+  };
+  
+  try { 
+    await db.ref(`canciones_borrador/${currentSong.id}`).update(upd); 
+    alert("✅ Guardado en Borrador."); 
+  } catch (e) { 
+    alert("Error al guardar."); 
+  } 
+  setBusy(false);
+}
+
+async function confirmPublish() {
+  if (!confirm("🚀 ¿Publicar Versión Oficial?")) return; 
+  setBusy(true, "Publicando...");
+  try {
+    const snap = await db.ref('canciones_borrador').get();
+    let p = globalVer.split('.'); 
+    if (p.length < 2) p = [globalVer, "000"];
+    const v = p[0] + "." + String(parseInt(p[p.length-1]) + 1).padStart(3, '0');
+    
+    await db.ref('canciones_base').set(snap.val()); 
+    await db.ref('version').set(v); 
+    alert("🎉 Éxito: v" + v);
+  } catch (e) { 
+    alert("Error."); 
+  } 
+  setBusy(false);
+}
+
+function usToEs(t) { return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { const r = c.match(/^([A-G])([#b]?)(.*)/); if (!r) return m; return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; }); }
+function esToUs(t) { return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { const roots = ["Sol","Do","Re","Mi","Fa","La","Si"]; for (let r of roots) { if (c.startsWith(r)) { let a = "", rest = c.slice(r.length); if (rest.startsWith("#") || rest.startsWith("b")) { a = rest[0]; rest = rest.slice(1); } return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${a}${rest}]`; } } return m; }); }
 
 function setBusy(on, t) { 
   document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none'; 
