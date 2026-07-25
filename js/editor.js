@@ -338,6 +338,14 @@ function setupEditorListeners() {
       }
   });
 
+   // Evita que los celulares desplieguen su teclado nativo al tocar el área de letras
+  area.addEventListener('focus', (e) => {
+      if (window.innerWidth <= 768) {
+          // En celulares, quitamos el foco nativo para que no se abra el teclado de Android
+          area.blur();
+      }
+  });
+
   // Bloquea el teclado nativo del celular para que solo se usen tus botones de acordes
   area.addEventListener('beforeinput', (e) => { 
       if (!isEditMode) {
