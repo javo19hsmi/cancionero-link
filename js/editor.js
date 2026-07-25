@@ -1,13 +1,19 @@
-let allSongs = [];
-let currentSong = null;
-let globalVer = "0";
-let isEditMode = false;
-let hasUnsavedChanges = false;
-let editorListenersAttached = false; 
-let activeChordNode = null; // NUEVO: Guarda el acorde actualmente seleccionado
+/* ==========================================================
+   1. VARIABLES GLOBALES DE ESTADO DEL EDITOR
+   ========================================================== */
+let allSongs = [];             // Lista completa de canciones obtenidas de Firebase
+let currentSong = null;        // Canción actualmente seleccionada y en edición
+let globalVer = "0";           // Versión global actual de la base de datos
+let isEditMode = false;        // Estado de edición de texto maestro (false = modo acordes visuales)
+let hasUnsavedChanges = false; // Bandera para advertir si hay cambios sin guardar
+let editorListenersAttached = false; // Control para evitar duplicar los eventos del teclado/mouse
+let activeChordNode = null;    // Guarda el nodo del acorde actualmente seleccionado (en naranja)
 
-// EL MOTOR DE RENDERIZADO COMPLETO
+/* ==========================================================
+   2. EL MOTOR DE RENDERIZADO (TRANSFORMACIONES VISUALES Y CRUDAS)
+   ========================================================== */
 const Render = {
+    // Convierte el texto plano de Firebase ([Do], **texto**) a HTML visual para el editor
     toVisual: function(rawText) {
         if (!rawText) return "";
         let html = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -16,26 +22,29 @@ const Render = {
         html = html.replace(/_([\s\S]*?)_/g, "<i>$1</i>");
         html = html.replace(/\{([\s\S]*?)\}/g, "<span style='color:#888; font-style:italic'>$1</span>");
         
-        // CORRECCIÓN: Ahora los acordes de la base de datos se generan vacíos por dentro
-        // para no romper el CSS, dejando que el 'data-chord' haga la magia visual.
+        // Transforma los corchetes [Do] en globitos visuales vacíos por dentro (el CSS hace la magia)
         html = html.replace(/\[([^\]]+)\]/g, (match, chord) => {
             return `<span class="chord-chip" contenteditable="false" data-chord="${chord}"></span>`;
         });
         return html.replace(/\n/g, "<br>");
     },
+    // Convierte el contenido visual del editor de vuelta a formato texto plano para guardar en Firebase
     toRaw: function(htmlElement) {
         let clone = htmlElement.cloneNode(true);
-        // Recuperar los corchetes
+        
+        // Recuperar los corchetes originales de los acordes
         clone.querySelectorAll('.chord-chip').forEach(chip => {
             chip.replaceWith(`[${chip.getAttribute('data-chord')}]`);
         });
-        // Recuperar formato markdown
+        
+        // Recuperar etiquetas de formato Markdown (Negritas y Cursivas)
         clone.querySelectorAll('b').forEach(b => {
             if(b.querySelector('i')) { b.replaceWith(`**_${b.innerText}_**`); } 
             else { b.replaceWith(`**${b.innerText}**`); }
         });
         clone.querySelectorAll('i').forEach(i => i.replaceWith(`_${i.innerText}_`));
 
+        // Normalizar saltos de línea
         clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
         clone.querySelectorAll('div').forEach(div => { div.prepend('\n'); div.replaceWith(...div.childNodes); });
         
@@ -44,6 +53,9 @@ const Render = {
     }
 };
 
+/* ==========================================================
+   3. LISTA DE MOMENTOS LITÚRGICOS DISPONIBLES
+   ========================================================== */
 const MOMENTS_LIST = [
   "Entrada", "Acto Penitencial", "Gloria", "Salmos", "Aclamación al Evangelio",
   "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
@@ -51,10 +63,15 @@ const MOMENTS_LIST = [
   "Virgen María", "Espíritu Santo", "Animación", "Adoración Eucarística",
   "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés","Santo Rosario",
   "Via Crucis", "Pesebre", "Juveniles", "Acción de Gracia", "Misioneros / Vocacionales",
-  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Varios"
+  "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Propios del Ordinario", 
+    "Varios"
 ];
 
+/* ==========================================================
+   4. INICIALIZACIÓN DE LA APLICACIÓN Y ESCUCHAS DE FIREBASE
+   ========================================================== */
 function initApp() {
+  // Carga el selector de tonos musicales principales
   const sel = document.getElementById('m-key-sel');
   if (sel) {
     sel.innerHTML = '<option value="">Sin tono</option>';
@@ -64,6 +81,7 @@ function initApp() {
     });
   }
   
+  // Escucha cambios de versión y borradores en tiempo real desde Firebase Realtime Database
   db.ref('version').on('value', s => { globalVer = String(s.val() || "0"); });
   db.ref('canciones_borrador').on('value', s => { 
     if (s.exists()) { 
@@ -75,6 +93,10 @@ function initApp() {
   setupEditorListeners();
 }
 
+/* ==========================================================
+   5. FILTRADO Y CARGA DE CANCIONES
+   ========================================================== */
+// Filtra la lista de canciones en el panel izquierdo según lo que escribas en el buscador
 function filterSongs() {
   const q = document.getElementById('song-search-box').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const res = document.getElementById('song-results-list'); 
@@ -95,6 +117,7 @@ function filterSongs() {
   });
 }
 
+// Carga los datos de una canción seleccionada en los inputs del formulario y en el editor
 function loadSong(s) {
   currentSong = JSON.parse(JSON.stringify(s));
   
@@ -125,37 +148,92 @@ function loadSong(s) {
   filterSongs();
 }
 
+/* ==========================================================
+   6. GESTIÓN DE MOMENTOS LITÚRGICOS (CHIPS Y DIÁLOGOS)
+   ========================================================== */
+// Dibuja los momentos seleccionados en el panel derecho de la canción
 function renderMomentsChips(selectedArr) {
-  const sel = new Set((Array.isArray(selectedArr) ? selectedArr : []).filter(Boolean));
-  if (sel.size === 0) sel.add("Varios");
-  const el = document.getElementById("moments-container");
-  el.innerHTML = "";
+  const container = document.getElementById("moments-container");
+  if (!container) return;
+  container.innerHTML = "";
   
-  MOMENTS_LIST.forEach(m => {
-    const d = document.createElement("div");
-    d.className = "chip" + (sel.has(m) ? " on" : "");
-    d.textContent = m;
-    d.dataset.value = m;
-    d.onclick = () => {
-      d.classList.toggle("on");
-      markUnsavedChanges();
-      const cur = getSelectedMoments();
-      if (cur.length === 0) d.classList.add("on"); 
-    };
-    el.appendChild(d);
+  const moments = (selectedArr || ["Varios"]).filter(Boolean);
+  
+  moments.forEach(m => {
+    const chip = document.createElement("div");
+    chip.className = "chip-selected";
+    chip.innerHTML = `
+      <span>${m}</span>
+      <span class="chip-remove-btn" onclick="removeMoment('${m}')">×</span>
+    `;
+    container.appendChild(chip);
   });
 }
 
-function getSelectedMoments() {
-  const selected = [];
-  document.querySelectorAll("#moments-container .chip.on").forEach(ch => selected.push(ch.dataset.value));
-  return selected.length ? selected : ["Varios"];
+// Abre la ventana flotante (diálogo) con la lista completa de momentos litúrgicos
+function openMomentsDialog() {
+  const listEl = document.getElementById("full-moments-list");
+  if (!listEl) return;
+  listEl.innerHTML = "";
+  
+  const current = new Set(currentSong && currentSong.moments ? currentSong.moments : []);
+
+  MOMENTS_LIST.forEach(m => {
+    const d = document.createElement("div");
+    d.className = "chip" + (current.has(m) ? " on" : "");
+    d.textContent = m;
+    d.onclick = () => {
+      toggleMoment(m);
+      d.classList.toggle("on");
+    };
+    listEl.appendChild(d);
+  });
+  
+  document.getElementById("moments-dialog").style.display = "flex";
 }
 
+// Añade o quita un momento litúrgico de la canción activa
+function toggleMoment(m) {
+  if (!currentSong) return;
+  if (!currentSong.moments) currentSong.moments = [];
+  const idx = currentSong.moments.indexOf(m);
+  
+  if (idx > -1) {
+    currentSong.moments.splice(idx, 1);
+  } else {
+    currentSong.moments.push(m);
+  }
+  
+  if (currentSong.moments.length === 0) currentSong.moments = ["Varios"];
+  renderMomentsChips(currentSong.moments);
+  markUnsavedChanges();
+}
+
+// Remueve un momento al hacer clic en la "×" del chip seleccionado
+function removeMoment(m) {
+  toggleMoment(m); 
+}
+
+// Cierra el diálogo flotante de momentos
+function closeMomentsDialog() {
+  const dlg = document.getElementById("moments-dialog");
+  if (dlg) dlg.style.display = "none";
+}
+
+// Devuelve un arreglo con los momentos activos actuales para guardar en Firebase
+function getSelectedMoments() {
+  if (currentSong && currentSong.moments) return currentSong.moments;
+  return ["Varios"];
+}
+
+/* ==========================================================
+   7. CONTROLES GENERALES DEL EDITOR Y PERMISOS
+   ========================================================== */
 function markUnsavedChanges() {
     hasUnsavedChanges = true;
 }
 
+// Aplica permisos de usuario según su rol y accesos otorgados
 function applyPermissions(permissionsArray) {
     const permMap = { 'canciones': 'tab-songs', 'anuncios': 'tab-announcements', 'oraciones': 'tab-prayers', 'guiones': 'tab-scripts' };
     document.querySelectorAll('.tab-btn').forEach(btn => btn.style.display = 'none');
@@ -183,6 +261,7 @@ function applyPermissions(permissionsArray) {
     if (firstTab) document.getElementById(firstTab).click();
 }
 
+// Cambia de pestaña principal en la interfaz
 function switchMod(mod) {
   document.querySelectorAll('main').forEach(m => m.style.display = 'none');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -191,6 +270,7 @@ function switchMod(mod) {
   if(event && event.target) event.target.classList.add('active');
 }
 
+// Alterna entre el Modo Acordes visuales y el Modo Letra (Texto maestro con corchetes)
 function toggleEditMode() {
   if (userRole !== 'super_admin') return;
   isEditMode = !isEditMode;
@@ -209,9 +289,9 @@ function toggleEditMode() {
   area.focus();
 }
 
-// ==========================================
-// NUEVO SISTEMA DE SELECCIÓN DE ACORDES
-// ==========================================
+/* ==========================================================
+   8. SISTEMA DE SELECCIÓN Y EVENTOS DEL EDITOR
+   ========================================================== */
 function clearChordSelection() {
     if (activeChordNode) {
         activeChordNode.classList.remove('active');
@@ -231,7 +311,7 @@ function setupEditorListeners() {
   
   const area = document.getElementById('lyrics-editor');
   
-  // Detectar clics con el mouse para seleccionar el acorde naranja
+  // Detectar clics del mouse para seleccionar un acorde (ponerlo naranja)
   area.addEventListener('click', (e) => {
       if (isEditMode) return;
       if (e.target.classList.contains('chord-chip')) {
@@ -243,30 +323,30 @@ function setupEditorListeners() {
 
   area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
 
-    area.addEventListener('keydown', (e) => {
+  area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
 
     const k = e.key.toLowerCase();
     const rootMap = {"d":"Do","r":"Re","m":"Mi","f":"Fa","s":"Sol","l":"La","i":"Si"};
     const mods = {"#":"#","b":"b","-":"-","7":"7"};
 
-    // 1. NAVEGACIÓN Y BORRADO CON ALT
+    // 1. NAVEGACIÓN Y BORRADO RÁPIDO CON LA TECLA ALT
     if (e.altKey) {
         if (e.key === "ArrowLeft") { e.preventDefault(); jumpToChord(-1); return; }
         if (e.key === "ArrowRight") { e.preventDefault(); jumpToChord(1); return; }
         if (e.key === "Backspace" || e.key === "Delete") { e.preventDefault(); delMob(); return; }
     }
 
-    // 2. NAVEGACIÓN NORMAL 
+    // 2. PERMITIR NAVEGACIÓN NORMAL CON FLECHAS (sin Alt) DESELECCIONA ACORDES
     if (["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Home","End","PageUp","PageDown"].includes(e.key) && !e.altKey) {
         clearChordSelection(); 
         return;
     }
     
-    // 3. ATAJOS DEL SISTEMA
+    // 3. PERMITIR ATAJOS DEL SISTEMA (Ctrl+C, Ctrl+V, etc.)
     if (e.ctrlKey || e.metaKey) return;
 
-    // 🚀 4. BLOQUEO DE LETRA + TECLAS MÚSICA LIBRES
+    // 4. BLOQUEO DE ESCRITURA DE TEXTO + INSERCIÓN DE ACORDES POR TECLADO
     e.preventDefault(); 
     e.stopPropagation(); 
     
@@ -276,16 +356,18 @@ function setupEditorListeners() {
     else if (mods[k]) { 
         modMob(mods[k]); 
     } 
-    // Borrado directo si hay un acorde naranja seleccionado
+    // Borrado directo si hay un acorde naranja activo
     else if ((e.key === "Backspace" || e.key === "Delete") && activeChordNode) { 
         delMob(); 
     }
   });
 }
 
+// Muestra u oculta el teclado visual lateral en pantallas de PC
 function toggleAcordes() {
   const col = document.getElementById("acordesCol");
   const btn = document.getElementById("toggleAcordesBtn");
+  if (!col || !btn) return;
   if (col.style.display === "none") {
     col.style.display = "block";
     btn.innerText = "Ocultar Teclado";
@@ -295,23 +377,24 @@ function toggleAcordes() {
   }
 }
 
+/* ==========================================================
+   9. INSERCIÓN, MODIFICACIÓN Y NAVEGACIÓN DE ACORDES
+   ========================================================== */
+// Inserta un nuevo acorde visual en el cursor y lo selecciona automáticamente en naranja
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
   area.focus();
   const id = 'chord-' + Date.now();
-  // Eliminamos el &#8203; invisible que rompía la palabra, y le ponemos ID para seleccionarlo al nacer
   const html = `<span id="${id}" class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>`;
   document.execCommand('insertHTML', false, html);
   markUnsavedChanges();
   if(navigator.vibrate) navigator.vibrate(10); 
   
-  // Seleccionamos automáticamente el acorde recién creado para que quede naranja
   setTimeout(() => {
       const newNode = document.getElementById(id);
       if (newNode) {
-          selectChord(newNode); // Lo ponemos naranja para que sepas que está activo
+          selectChord(newNode); 
           
-          // Traemos el cursor de texto al lado
           const sel = window.getSelection();
           const range = document.createRange();
           range.setStartAfter(newNode);
@@ -322,25 +405,28 @@ function insChordVisual(chordText) {
   }, 10);
 }
 
+// Inserta o reemplaza un acorde (si ya hay uno seleccionado en naranja, lo transforma)
 function insMob(chordText) {
-    // Si hay un acorde seleccionado (naranja), lo transformamos.
     if (activeChordNode) {
         activeChordNode.setAttribute('data-chord', chordText);
         markUnsavedChanges();
     } else {
-        // Si no hay ninguno seleccionado, creamos uno nuevo.
         insChordVisual(chordText);
     }
 }
 
+// Inserta un acorde escrito manualmente desde el input secundario
 function insManual() {
-  const v = document.getElementById('manual-chord-in').value.trim();
+  const inputEl = document.getElementById('manual-chord-in');
+  if (!inputEl) return;
+  const v = inputEl.value.trim();
   if (v) { 
     insChordVisual(v); 
-    document.getElementById('manual-chord-in').value = ""; 
+    inputEl.value = ""; 
   }
 }
 
+// Salta de un acorde a otro hacia adelante (+1) o hacia atrás (-1) de forma inteligente
 function jumpToChord(dir) {
     const editor = document.getElementById('lyrics-editor');
     const chords = Array.from(editor.querySelectorAll('.chord-chip'));
@@ -348,31 +434,26 @@ function jumpToChord(dir) {
 
     let targetChord = null;
 
-    // 1. Si ya hay un acorde naranja, saltamos al siguiente/anterior en la lista
     if (activeChordNode) {
         let currentIndex = chords.indexOf(activeChordNode) + dir;
         if (currentIndex >= chords.length) currentIndex = 0;
         if (currentIndex < 0) currentIndex = chords.length - 1;
         targetChord = chords[currentIndex];
-    } 
-    // 2. Si NO hay acorde seleccionado, usamos la ubicación actual del cursor de texto
-    else {
+    } else {
         const sel = window.getSelection();
         if (!sel.rangeCount) {
             targetChord = chords[dir > 0 ? 0 : chords.length - 1];
         } else {
             const cursorNode = sel.focusNode;
             if (dir > 0) {
-                // Buscar el primer acorde DESPUÉS del cursor de texto
                 for (let chord of chords) {
                     if (cursorNode.compareDocumentPosition(chord) & Node.DOCUMENT_POSITION_FOLLOWING) {
                         targetChord = chord;
                         break;
                     }
                 }
-                if (!targetChord) targetChord = chords[0]; // Si no hay más, vuelve al primero
+                if (!targetChord) targetChord = chords[0];
             } else {
-                // Buscar el primer acorde ANTES del cursor de texto
                 for (let i = chords.length - 1; i >= 0; i--) {
                     let chord = chords[i];
                     if (cursorNode.compareDocumentPosition(chord) & Node.DOCUMENT_POSITION_PRECEDING) {
@@ -380,17 +461,15 @@ function jumpToChord(dir) {
                         break;
                     }
                 }
-                if (!targetChord) targetChord = chords[chords.length - 1]; // Si no hay más, va al último
+                if (!targetChord) targetChord = chords[chords.length - 1];
             }
         }
     }
 
     if (!targetChord) return;
 
-    // 3. Pintamos de naranja el acorde encontrado
     selectChord(targetChord);
 
-    // 4. Traemos el cursor de texto al lado del acorde (para que no quede tirado lejos)
     const sel = window.getSelection();
     const range = document.createRange();
     range.setStartAfter(targetChord);
@@ -399,8 +478,8 @@ function jumpToChord(dir) {
     sel.addRange(range);
 }
 
+// Modifica las alteraciones del acorde activo seleccionado ( Sostenidos #, Bemoles b, Menores -, Séptimas 7 )
 function modMob(mod) {
-    // Ahora modifica directamente el acorde naranja (activeChordNode)
     if (activeChordNode) {
         let chord = activeChordNode.getAttribute('data-chord');
         const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(7?)$/i);
@@ -420,10 +499,10 @@ function modMob(mod) {
     }
 }
 
+// Borra el acorde activo seleccionado y reubica la selección en el anterior
 function delMob() {
     if (activeChordNode) {
         const nodeToDelete = activeChordNode;
-        // Salta al anterior para no perder la selección
         jumpToChord(-1); 
         if (activeChordNode === nodeToDelete) {
             clearChordSelection();
@@ -433,6 +512,9 @@ function delMob() {
     }
 }
 
+/* ==========================================================
+   10. GESTIÓN DE ARCHIVOS MULTIMEDIA (AUDIO Y YOUTUBE)
+   ========================================================== */
 async function uploadFile(input, folder, targetInputId) {
   const file = input.files[0];
   if (!file || !currentSong) return;
@@ -440,7 +522,7 @@ async function uploadFile(input, folder, targetInputId) {
   const status = document.getElementById("uploadStatus");
   const linkInput = document.getElementById(targetInputId);
   
-  status.textContent = "⏳ Subiendo archivo a Storage...";
+  if (status) status.textContent = "⏳ Subiendo archivo a Storage...";
   setBusy(true, "Subiendo archivo...");
 
   try {
@@ -449,19 +531,22 @@ async function uploadFile(input, folder, targetInputId) {
     await ref.put(file);
     const downloadUrl = await ref.getDownloadURL();
     
-    linkInput.value = downloadUrl;
-    status.textContent = "✅ Archivo subido con éxito.";
+    if (linkInput) linkInput.value = downloadUrl;
+    if (status) status.textContent = "✅ Archivo subido con éxito.";
     markUnsavedChanges();
     if(folder === 'audios') updateAudioPreview();
   } catch (error) {
-    status.textContent = `❌ Error: ${error.message}`;
+    if (status) status.textContent = `❌ Error: ${error.message}`;
   } finally {
     setBusy(false);
   }
 }
 
+// Actualiza la vista previa del reproductor multimedia (YouTube, Google Drive o MP3 directo)
 function updateAudioPreview() {
-  const link = document.getElementById("m-audio-in").value.trim();
+  const linkInput = document.getElementById("m-audio-in");
+  if (!linkInput) return;
+  const link = linkInput.value.trim();
   const container = document.getElementById("audioPreviewContainer");
   const wrapper = document.getElementById("playerWrapper");
 
@@ -472,26 +557,26 @@ function updateAudioPreview() {
   }
 
   if (container) container.style.display = "block";
-  wrapper.innerHTML = ""; // Limpiamos anterior
+  if (wrapper) wrapper.innerHTML = "";
 
-  // 1. LÓGICA YOUTUBE
+  // 1. Reproductor para enlaces de YouTube
   if (link.includes("youtube.com") || link.includes("youtu.be")) {
     let videoId = "";
     try {
       if (link.includes("v=")) videoId = link.split("v=")[1].split("&")[0];
       else videoId = link.split("/").pop().split("?")[0];
-      wrapper.innerHTML = `<iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
+      if (wrapper) wrapper.innerHTML = `<iframe width="100%" height="180" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen style="border-radius:8px; border:none;"></iframe>`;
     } catch (e) {
-      wrapper.innerHTML = '<p style="color:red; font-size:12px;">Error en link de YouTube</p>';
+      if (wrapper) wrapper.innerHTML = '<p style="color:red; font-size:12px;">Error en link de YouTube</p>';
     }
   } 
-  // 2. LÓGICA GOOGLE DRIVE (TU BOTÓN AZUL ORIGINAL)
+  // 2. Botón de acceso directo para Google Drive
   else if (link.includes("drive.google.com")) {
     let fileId = "";
     try {
       const match = link.match(/[-\w]{25,}/);
       fileId = match ? match[0] : "";
-      if (fileId) {
+      if (fileId && wrapper) {
         wrapper.innerHTML = `
           <div style="background:rgba(255,255,255,0.05); border:1px dashed #4DB6AC; padding:15px; border-radius:8px; text-align:center;">
             <div style="margin-bottom:10px; color:#aaa; font-size:11px;">
@@ -506,20 +591,26 @@ function updateAudioPreview() {
             </p>
           </div>`;
       }
-    } catch (e) { wrapper.innerHTML = '<p style="color:red; font-size:11px;">Error al procesar Drive</p>'; }
+    } catch (e) { if (wrapper) wrapper.innerHTML = '<p style="color:red; font-size:11px;">Error al procesar Drive</p>'; }
   }
-  // 3. LÓGICA STORAGE / MP3 DIRECTO (REPRODUCTOR NATIVO)
+  // 3. Reproductor nativo de audio estándar (MP3 / Firebase Storage)
   else {
-    wrapper.innerHTML = `
-      <audio controls style="width:100%; height:35px;">
-        <source src="${link}" type="audio/mpeg">
-      </audio>
-    `;
-    const audio = wrapper.querySelector('audio');
-    if (audio) audio.load();
+    if (wrapper) {
+      wrapper.innerHTML = `
+        <audio controls style="width:100%; height:35px;">
+          <source src="${link}" type="audio/mpeg">
+        </audio>
+      `;
+      const audio = wrapper.querySelector('audio');
+      if (audio) audio.load();
+    }
   }
 }
 
+/* ==========================================================
+   11. GUARDADO Y PUBLICACIÓN GLOBAL EN FIREBASE
+   ========================================================== */
+// Guarda los cambios de la canción activa en la colección de borradores
 async function saveBorrador() {
   if (!currentSong) return; 
   setBusy(true, "Guardando...");
@@ -552,6 +643,7 @@ async function saveBorrador() {
   setBusy(false);
 }
 
+// Publica oficialmente todos los borradores para que se reflejen en la app principal de los usuarios
 async function confirmPublish() {
   if (!confirm("🚀 ¿Publicar Versión Oficial para todos los usuarios?")) return; 
   setBusy(true, "Publicando...");
@@ -570,10 +662,40 @@ async function confirmPublish() {
   setBusy(false);
 }
 
-function usToEs(t) { return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { const r = c.match(/^([A-G])([#b]?)(.*)/); if (!r) return m; return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; }); }
-function esToUs(t) { return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { const roots = ["Sol","Do","Re","Mi","Fa","La","Si"]; for (let r of roots) { if (c.startsWith(r)) { let a = "", rest = c.slice(r.length); if (rest.startsWith("#") || rest.startsWith("b")) { a = rest[0]; rest = rest.slice(1); } return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${a}${rest}]`; } } return m; }); }
+/* ==========================================================
+   12. FUNCIONES AUXILIARES DE TRADUCCIÓN Y ESTADOS DE CARGA
+   ========================================================== */
+// Traduce notación científica americana (C, D, E) a española (Do, Re, Mi) para el editor
+function usToEs(t) { 
+  return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { 
+    const r = c.match(/^([A-G])([#b]?)(.*)/); 
+    if (!r) return m; 
+    return `[${{"C":"Do","D":"Re","E":"Mi","F":"Fa","G":"Sol","A":"La","B":"Si"}[r[1]]}${r[2]}${r[3]}]`; 
+  }); 
+}
 
+// Traduce notación española (Do, Re, Mi) a científica americana (C, D, E) para guardar
+function esToUs(t) { 
+  return (t||"").replace(/\[([^\]]+)\]/g, (m, c) => { 
+    const roots = ["Sol","Do","Re","Mi","Fa","La","Si"]; 
+    for (let r of roots) { 
+      if (c.startsWith(r)) { 
+        let a = "", rest = c.slice(r.length); 
+        if (rest.startsWith("#") || rest.startsWith("b")) { 
+          a = rest[0]; 
+          rest = rest.slice(1); 
+        } 
+        return `[${{"Do":"C","Re":"D","Mi":"E","Fa":"F","Sol":"G","La":"A","Si":"B"}[r]}${a}${rest}]`; 
+      } 
+    } 
+    return m; 
+  }); 
+}
+
+// Muestra u oculta la pantalla flotante de carga / procesos pesados
 function setBusy(on, t) { 
-  document.getElementById('busy-overlay').style.display = on ? 'flex' : 'none'; 
-  document.getElementById('busy-text').innerText = t || "Cargando..."; 
+  const overlay = document.getElementById('busy-overlay');
+  const text = document.getElementById('busy-text');
+  if (overlay) overlay.style.display = on ? 'flex' : 'none'; 
+  if (text) text.innerText = t || "Cargando..."; 
 }
