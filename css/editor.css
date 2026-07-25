@@ -362,7 +362,7 @@ input, select {
 /* Evita que los divs o saltos invisibles rompan el texto dentro del editor */
 #lyrics-editor b, #lyrics-editor i, #lyrics-editor span:not(.chord-chip) {
   display: inline !important;
-  white-space: normal !important;
+  white-space: pre-wrap !important; /* <--- Cambiado a pre-wrap para respetar los espacios */
 }
 
 /* Fuerza a que el chip de acorde sea un bloque estricto que no genere saltos de línea */
