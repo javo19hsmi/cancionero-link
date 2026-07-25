@@ -265,9 +265,11 @@ input, select {
 #m-biography-in { 
    min-height: 60px;   /* Altura mínima (aprox 2 renglones) */ 
    max-height: 300px;  /* Altura máxima para que no rompa el panel */ 
+   height: auto;       /* Permite que el CSS acepte la orden de auto-expansión */
    overflow-y: hidden; /* Ocultamos el scroll para que el JS maneje la altura */ 
-   resize: none;       /* Quitamos el tirador de la esquina para que sea automático */ 
-   transition: height 0.2s ease; /* Efecto suave al crecer */ 
+   resize: none;       /* Quitamos el tirador de la esquina para que sea automático */
+   line-height: 1.4;   /* Altura de renglón limpia para el cálculo */
+   transition: height 0.1s ease; /* Efecto suave al crecer */ 
 }
 
 /* ==========================================================
