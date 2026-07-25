@@ -64,7 +64,7 @@
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
           <label id="mode-text">CARGA DE ACORDES</label>
           <div style="display:flex; gap:8px;">
-            <button id="toggleAcordesBtn" class="btn" style="padding:5px 10px; font-size:11px; background: rgba(255,255,255,0.05); color: var(--text);" onclick="toggleAcordes()">Mostrar Teclado</button>
+            <button id="toggleAcordesBtn" class="btn" onclick="toggleAcordes()" style="background:var(--card-bg); border:1px solid var(--glass-border); color:white; font-size:12px; padding:6px 12px;">Mostrar Teclado</button>
             <button id="pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleEditMode()" title="Lápiz Maestro">
               <span class="material-symbols-outlined" style="font-size:20px">edit</span>
             </button>
@@ -171,27 +171,6 @@
     <main id="mod-announcements" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📢 Anuncios</h2></section></main>
     <main id="mod-prayers" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">🙏 Oraciones</h2></section></main>
     <main id="mod-scripts" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📜 Guiones</h2></section></main>
-  </div>
-
-  <!-- TECLADO MÓVIL (OCULTO EN PC) -->
-  <div id="mobileChordBar">
-    <button class="close-mobile-btn" onclick="document.getElementById('mobileChordBar').style.display='none'">X</button>
-    <div class="mb-row">
-      <div class="mb-btn btn-root" onclick="insMob('Do')">Do</div>
-      <div class="mb-btn btn-root" onclick="insMob('Re')">Re</div>
-      <div class="mb-btn btn-root" onclick="insMob('Mi')">Mi</div>
-      <div class="mb-btn btn-root" onclick="insMob('Fa')">Fa</div>
-      <div class="mb-btn btn-root" onclick="insMob('Sol')">Sol</div>
-      <div class="mb-btn btn-root" onclick="insMob('La')">La</div>
-      <div class="mb-btn btn-root" onclick="insMob('Si')">Si</div>
-    </div>
-    <div class="mb-row">
-      <div class="mb-btn btn-mod" onclick="modMob('#')">#</div>
-      <div class="mb-btn btn-mod" onclick="modMob('b')">b</div>
-      <div class="mb-btn btn-mod" onclick="modMob('m')">m</div>
-      <div class="mb-btn btn-mod" onclick="modMob('7')">7</div>
-      <div class="mb-btn btn-action" style="color:var(--danger);" onclick="delMob()">⌫</div>
-    </div>
   </div>
 
   <div id="busy-overlay">
