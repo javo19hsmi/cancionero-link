@@ -529,17 +529,22 @@ function jumpToChord(dir) {
 function modMob(mod) {
     if (activeChordNode) {
         let chord = activeChordNode.getAttribute('data-chord');
-        const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(7?)$/i);
+        const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(-?)(7?)$/i);
         if (!m) return;
         
         let root = m[1], acc = m[2] || "", minor = m[3] || "", sev = m[4] || "";
-        if (mod === "#") acc = (acc === "#") ? "" : "#";
-        else if (mod === "b") acc = (acc === "b") ? "" : "b";
-        else if (mod === "-") minor = (minor === "m") ? "" : "m";
-        else if (mod === "7") sev = (sev === "7") ? "" : "7";
-        if (acc === '#') acc = (mod === 'b') ? 'b' : '#';
-        if (acc === 'b') acc = (mod === '#') ? '#' : 'b';
         
+        if (mod === "#") {
+            acc = (acc === "#") ? "" : "#";
+        } else if (mod === "b") {
+            acc = (acc === "b") ? "" : "b";
+        } else if (mod === "m" || mod === "-") { 
+            // MAGIA: Si el botón manda 'm' o '-', alterna entre menor y mayor perfectamente
+            minor = (minor === "m") ? "" : "m";
+        } else if (mod === "7") {
+            sev = (sev === "7") ? "" : "7";
+        }
+
         const newChord = root + acc + minor + sev;
         activeChordNode.setAttribute('data-chord', newChord);
         markUnsavedChanges();
