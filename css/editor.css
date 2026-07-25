@@ -1,226 +1,443 @@
 :root {
-  --primary: #4DB6AC; 
-  --primary-dark: #004D40; 
-  --bg: #0A0A0B;
-  --card-bg: rgba(255, 255, 255, 0.04); 
-  --glass-border: rgba(255, 255, 255, 0.12);
-  --text: #E0E0E0; 
-  --danger: #ff5252; 
-  --warning: #ffa726;
+
+--primary: #4DB6AC;
+
+--primary-dark: #004D40;
+
+--bg: #0A0A0B;
+
+--card-bg: rgba(255, 255, 255, 0.04);
+
+--glass-border: rgba(255, 255, 255, 0.12);
+
+--text: #E0E0E0;
+
+--danger: #ff5252;
+
+--warning: #ffa726;
+
 }
 
+
+
 body {
-  margin: 0; 
-  font-family: 'Segoe UI', Roboto, sans-serif; 
-  background: var(--bg); 
-  color: var(--text);
-  height: 100vh; 
-  display: flex; 
-  flex-direction: column; 
-  overflow: hidden;
+
+margin: 0;
+
+font-family: 'Segoe UI', Roboto, sans-serif;
+
+background: var(--bg);
+
+color: var(--text);
+
+height: 100vh;
+
+display: flex;
+
+flex-direction: column;
+
+overflow: hidden;
+
 }
+
+
 
 .app-container { display: none; flex-direction: column; height: 100vh; }
 
+
+
 header { background: rgba(0,0,0,0.4); }
 
+
+
 .main-grid {
-  display: grid; 
-  grid-template-columns: 280px 1fr 320px; 
-  gap: 15px; 
-  padding: 15px; 
-  flex: 1; 
-  overflow: hidden;
+
+display: grid;
+
+grid-template-columns: 280px 1fr 320px;
+
+gap: 15px;
+
+padding: 15px;
+
+flex: 1;
+
+overflow: hidden;
+
 }
 
-@media (max-width: 1100px) { 
-  .main-grid { grid-template-columns: 1fr; overflow-y: auto; } 
+
+
+@media (max-width: 1100px) {
+
+.main-grid { grid-template-columns: 1fr; overflow-y: auto; }
+
 }
 
-.glass-panel { 
-  background: var(--card-bg); 
-  backdrop-filter: blur(15px); 
-  border: 1px solid var(--glass-border); 
-  border-radius: 20px;
-  display: flex; 
-  flex-direction: column; 
-  padding: 15px; 
-  overflow: hidden;
+
+
+.glass-panel {
+
+background: var(--card-bg);
+
+backdrop-filter: blur(15px);
+
+border: 1px solid var(--glass-border);
+
+border-radius: 20px;
+
+display: flex;
+
+flex-direction: column;
+
+padding: 15px;
+
+overflow: hidden;
+
 }
+
+
 
 .search-results { flex: 1; overflow-y: auto; margin-top: 10px; }
+
 .result-item {
-  padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px;
-  font-size: 13px; border: 1px solid transparent; transition: 0.2s;
+
+padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px;
+
+font-size: 13px; border: 1px solid transparent; transition: 0.2s;
+
 }
+
 .result-item:hover { background: rgba(255,255,255,0.05); border-color: var(--primary); }
+
 .result-item.active { background: var(--primary); color: white; }
 
-/* 🚀 1. EDITOR Y LÍNEA DE TECHO UNIFICADA */
+
+
+/* EL EDITOR VISUAL */
+
 #lyrics-editor {
-  flex: 1; min-height: 450px; background: #000000; 
-  border: 1px solid var(--glass-border); border-radius: 12px; 
-  padding: 25px 25px 60px 25px; color: #ffffff; 
-  font-family: 'Consolas', monospace; font-size: 16px; 
-  line-height: 2.2 !important; /* Equilibrio perfecto para la escalera de acordes */
-  outline: none; overflow-y: auto; white-space: pre-wrap;
+
+flex: 1; min-height: 450px; background: #000000;
+
+border: 1px solid var(--glass-border); border-radius: 12px;
+
+padding: 25px 25px 60px 25px; color: #ffffff;
+
+font-family: 'Consolas', monospace; font-size: 16px;
+
+line-height: 1.8; /* REDUCIDO: Las líneas sin acordes ahora se ven juntas y naturales */
+
+outline: none; overflow-y: auto; white-space: pre-wrap;
+
 }
+
 #lyrics-editor:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(77,182,172,0.1); }
+
 #lyrics-editor:empty:before { content: attr(placeholder); color: #555; font-style: italic; }
 
-/* 🪜 2. GLOBLITOS SIN ESTIRAR LA PALABRA */
+
+
+/* GLOBLITOS DE ACORDES FLOTANTES */
+
 .chord-chip {
-  position: relative;
-  display: inline-block;
-  width: 0; 
-  height: 0;
-  vertical-align: baseline; 
-  overflow: visible;
-  cursor: pointer; 
+
+position: relative;
+
+display: inline-block;
+
+width: 0;
+
+height: 44px; /* SUBIMOS EL PILAR: Esto aleja más el renglón de arriba para que no se pegue a la letra */
+
+vertical-align: baseline;
+
+font-size: 0;
+
+color: transparent;
+
+overflow: visible;
+
+direction: ltr;
+
+user-select: none;
+
+cursor: pointer;
+
 }
+
+
 
 .chord-chip::before {
-  content: attr(data-chord);
-  position: absolute;
-  bottom: 10px; /* Altura Nivel 1 */
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: #0b1a1c;
-  color: #4DB6AC;
-  border: 1px solid #4DB6AC;
-  border-radius: 12px;
-  padding: 1px 5px;
-  font-size: 10px; 
-  font-weight: bold;
-  white-space: nowrap;
-  z-index: 10;
-  transition: all 0.2s ease;
-  pointer-events: auto; 
+
+content: attr(data-chord);
+
+position: absolute;
+
+bottom: 12px; /* LEVANTAMOS EL GLOBO: 4 píxeles más arriba para que respire de la letra */
+
+left: 50%;
+
+transform: translateX(-50%);
+
+background-color: #0b1a1c;
+
+color: #4DB6AC;
+
+border: 1px solid #4DB6AC;
+
+border-radius: 12px;
+
+padding: 3px 7px;
+
+font-size: 11px;
+
+font-weight: bold;
+
+white-space: nowrap;
+
+z-index: 10;
+
+transition: all 0.2s ease;
+
+pointer-events: auto;
+
 }
+
+
 
 .chord-chip::after {
-  content: '';
-  position: absolute;
-  bottom: 6px; 
-  left: 50%;
-  transform: translateX(-50%);
-  border-left: 3px solid transparent;
-  border-right: 3px solid transparent;
-  border-top: 3px solid #4DB6AC;
-  z-index: 10;
-  transition: all 0.2s ease;
+
+content: '';
+
+position: absolute;
+
+bottom: 7px; /* Acomodamos el piquito a la nueva altura */
+
+left: 50%;
+
+transform: translateX(-50%);
+
+border-left: 4px solid transparent;
+
+border-right: 4px solid transparent;
+
+border-top: 4px solid #4DB6AC;
+
+z-index: 10;
+
+transition: all 0.2s ease;
+
 }
 
-/* 🚀 ESCALERA NIVEL 2 (Si un acorde sigue a otro) */
-.chord-chip + .chord-chip::before {
-  bottom: 24px; 
-}
-.chord-chip + .chord-chip::after {
-  bottom: 20px; 
-}
 
-/* 🚀 ESCALERA NIVEL 3 (Si hay tres seguidos) */
-.chord-chip + .chord-chip + .chord-chip::before {
-  bottom: 38px;
-}
-.chord-chip + .chord-chip + .chord-chip::after {
-  bottom: 34px;
-}
 
-/* PRIORIDAD DE CAPAS PARA HOVER Y SELECCIÓN */
+/* ==========================================================
+
+SOLUCIÓN PARA ACORDES AMONTONADOS ("Ac[Do]u[Mi]erdate...")
+
+========================================================== */
+
 .chord-chip:hover::before,
+
 .chord-chip.active::before {
-  z-index: 50; 
+
+z-index: 50; /* Cuando pasás el mouse o está naranja, se pone al frente de todos */
+
 }
+
+
+
+/* Si hay acordes pegados, el navegador los va escalonando hacia arriba automáticamente */
+
+.chord-chip + .chord-chip::before {
+
+bottom: 25px; /* Si hay dos seguidos, el segundo sube un escalón para no pisar al primero */
+
+}
+
+.chord-chip + .chord-chip::after {
+
+bottom: 20px;
+
+}
+
+
 
 /* ESTADO SELECCIONADO (NARANJA) */
+
 .chord-chip.active::before {
-  background-color: #e65100;
-  color: #ffffff;
-  border-color: #ffb74d;
-  transform: translateX(-50%) scale(1.15); 
-  box-shadow: 0 4px 8px rgba(230, 81, 0, 0.4);
+
+background-color: #e65100;
+
+color: #ffffff;
+
+border-color: #ffb74d;
+
+transform: translateX(-50%) scale(1.15);
+
+box-shadow: 0 4px 8px rgba(230, 81, 0, 0.4);
+
 }
+
+
 
 .chord-chip.active::after {
-  border-top-color: #ffb74d;
-  transform: translateX(-50%) scale(1.15);
+
+border-top-color: #ffb74d;
+
+transform: translateX(-50%) scale(1.15);
+
 }
+
+
 
 /* BOTÓN CERRAR TECLADO MÓVIL */
+
 .close-mobile-btn {
-  position: absolute;
-  top: -15px;
-  right: 10px;
-  background: var(--danger);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 25px;
-  height: 25px;
-  font-size: 12px;
-  font-weight: bold;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+
+position: absolute;
+
+top: -15px;
+
+right: 10px;
+
+background: var(--danger);
+
+color: white;
+
+border: none;
+
+border-radius: 50%;
+
+width: 25px;
+
+height: 25px;
+
+font-size: 12px;
+
+font-weight: bold;
+
+cursor: pointer;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+
 }
+
+
 
 /* TECLADOS VISUALES (PC) */
+
 .kbd { border: 1px solid var(--glass-border); border-radius: 12px; padding: 10px; background: rgba(255,255,255,0.02); }
+
 .key { padding: 8px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; font-size: 13px; background: rgba(255,255,255,0.05); text-align: center; transition: 0.2s; color: white; }
+
 .key:hover { background: var(--primary); color: black; }
 
-/* TECLADO MÓVIL (CELULAR) - Ajustado para que no tape la letra abajo */
+
+
+/* TECLADO MÓVIL (CELULAR) */
+
 #mobileChordBar { display: none; }
+
 @media (max-width: 768px) {
-  #acordesCol { display: none !important; } 
-  #mobileChordBar {
-    display: block; position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
-    border-top: 1px solid var(--glass-border); padding: 8px; z-index: 1000;
-  }
-  #mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
-  #mobileChordBar .mb-btn {
-    flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
-    border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; font-weight: bold; cursor: pointer;
-  }
-  #mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
-  
-  /* MARGEN EXTRA EN CELULAR PARA QUE LA BARRA MÓVIL NO TAPE EL FINAL DEL TEXTO */
-  #lyrics-editor { margin-bottom: 140px !important; }
+
+#acordesCol { display: none !important; } /* Oculta el de PC en el celu */
+
+#mobileChordBar {
+
+display: block; position: fixed; left: 0; right: 0; bottom: 0; background: var(--bg);
+
+border-top: 1px solid var(--glass-border); padding: 8px; z-index: 1000;
+
 }
+
+#mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
+
+#mobileChordBar .mb-btn {
+
+flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
+
+border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; font-weight: bold; cursor: pointer;
+
+}
+
+#mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
+
+#lyrics-editor { margin-bottom: 100px; }
+
+}
+
+
 
 label { font-size: 9px; font-weight: bold; color: var(--primary); margin-bottom: 4px; display: block; text-transform: uppercase; }
+
 input, select {
-  width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); box-sizing: border-box;
-  border-radius: 8px; padding: 8px; color: white; font-size: 13px; margin-bottom: 10px;
+
+width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); box-sizing: border-box;
+
+border-radius: 8px; padding: 8px; color: white; font-size: 13px; margin-bottom: 10px;
+
 }
+
 .btn { border: none; border-radius: 10px; padding: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+
 .btn-save { background: var(--primary); color: white; }
+
 .btn-publish { background: var(--warning); color: white; }
+
 .tab-btn { background: none; border: none; color: #555; padding: 15px 0; font-weight: bold; cursor: pointer; border-bottom: 2px solid transparent; display: none; }
+
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
 
+
+
 #login-overlay { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+
 .login-card { text-align: center; padding: 40px; border-radius: 30px; max-width: 400px; width: 90%; background: var(--card-bg); backdrop-filter: blur(20px); border: 1px solid var(--glass-border); }
+
 #busy-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 20000; }
+
 @keyframes spin { to { transform: rotate(360deg); } }
 
+
+
 /* ESTILOS PARA LOS CHIPS DE MOMENTOS LITÚRGICOS */
-.chip { 
-  padding: 4px 10px; 
-  border-radius: 999px; 
-  border: 1px solid var(--glass-border); 
-  font-size: 11px; 
-  cursor: pointer; 
-  transition: 0.2s; 
-  background: rgba(255,255,255,0.05); 
-  color: white; 
+
+.chip {
+
+padding: 4px 10px;
+
+border-radius: 999px;
+
+border: 1px solid var(--glass-border);
+
+font-size: 11px;
+
+cursor: pointer;
+
+transition: 0.2s;
+
+background: rgba(255,255,255,0.05);
+
+color: white;
+
 }
-.chip.on { 
-  background: var(--primary); 
-  border-color: var(--primary); 
-  color: #000000; 
-  font-weight: bold; 
+
+.chip.on {
+
+background: var(--primary);
+
+border-color: var(--primary);
+
+color: #000000;
+
+font-weight: bold;
+
 }
