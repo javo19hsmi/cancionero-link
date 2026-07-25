@@ -208,26 +208,33 @@ header { background: rgba(0,0,0,0.4); }
 .key { padding: 8px; border-radius: 8px; border: 1px solid var(--glass-border); cursor: pointer; font-size: 13px; background: rgba(255,255,255,0.05); text-align: center; transition: 0.2s; color: white; }
 .key:hover { background: var(--primary); color: black; }
 
-/* Barra de acordes inferior exclusiva para Celulares */
-#mobileChordBar { display: none; }
+/* ==========================================================
+   ADAPTACIÓN MÓVIL DEL TECLADO UNIFICADO
+   ========================================================== */
 @media (max-width: 768px) {
-  #acordesCol { display: none !important; } /* Oculta el teclado de PC en pantallas chicas */
-  #mobileChordBar {
-    display: block; 
-    position: fixed; 
-    left: 0; right: 0; bottom: 0; 
-    background: var(--bg);
-    border-top: 1px solid var(--glass-border); 
-    padding: 8px; 
-    z-index: 1000;
+  /* En celulares, el contenedor #acordesCol pasa a ser una ventana flotante inferior deslizable */
+  #acordesCol {
+    display: none; /* Arranca oculto por defecto y se abre con el botón */
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    max-height: 48vh;
+    overflow-y: auto;
+    background: #121214 !important;
+    border-top: 2px solid var(--primary) !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -10px 25px rgba(0,0,0,0.8);
+    z-index: 9999;
+    padding: 15px !important;
+    box-sizing: border-box;
   }
-  #mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
-  #mobileChordBar .mb-btn {
-    flex: 1; text-align: center; padding: 10px 0; border-radius: 8px;
-    border: 1px solid var(--glass-border); background: rgba(255,255,255,0.05); color: white; font-weight: bold; cursor: pointer;
+  
+  /* Margen inferior extra en el editor para que el teclado flotante no tape los últimos renglones */
+  #lyrics-editor { 
+    margin-bottom: 240px !important; 
   }
-  #mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
-  #lyrics-editor { margin-bottom: 100px; /* Deja espacio al final para que la barra móvil no tape la letra */ }
 }
 
 /* ==========================================================
