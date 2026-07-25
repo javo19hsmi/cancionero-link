@@ -8,6 +8,7 @@ let isEditMode = false;        // Estado de edición de texto maestro (false = m
 let hasUnsavedChanges = false; // Bandera para advertir si hay cambios sin guardar
 let editorListenersAttached = false; // Control para evitar duplicar los eventos del teclado/mouse
 let activeChordNode = null;    // Guarda el nodo del acorde actualmente seleccionado (en naranja)
+let savedRange = null; // Guarda la última posición conocida del cursor en el texto
 
 /* ==========================================================
    2. EL MOTOR DE RENDERIZADO (TRANSFORMACIONES VISUALES Y CRUDAS)
@@ -312,13 +313,28 @@ function setupEditorListeners() {
   
   const area = document.getElementById('lyrics-editor');
   
-  // Detectar clics del mouse para seleccionar un acorde (ponerlo naranja)
+  // 1. Detectar clics del mouse para seleccionar un acorde y guardar la posición del cursor
   area.addEventListener('click', (e) => {
       if (isEditMode) return;
+      
+      // Guardamos la posición exacta del cursor para los teclados virtuales
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0 && area.contains(sel.anchorNode)) {
+          savedRange = sel.getRangeAt(0);
+      }
+
       if (e.target.classList.contains('chord-chip')) {
           selectChord(e.target);
       } else {
           clearChordSelection();
+      }
+  });
+
+  // 2. Guardar posición también al usar las teclas de movimiento común
+  area.addEventListener('keyup', () => {
+      const sel = window.getSelection();
+      if (sel.rangeCount > 0 && area.contains(sel.anchorNode)) {
+          savedRange = sel.getRangeAt(0);
       }
   });
 
@@ -381,15 +397,19 @@ function toggleAcordes() {
 /* ==========================================================
    9. INSERCIÓN, MODIFICACIÓN Y NAVEGACIÓN DE ACORDES
    ========================================================== */
-// Inserta un nuevo acorde visual en el cursor y lo selecciona automáticamente en naranja
+// Inserta un nuevo acorde visual respetando la posición memorizada del cursor
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
-  
-  // 1. Si el cursor se salió del editor, lo devolvemos al final o recuperamos la selección
+  area.focus();
+
   const sel = window.getSelection();
-  if (!sel.rangeCount || !area.contains(sel.anchorNode)) {
-      area.focus();
-      // Si no hay rango válido, ponemos el cursor al final del texto
+  
+  // Restauramos la posición donde el usuario hizo clic por última vez
+  if (savedRange && area.contains(savedRange.commonAncestorContainer)) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+  } else if (!sel.rangeCount || !area.contains(sel.anchorNode)) {
+      // Si no hay memoria previa, lo ubicamos al final del texto por seguridad
       const range = document.createRange();
       range.selectNodeContents(area);
       range.collapse(false);
@@ -406,7 +426,7 @@ function insChordVisual(chordText) {
   setTimeout(() => {
       const newNode = document.getElementById(id);
       if (newNode) {
-          selectChord(newNode); 
+          selectChord(newNode); // Pone el acorde en naranja
           
           const selNew = window.getSelection();
           const rangeNew = document.createRange();
@@ -414,6 +434,9 @@ function insChordVisual(chordText) {
           rangeNew.collapse(true);
           selNew.removeAllRanges();
           selNew.addRange(rangeNew);
+          
+          // Actualizamos la memoria con la nueva posición después de insertar
+          savedRange = rangeNew;
       }
   }, 10);
 }
@@ -428,7 +451,7 @@ function insMob(chordText) {
     }
 }
 
-// Inserta un acorde escrito manualmente desde el input secundario
+// Inserta un acorde escrito manualmente desde el input secundario con validación estricta
 function insManual() {
   const inputEl = document.getElementById('manual-chord-in');
   if (!inputEl) return;
@@ -436,8 +459,7 @@ function insManual() {
   
   if (!v) return;
 
-  // EXPRESIÓN REGULAR DE VALIDACIÓN MUSICAL:
-  // Valda notas base (Do, Re, Mi, Fa, Sol, La, Si o C-G), alteraciones (#, b), menores (m, -) y séptimas/extensiones
+  // EXPRESIÓN REGULAR DE VALIDACIÓN MUSICAL
   const chordRegex = /^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(-?)(7?)(sus4|sus2|maj7|6|9)?$/i;
 
   if (!chordRegex.test(v)) {
@@ -446,7 +468,7 @@ function insManual() {
       return;
   }
 
-  // Si pasa la validación, lo inserta prolijamente
+  // Si pasa la validación, lo inserta en el lugar memorizado
   insChordVisual(v); 
   inputEl.value = ""; 
 }
