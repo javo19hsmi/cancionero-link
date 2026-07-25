@@ -418,7 +418,7 @@ input, select {
   direction: ltr;
   user-select: none;
   cursor: pointer;
-  /* IMPORTANTE: Evita que el navegador rompa el texto adyacente al chip */
+  /* Evita que el navegador rompa el texto adyacente al chip */
   contain: layout style;
 }
 
