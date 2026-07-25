@@ -44,17 +44,22 @@ const Render = {
         
         // Recuperar etiquetas de formato Markdown de forma segura
         clone.querySelectorAll('b').forEach(b => {
-            if(b.querySelector('i')) { b.replaceWith(`**_${b.innerText}_**`); } 
-            else { b.replaceWith(`**${b.innerText}**`); }
+            if(b.querySelector('i')) { b.replaceWith(`**_${b.innerText.replace(/\n/g, '')}_**`); } 
+            else { b.replaceWith(`**${b.innerText.replace(/\n/g, '')}**`); }
         });
-        clone.querySelectorAll('i').forEach(i => i.replaceWith(`_${i.innerText}_`));
+        clone.querySelectorAll('i').forEach(i => i.replaceWith(`_${i.innerText.replace(/\n/g, '')}_`));
 
-        // Normalizar saltos de línea y limpiar espacios fantasmas creados por el DOM
+        // Normalizar saltos de línea y eliminar los saltos de línea basura dentro de palabras cortadas
         clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
-        clone.querySelectorAll('div').forEach(div => { div.prepend('\n'); div.replaceWith(...div.childNodes); });
+        clone.querySelectorAll('div').forEach(div => { 
+            div.prepend('\n'); 
+            div.replaceWith(...div.childNodes); 
+        });
         
         let rawText = clone.textContent || clone.innerText || "";
-        return rawText.replace(/\r/g, '').replace(/\n\n/g, '\n');
+        
+        // Limpia cualquier salto de línea inesperado que haya quedado cortando una palabra con asteriscos/guiones bajos
+        return rawText.replace(/\r/g, '');
     }
 };
 
