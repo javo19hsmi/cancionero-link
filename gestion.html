@@ -180,6 +180,35 @@
     </div>
   </div>
 
+  <!-- ========================================================== -->
+<!-- BARRA MÓVIL INFERIOR DE ACORDES                            -->
+<!-- ========================================================== -->
+<div id="mobileChordBar">
+  <div class="mb-row">
+    <div class="mb-btn" onclick="insMob('Do')">Do</div>
+    <div class="mb-btn" onclick="insMob('Re')">Re</div>
+    <div class="mb-btn" onclick="insMob('Mi')">Mi</div>
+    <div class="mb-btn" onclick="insMob('Fa')">Fa</div>
+    <div class="mb-btn" onclick="insMob('Sol')">Sol</div>
+    <div class="mb-btn" onclick="insMob('La')">La</div>
+    <div class="mb-btn" onclick="insMob('Si')">Si</div>
+  </div>
+
+  <div class="mb-row">
+    <div class="mb-btn" onclick="modMob('#')">#</div>
+    <div class="mb-btn" onclick="modMob('b')">b</div>
+    <div class="mb-btn" onclick="modMob('m')">m</div>
+    <div class="mb-btn" onclick="modMob('7')">7</div>
+    <div class="mb-btn" onclick="jumpToChord(1)">▶</div>
+    <div class="mb-btn" onclick="jumpToChord(-1)">◀</div>
+  </div>
+
+  <div class="mb-row">
+    <div class="mb-btn" onclick="delMob()" style="background:rgba(255,82,82,0.15); color:var(--danger); border-color:var(--danger);">⌫ Borrar</div>
+    <div class="mb-btn" onclick="toggleAcordes()" style="background:rgba(255,255,255,0.1); color:#fff;">Ocultar</div>
+  </div>
+</div>
+
   <script src="js/firebase-config.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/editor.js"></script>
