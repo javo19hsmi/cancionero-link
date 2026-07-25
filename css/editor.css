@@ -30,9 +30,10 @@ body {
 
 header { 
   background: var(--bg); /* Cambiado a fondo sólido oscuro para que la letra no se mezcle por detrás */
-  position: sticky; 
-  top: 0; 
+  position: sticky !important; 
+  top: -1px; /* Truquito para que no quede una línea finita transparente arriba */
   z-index: 1000; 
+  box-shadow: 0 4px 15px rgba(0,0,0,0.6); 
 }
 
 /* Estructura de 3 columnas para el panel de edición (Buscador - Editor - Opciones) */
@@ -43,6 +44,7 @@ header {
   padding: 15px; 
   flex: 1; 
   overflow: hidden;
+  min-height: 0; /* <--- ESTA LÍNEA ES MAGIA PARA LA COMPU */
 }
 
 /* ==========================================================
@@ -52,7 +54,7 @@ header {
   /* 1. Liberamos la altura del body para permitir scroll natural en toda la página */
   body, .app-container { 
     height: auto !important; 
-    overflow-y: auto !important; 
+    overflow: visible !important; 
     display: block; 
   }
   
