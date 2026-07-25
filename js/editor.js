@@ -350,11 +350,19 @@ if (area) {
       }
   });
 
-   // Evita que los celulares desplieguen su teclado nativo al tocar el área de letras
+// Mantiene el cursor visible en celulares y abre la barra de acordes automáticamente
   area.addEventListener('focus', (e) => {
-      if (window.innerWidth <= 768) {
-          // En celulares, quitamos el foco nativo para que no se abra el teclado de Android
-          area.blur();
+      if (window.innerWidth <= 768 && !isEditMode) {
+          // Ya no hacemos area.blur() para no perder el puntero parpadeante (|).
+          // El inputmode="none" se encarga de frenar el teclado nativo.
+          
+          // Hacemos que la barra inferior de acordes se abra sola al tocar la letra
+          const bar = document.getElementById("mobileChordBar");
+          const btn = document.getElementById("toggleAcordesBtn");
+          if (bar && bar.style.display !== "block") {
+              bar.style.display = "block";
+              if (btn) btn.innerText = "Ocultar Teclado";
+          }
       }
   });
 
