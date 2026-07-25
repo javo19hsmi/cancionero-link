@@ -40,9 +40,44 @@ header { background: rgba(0,0,0,0.4); }
   overflow: hidden;
 }
 
-/* Si la pantalla es chica (notebooks o tablets), pasa a una sola columna vertical */
+/* ==========================================================
+   ADAPTACIÓN MÓVIL Y PANTALLAS CHICAS (Reemplaza al anterior de 1100px)
+   ========================================================== */
 @media (max-width: 1100px) { 
-  .main-grid { grid-template-columns: 1fr; overflow-y: auto; } 
+  /* 1. Liberamos la altura del body para permitir scroll natural en toda la página */
+  body, .app-container { 
+    height: auto !important; 
+    overflow-y: auto !important; 
+    display: block; 
+  }
+  
+  /* 2. La grilla principal pasa a ser una columna que se estira hacia abajo */
+  .main-grid { 
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* 3. Liberamos la altura de los paneles de cristal */
+  .glass-panel {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* 4. Limitamos la lista de búsqueda para que no ocupe toda la pantalla y te deje ver el editor */
+  .search-results {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  /* 5. El editor de letras ahora no tiene scroll interno, crece con el contenido */
+  #lyrics-editor {
+    min-height: 60vh;
+    height: auto !important;
+    overflow-y: visible !important; 
+    margin-bottom: 20px !important;
+  }
 }
 
 /* Paneles con diseño tipo "cristal esmerilado" */
@@ -387,4 +422,29 @@ input, select {
   display: inline !important;
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* ==========================================================
+   SCROLLBARS OSCURAS Y ELEGANTES (Tema Dark)
+   ========================================================== */
+/* Para navegadores basados en WebKit (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg); /* Fondo oscuro general */
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15); /* Gris semitransparente */
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary); /* Se pone turquesa al pasar el mouse */
+}
+
+/* Para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) var(--bg);
 }
