@@ -62,9 +62,9 @@
       <!-- COLUMNA 2: EDITOR VISUAL -->
       <section class="glass-panel" style="overflow-y: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-          <label id="mode-text">MODO ACORDES</label>
+          <label id="mode-text">CARGA DE ACORDES</label>
           <div style="display:flex; gap:8px;">
-            <button id="toggleAcordesBtn" class="btn" style="padding:5px 10px; font-size:11px; background: rgba(255,255,255,0.05); color: var(--text);" onclick="toggleAcordes()">Ocultar Teclado</button>
+            <button id="toggleAcordesBtn" class="btn" style="padding:5px 10px; font-size:11px; background: rgba(255,255,255,0.05); color: var(--text);" onclick="toggleAcordes()">Mostrar Teclado</button>
             <button id="pencil-btn" class="btn" style="background:none; color:#555; padding:0; display:none" onclick="toggleEditMode()" title="Lápiz Maestro">
               <span class="material-symbols-outlined" style="font-size:20px">edit</span>
             </button>
@@ -74,7 +74,7 @@
         <div style="display:flex; gap:15px; align-items: flex-start;">
           <div id="lyrics-editor" contenteditable="true" spellcheck="false" placeholder="Elegí una canción para empezar a editar..." oninput="markUnsavedChanges()"></div>
           
-          <div id="acordesCol" style="width: 220px; flex-shrink: 0;">
+          <div id="acordesCol" style="display: none; width: 220px; flex-shrink: 0;">
              <div class="kbd">
                <label style="text-align:center;">Acordes Rápidos</label>
                <div class="grid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
