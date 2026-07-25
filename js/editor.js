@@ -108,9 +108,16 @@ function initApp() {
    ========================================================== */
 // Filtra la lista de canciones en el panel izquierdo según lo que escribas en el buscador
 function filterSongs() {
-  const q = document.getElementById('song-search-box').value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const searchBox = document.getElementById('song-search-box');
+  const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+  const q = searchBox.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const res = document.getElementById('song-results-list'); 
   res.innerHTML = "";
+  
+  // Muestra u oculta la "X" dependiendo de si hay texto escrito
+  if (btnLimpiar) {
+      btnLimpiar.style.display = searchBox.value.length > 0 ? 'block' : 'none';
+  }
   
   allSongs.filter(s => {
     const t = s.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -125,6 +132,14 @@ function filterSongs() {
     }; 
     res.appendChild(div);
   });
+}
+
+// Limpia la caja de búsqueda y vuelve a mostrar toda la lista
+function clearSearch() {
+    const searchBox = document.getElementById('song-search-box');
+    searchBox.value = '';
+    filterSongs(); // Vuelve a ejecutar el filtro (que ahora mostrará todo y ocultará la X)
+    searchBox.focus(); // Deja el cursor titilando en la caja por si querés escribir otra cosa
 }
 
 // Carga los datos de una canción seleccionada en los inputs del formulario y en el editor
