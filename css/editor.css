@@ -262,11 +262,12 @@ input, select {
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* BIOGRAFÍA AUTO-EXPANDIBLE */
-#m-biography-in { min-height: 60px;   /* Altura mínima (aprox 2 renglones) */ 
-max-height: 300px;  /* Altura máxima para que no rompa el panel */ 
-overflow-y: hidden; /* Ocultamos el scroll para que el JS maneje la altura */ 
-resize: none;       /* Quitamos el tirador de la esquina para que sea automático */ 
-transition: height 0.2s ease; /* Efecto suave al crecer */ 
+#m-biography-in { 
+   min-height: 60px;   /* Altura mínima (aprox 2 renglones) */ 
+   max-height: 300px;  /* Altura máxima para que no rompa el panel */ 
+   overflow-y: hidden; /* Ocultamos el scroll para que el JS maneje la altura */ 
+   resize: none;       /* Quitamos el tirador de la esquina para que sea automático */ 
+   transition: height 0.2s ease; /* Efecto suave al crecer */ 
 }
 
 /* ==========================================================
