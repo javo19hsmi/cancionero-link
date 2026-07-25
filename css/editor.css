@@ -354,3 +354,37 @@ input, select {
   color: #000000; 
   font-weight: bold; 
 }
+
+/* ==========================================================
+   BLINDAJE DE PALABRAS Y ACORDES CONTRA SALTOS DE LÍNEA
+   ========================================================== */
+
+/* Evita que los divs o saltos invisibles rompan el texto dentro del editor */
+#lyrics-editor b, #lyrics-editor i, #lyrics-editor span:not(.chord-chip) {
+  display: inline !important;
+  white-space: normal !important;
+}
+
+/* Fuerza a que el chip de acorde sea un bloque estricto que no genere saltos de línea */
+.chord-chip {
+  display: inline-block !important;
+  position: relative;
+  width: 0;
+  height: 46px;
+  vertical-align: baseline;
+  font-size: 0;
+  color: transparent;
+  overflow: visible;
+  direction: ltr;
+  user-select: none;
+  cursor: pointer;
+  /* IMPORTANTE: Evita que el navegador rompa el texto adyacente al chip */
+  contain: layout style;
+}
+
+/* Asegura que el texto plano dentro del editor no cree divs automáticos al borrar */
+#lyrics-editor div {
+  display: inline !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
