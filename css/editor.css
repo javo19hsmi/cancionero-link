@@ -28,7 +28,12 @@ body {
 
 .app-container { display: none; flex-direction: column; height: 100vh; }
 
-header { background: rgba(0,0,0,0.4); }
+header { 
+  background: var(--bg); /* Cambiado a fondo sólido oscuro para que la letra no se mezcle por detrás */
+  position: sticky; 
+  top: 0; 
+  z-index: 1000; 
+}
 
 /* Estructura de 3 columnas para el panel de edición (Buscador - Editor - Opciones) */
 .main-grid {
