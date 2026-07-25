@@ -525,22 +525,28 @@ function jumpToChord(dir) {
     sel.addRange(range);
 }
 
-// Modifica las alteraciones del acorde activo seleccionado ( Sostenidos #, Bemoles b, Menores -, Séptimas 7 )
+// Modifica las alteraciones del acorde activo seleccionado ( Sostenidos #, Bemoles b, Menores m/-, Séptimas 7 )
 function modMob(mod) {
     if (activeChordNode) {
         let chord = activeChordNode.getAttribute('data-chord');
-        const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(-?)(7?)$/i);
+        
+        // Expresión regular robusta que separa la nota raíz, alteraciones, menores y séptimas
+        const m = chord.match(/^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(7?)/i);
         if (!m) return;
         
-        let root = m[1], acc = m[2] || "", minor = m[3] || "", sev = m[4] || "";
+        let root = m[1];
+        let acc = m[2] || "";
+        let minor = m[3] || "";
+        let sev = m[4] || "";
         
         if (mod === "#") {
             acc = (acc === "#") ? "" : "#";
+            if (acc === "#") acc = (acc === "b") ? "" : "#"; // Limpia bemol si ponemos sostenido
         } else if (mod === "b") {
             acc = (acc === "b") ? "" : "b";
         } else if (mod === "m" || mod === "-") { 
-            // MAGIA: Si el botón manda 'm' o '-', alterna entre menor y mayor perfectamente
-            minor = (minor === "m") ? "" : "m";
+            // Alterna la "m" de menor de forma limpia
+            minor = (minor.toLowerCase() === "m") ? "" : "m";
         } else if (mod === "7") {
             sev = (sev === "7") ? "" : "7";
         }
