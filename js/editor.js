@@ -146,7 +146,7 @@ function loadSong(s) {
   
   updateAudioPreview();
   filterSongs();
-  autoExpandBio(); // <--- NUEVO: Estira el cuadro al cargar la canción
+  setTimeout(autoExpandBio, 50); // Estira el cuadro al cargar la canción
 }
 
 /* ==========================================================
