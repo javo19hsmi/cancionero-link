@@ -790,19 +790,43 @@ async function saveBorrador() {
   setBusy(false);
 }
 
-// Publica oficialmente todos los borradores para que se reflejen en la app principal de los usuarios
-async function confirmPublish() {
-  if (!confirm("🚀 ¿Publicar Versión Oficial para todos los usuarios?")) return; 
+let pendingNewVersion = ""; // Variable temporal para guardar la versión a publicar
+
+// Abre el modal glaseado y calcula el número de versión
+function confirmPublish() {
+  // 1. Calculamos la nueva versión
+  let p = globalVer.split('.'); 
+  if (p.length < 2) p = [globalVer, "000"];
+  pendingNewVersion = p[0] + "." + String(parseInt(p[p.length-1]) + 1).padStart(3, '0');
+
+  // 2. Cargamos los textos en tu diseño visual
+  const oldVerEl = document.getElementById("pub-old-ver");
+  const newVerEl = document.getElementById("pub-new-ver");
+  if (oldVerEl) oldVerEl.innerText = "v" + globalVer;
+  if (newVerEl) newVerEl.innerText = "v" + pendingNewVersion;
+
+  // 3. Mostramos la pantalla flotante
+  const dlg = document.getElementById("publish-dialog");
+  if (dlg) dlg.style.display = "flex";
+}
+
+// Cierra el modal glaseado si el usuario cancela
+function closePublishDialog() {
+  const dlg = document.getElementById("publish-dialog");
+  if (dlg) dlg.style.display = "none";
+  pendingNewVersion = ""; 
+}
+
+// Publica oficialmente todos los borradores (Se ejecuta al tocar "SÍ, PUBLICAR")
+async function executePublish() {
+  closePublishDialog(); // Cerramos el cuadro visual
   setBusy(true, "Publicando...");
   try {
     const snap = await db.ref('canciones_borrador').get();
-    let p = globalVer.split('.'); 
-    if (p.length < 2) p = [globalVer, "000"];
-    const v = p[0] + "." + String(parseInt(p[p.length-1]) + 1).padStart(3, '0');
     
     await db.ref('canciones_base').set(snap.val()); 
-    await db.ref('version').set(v); 
-    alert("🎉 Publicación Exitosa. Nueva versión: v" + v);
+    await db.ref('version').set(pendingNewVersion); 
+    alert("🎉 Publicación Exitosa. Nueva versión oficial: v" + pendingNewVersion);
   } catch (e) { 
     alert("Error en la publicación."); 
   } 
