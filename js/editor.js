@@ -338,7 +338,12 @@ function setupEditorListeners() {
       }
   });
 
-  area.addEventListener('beforeinput', (e) => { if (!isEditMode) e.preventDefault(); });
+  // Bloquea el teclado nativo del celular para que solo se usen tus botones de acordes
+  area.addEventListener('beforeinput', (e) => { 
+      if (!isEditMode) {
+          e.preventDefault(); // Detiene el teclado flotante del celular
+      }
+  });
 
   area.addEventListener('keydown', (e) => {
     if (isEditMode) return; 
@@ -380,14 +385,24 @@ function setupEditorListeners() {
   });
 }
 
-// Muestra u oculta el teclado visual lateral en pantallas de PC
+// Muestra u oculta el teclado unificado (Lateral en PC / Flotante inferior en Celular)
 function toggleAcordes() {
   const col = document.getElementById("acordesCol");
   const btn = document.getElementById("toggleAcordesBtn");
   if (!col || !btn) return;
-  if (col.style.display === "none") {
+
+  // Verificamos si estamos en vista de celular o PC
+  const isMobile = window.innerWidth <= 768;
+
+  if (col.style.display === "none" || col.style.display === "") {
     col.style.display = "block";
     btn.innerText = "Ocultar Teclado";
+    
+    // Si es celular, hacemos foco en el editor pero prevenimos que salte el teclado nativo intrusivo
+    if (isMobile) {
+      const editor = document.getElementById('lyrics-editor');
+      if (editor) editor.focus();
+    }
   } else {
     col.style.display = "none";
     btn.innerText = "Mostrar Teclado";
