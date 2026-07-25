@@ -431,47 +431,58 @@ function toggleAcordes() {
    9. INSERCIÓN, MODIFICACIÓN Y NAVEGACIÓN DE ACORDES
    ========================================================== */
 // Inserta un nuevo acorde visual respetando la posición memorizada del cursor
+// Inserta un nuevo acorde visual respetando la posición memorizada del cursor sin romper formatos
 function insChordVisual(chordText) {
-  const area = document.getElementById('lyrics-editor');
-  area.focus();
+    const area = document.getElementById('lyrics-editor');
+    area.focus();
 
-  const sel = window.getSelection();
-  
-  // Restauramos la posición donde el usuario hizo clic por última vez
-  if (savedRange && area.contains(savedRange.commonAncestorContainer)) {
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
-  } else if (!sel.rangeCount || !area.contains(sel.anchorNode)) {
-      // Si no hay memoria previa, lo ubicamos al final del texto por seguridad
-      const range = document.createRange();
-      range.selectNodeContents(area);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-  }
+    const sel = window.getSelection();
+    let range;
 
-  const id = 'chord-' + Date.now();
-  const html = `<span id="${id}" class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>`;
-  document.execCommand('insertHTML', false, html);
-  markUnsavedChanges();
-  if(navigator.vibrate) navigator.vibrate(10); 
-  
-  setTimeout(() => {
-      const newNode = document.getElementById(id);
-      if (newNode) {
-          selectChord(newNode); // Pone el acorde en naranja
-          
-          const selNew = window.getSelection();
-          const rangeNew = document.createRange();
-          rangeNew.setStartAfter(newNode);
-          rangeNew.collapse(true);
-          selNew.removeAllRanges();
-          selNew.addRange(rangeNew);
-          
-          // Actualizamos la memoria con la nueva posición después de insertar
-          savedRange = rangeNew;
-      }
-  }, 10);
+    // Restauramos la posición donde el usuario hizo clic por última vez
+    if (savedRange && area.contains(savedRange.commonAncestorContainer)) {
+        range = savedRange;
+    } else if (sel.rangeCount > 0 && area.contains(sel.anchorNode)) {
+        range = sel.getRangeAt(0);
+    } else {
+        // Si no hay memoria previa, lo ubicamos al final del texto por seguridad
+        range = document.createRange();
+        range.selectNodeContents(area);
+        range.collapse(false);
+    }
+
+    sel.removeAllRanges();
+    sel.addRange(range);
+
+    // NUEVO MÉTODO: Creamos el nodo limpiamente en el DOM (chau execCommand)
+    const id = 'chord-' + Date.now();
+    const chip = document.createElement('span');
+    chip.id = id;
+    chip.className = 'chord-chip';
+    chip.contentEditable = "false";
+    chip.setAttribute('data-chord', chordText);
+
+    // Insertamos el nodo sin romper las etiquetas de negrita/cursiva adyacentes
+    range.deleteContents(); // Borra si había texto seleccionado
+    range.insertNode(chip);
+
+    // Movemos el cursor justo después del acorde
+    range.setStartAfter(chip);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    
+    // Actualizamos la memoria
+    savedRange = range;
+    markUnsavedChanges();
+    if(navigator.vibrate) navigator.vibrate(10); 
+    
+    setTimeout(() => {
+        const newNode = document.getElementById(id);
+        if (newNode) {
+            selectChord(newNode); // Pone el acorde en naranja
+        }
+    }, 10);
 }
 
 // Inserta o reemplaza un acorde (si ya hay uno seleccionado en naranja, lo transforma)
