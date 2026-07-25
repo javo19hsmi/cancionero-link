@@ -366,6 +366,28 @@ if (area) {
       }
   });
 
+   // Ocultar la barra móvil de acordes si el usuario toca otro campo (Ritmo, Biografía, etc.)
+  document.addEventListener('focusin', (e) => {
+      if (window.innerWidth <= 768) {
+          const bar = document.getElementById("mobileChordBar");
+          const editor = document.getElementById('lyrics-editor');
+          
+          // Verificamos que la barra esté visible y que el elemento tocado NO sea el editor de letras
+          if (bar && bar.style.display === "block" && e.target !== editor) {
+              
+              // Si tocamos un input (Título, Ritmo), textarea (Biografía) o select (Tono)
+              const tag = e.target.tagName;
+              if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+                  bar.style.display = "none";
+                  
+                  // Actualizamos el texto del botón por las dudas
+                  const btn = document.getElementById("toggleAcordesBtn");
+                  if (btn) btn.innerText = "Mostrar Teclado";
+              }
+          }
+      }
+  });
+
   // Bloquea el teclado nativo del celular para que solo se usen tus botones de acordes
   area.addEventListener('beforeinput', (e) => { 
       if (!isEditMode) {
