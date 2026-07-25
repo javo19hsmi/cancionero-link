@@ -212,28 +212,30 @@ header { background: rgba(0,0,0,0.4); }
    ADAPTACIÓN MÓVIL DEL TECLADO UNIFICADO
    ========================================================== */
 @media (max-width: 768px) {
-  /* En celulares, el contenedor #acordesCol pasa a ser una ventana flotante inferior deslizable */
+  /* Panel flotante inferior fijo para celulares */
   #acordesCol {
-    display: none; /* Arranca oculto por defecto y se abre con el botón */
+    display: none; /* Arranca oculto */
     position: fixed !important;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
     width: 100% !important;
-    max-height: 48vh;
-    overflow-y: auto;
-    background: #121214 !important;
+    height: auto;
+    max-height: 40vh !important;
+    overflow-y: auto !important;
+    background: #0A0A0B !important;
     border-top: 2px solid var(--primary) !important;
-    border-radius: 20px 20px 0 0 !important;
-    box-shadow: 0 -10px 25px rgba(0,0,0,0.8);
-    z-index: 9999;
-    padding: 15px !important;
-    box-sizing: border-box;
+    border-radius: 16px 16px 0 0 !important;
+    box-shadow: 0 -5px 20px rgba(0,0,0,0.9) !important;
+    z-index: 99999 !important;
+    padding: 10px 15px 20px 15px !important;
+    box-sizing: border-box !important;
   }
   
-  /* Margen inferior extra en el editor para que el teclado flotante no tape los últimos renglones */
-  #lyrics-editor { 
-    margin-bottom: 240px !important; 
+  /* Margen gigante abajo en el editor para que el contenido nunca quede tapado por el panel flotante */
+  #lyrics-editor {
+    margin-bottom: 260px !important;
+    min-height: 300px !important;
   }
 }
 
