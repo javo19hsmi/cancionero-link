@@ -384,7 +384,19 @@ function toggleAcordes() {
 // Inserta un nuevo acorde visual en el cursor y lo selecciona automáticamente en naranja
 function insChordVisual(chordText) {
   const area = document.getElementById('lyrics-editor');
-  area.focus();
+  
+  // 1. Si el cursor se salió del editor, lo devolvemos al final o recuperamos la selección
+  const sel = window.getSelection();
+  if (!sel.rangeCount || !area.contains(sel.anchorNode)) {
+      area.focus();
+      // Si no hay rango válido, ponemos el cursor al final del texto
+      const range = document.createRange();
+      range.selectNodeContents(area);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+  }
+
   const id = 'chord-' + Date.now();
   const html = `<span id="${id}" class="chord-chip" contenteditable="false" data-chord="${chordText}"></span>`;
   document.execCommand('insertHTML', false, html);
@@ -396,12 +408,12 @@ function insChordVisual(chordText) {
       if (newNode) {
           selectChord(newNode); 
           
-          const sel = window.getSelection();
-          const range = document.createRange();
-          range.setStartAfter(newNode);
-          range.collapse(true);
-          sel.removeAllRanges();
-          sel.addRange(range);
+          const selNew = window.getSelection();
+          const rangeNew = document.createRange();
+          rangeNew.setStartAfter(newNode);
+          rangeNew.collapse(true);
+          selNew.removeAllRanges();
+          selNew.addRange(rangeNew);
       }
   }, 10);
 }
@@ -421,10 +433,22 @@ function insManual() {
   const inputEl = document.getElementById('manual-chord-in');
   if (!inputEl) return;
   const v = inputEl.value.trim();
-  if (v) { 
-    insChordVisual(v); 
-    inputEl.value = ""; 
+  
+  if (!v) return;
+
+  // EXPRESIÓN REGULAR DE VALIDACIÓN MUSICAL:
+  // Valda notas base (Do, Re, Mi, Fa, Sol, La, Si o C-G), alteraciones (#, b), menores (m, -) y séptimas/extensiones
+  const chordRegex = /^((?:Do|Re|Mi|Fa|Sol|La|Si)|(?:[A-G]))([#b]?)(m?)(-?)(7?)(sus4|sus2|maj7|6|9)?$/i;
+
+  if (!chordRegex.test(v)) {
+      alert("❌ Acorde no válido. Por favor ingresá un formato correcto (Ej: Do, Rem, Sol7, Fa#).");
+      inputEl.focus();
+      return;
   }
+
+  // Si pasa la validación, lo inserta prolijamente
+  insChordVisual(v); 
+  inputEl.value = ""; 
 }
 
 // Salta de un acorde a otro hacia adelante (+1) o hacia atrás (-1) de forma inteligente
