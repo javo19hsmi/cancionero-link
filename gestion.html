@@ -55,10 +55,13 @@
       <!-- COLUMNA 1: BUSCADOR -->
       <section class="glass-panel">
         <label>BUSCAR CANCIÓN</label>
-        <input type="text" id="song-search-box" placeholder="Título o frase..." oninput="filterSongs()">
+        <div class="search-wrapper">
+          <input type="text" id="song-search-box" placeholder="Título o frase..." oninput="filterSongs()">
+          <button id="btnLimpiarBusqueda" class="clear-search-btn" style="display: none;" onclick="clearSearch()">&times;</button>
+        </div>
         <div id="song-results-list" class="search-results"></div>
       </section>
-
+      
       <!-- COLUMNA 2: EDITOR VISUAL -->
       <section class="glass-panel" style="overflow-y: auto;">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
