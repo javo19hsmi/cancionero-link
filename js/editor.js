@@ -146,6 +146,7 @@ function loadSong(s) {
   
   updateAudioPreview();
   filterSongs();
+  autoExpandBio(); // <--- NUEVO: Estira el cuadro al cargar la canción
 }
 
 /* ==========================================================
@@ -698,4 +699,14 @@ function setBusy(on, t) {
   const text = document.getElementById('busy-text');
   if (overlay) overlay.style.display = on ? 'flex' : 'none'; 
   if (text) text.innerText = t || "Cargando..."; 
+}
+
+// ==========================================================
+// AUTO-EXPANSIÓN DEL CUADRO DE BIOGRAFÍA
+// ==========================================================
+function autoExpandBio() { 
+  const el = document.getElementById('m-biography-in'); 
+  if (!el) return;
+  el.style.height = 'auto'; // Resetea la altura para recalcular
+  el.style.height = (el.scrollHeight) + 'px'; // Se adapta al contenido real
 }
