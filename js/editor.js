@@ -14,22 +14,26 @@ let savedRange = null; // Guarda la última posición conocida del cursor en el 
    2. EL MOTOR DE RENDERIZADO (TRANSFORMACIONES VISUALES Y CRUDAS)
    ========================================================== */
 const Render = {
-    // Convierte el texto plano de Firebase ([Do], **texto**) a HTML visual para el editor
+    // Convierte el texto plano de Firebase a HTML visual para el editor de forma limpia
     toVisual: function(rawText) {
         if (!rawText) return "";
         let html = rawText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        
+        // 1. Transformar corchetes en chips de acordes antes de aplicar estilos de texto
+        html = html.replace(/\[([^\]]+)\]/g, (match, chord) => {
+            return `<span class="chord-chip" contenteditable="false" data-chord="${chord}"></span>`;
+        });
+
+        // 2. Aplicar formatos de Markdown asegurando que no rompan los chips adyacentes
         html = html.replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>");
         html = html.replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>");
         html = html.replace(/_([\s\S]*?)_/g, "<i>$1</i>");
         html = html.replace(/\{([\s\S]*?)\}/g, "<span style='color:#888; font-style:italic'>$1</span>");
         
-        // Transforma los corchetes [Do] en globitos visuales vacíos por dentro (el CSS hace la magia)
-        html = html.replace(/\[([^\]]+)\]/g, (match, chord) => {
-            return `<span class="chord-chip" contenteditable="false" data-chord="${chord}"></span>`;
-        });
         return html.replace(/\n/g, "<br>");
     },
-    // Convierte el contenido visual del editor de vuelta a formato texto plano para guardar en Firebase
+
+    // Convierte el contenido visual del editor de vuelta a texto plano para Firebase sin romper palabras
     toRaw: function(htmlElement) {
         let clone = htmlElement.cloneNode(true);
         
@@ -38,19 +42,19 @@ const Render = {
             chip.replaceWith(`[${chip.getAttribute('data-chord')}]`);
         });
         
-        // Recuperar etiquetas de formato Markdown (Negritas y Cursivas)
+        // Recuperar etiquetas de formato Markdown de forma segura
         clone.querySelectorAll('b').forEach(b => {
             if(b.querySelector('i')) { b.replaceWith(`**_${b.innerText}_**`); } 
             else { b.replaceWith(`**${b.innerText}**`); }
         });
         clone.querySelectorAll('i').forEach(i => i.replaceWith(`_${i.innerText}_`));
 
-        // Normalizar saltos de línea
+        // Normalizar saltos de línea y limpiar espacios fantasmas creados por el DOM
         clone.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
         clone.querySelectorAll('div').forEach(div => { div.prepend('\n'); div.replaceWith(...div.childNodes); });
         
         let rawText = clone.textContent || clone.innerText || "";
-        return rawText.replace(/\n\n/g, '\n');
+        return rawText.replace(/\r/g, '').replace(/\n\n/g, '\n');
     }
 };
 
