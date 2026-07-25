@@ -312,6 +312,9 @@ function setupEditorListeners() {
   editorListenersAttached = true;
   
   const area = document.getElementById('lyrics-editor');
+if (area) {
+    area.setAttribute("inputmode", "none"); // Impide que aparezca el teclado nativo de Android
+}
   
   // 1. Detectar clics del mouse para seleccionar un acorde y guardar la posición del cursor
   area.addEventListener('click', (e) => {
@@ -393,27 +396,25 @@ function setupEditorListeners() {
   });
 }
 
-// Muestra u oculta el teclado unificado (Lateral en PC / Flotante inferior en Celular)
+// Muestra u oculta el teclado (Panel lateral en PC / Barra inferior en Celular)
 function toggleAcordes() {
-  const col = document.getElementById("acordesCol");
-  const btn = document.getElementById("toggleAcordesBtn");
-  if (!col || !btn) return;
-
-  // Verificamos si estamos en vista de celular o PC
   const isMobile = window.innerWidth <= 768;
-
-  if (col.style.display === "none" || col.style.display === "") {
-    col.style.display = "block";
-    btn.innerText = "Ocultar Teclado";
+  const btn = document.getElementById("toggleAcordesBtn");
+  
+  if (isMobile) {
+    const bar = document.getElementById("mobileChordBar");
+    if (!bar) return;
     
-    // Si es celular, hacemos foco en el editor pero prevenimos que salte el teclado nativo intrusivo
-    if (isMobile) {
-      const editor = document.getElementById('lyrics-editor');
-      if (editor) editor.focus();
-    }
+    const isVisible = bar.style.display === "block";
+    bar.style.display = isVisible ? "none" : "block";
+    if (btn) btn.innerText = isVisible ? "Mostrar Teclado" : "Ocultar Teclado";
   } else {
-    col.style.display = "none";
-    btn.innerText = "Mostrar Teclado";
+    const col = document.getElementById("acordesCol");
+    if (!col) return;
+    
+    const isHidden = col.style.display === "none" || col.style.display === "";
+    col.style.display = isHidden ? "block" : "none";
+    if (btn) btn.innerText = isHidden ? "Ocultar Teclado" : "Mostrar Teclado";
   }
 }
 
