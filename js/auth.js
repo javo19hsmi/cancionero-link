@@ -28,7 +28,7 @@ auth.onAuthStateChanged(async user => {
             // Si el ID tiene guiones bajos, es una capilla
             if (id.includes('_cap_')) {
                 const parts = id.split('_cap_');
-                path = `comunidades/${parts[0]}/sub_nodos/${id}`;
+                path = `comunidades/${parts[0]}/sub_nodos/${parts[1]}`;
             } else {
                 // Es una parroquia principal
                 path = `comunidades/${id}`;
