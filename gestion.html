@@ -170,8 +170,7 @@
       </section>
     </main>
 
-    <!-- ANUNCIOS PARROQUIALES -->
-<!-- MÓDULO 2: ANUNCIOS PARROQUIALES -->
+    <!-- MÓDULO 2: ANUNCIOS PARROQUIALES -->
     <main id="mod-announcements" class="main-grid" style="display:none;">
       <!-- COLUMNA 1: LISTA DE ANUNCIOS -->
       <section class="glass-panel">
@@ -185,13 +184,10 @@
       <!-- COLUMNA 2: EDITOR DEL ANUNCIO -->
       <section class="glass-panel" style="grid-column: span 2; overflow-y: auto;">
         
-        <!-- ZONA SUPER ADMIN (Oculta por defecto) -->
-        <div id="ann-global-zone" style="display:none; margin-bottom:15px; background:rgba(255,167,38,0.1); border:1px solid var(--warning); padding:10px; border-radius:8px;">
-          <label style="color:var(--warning)">ZONA SÚPER ADMIN</label>
-          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color: white;">
-            <input type="checkbox" id="ann-is-global" style="width:auto; margin:0;">
-            <span>Publicar como Anuncio Global (visible en TODAS las comunidades)</span>
-          </div>
+        <!-- NUEVO: SELECTOR DE COMUNIDAD DESTINO -->
+        <div class="form-group" style="margin-bottom: 20px; background: rgba(77,182,172,0.1); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary);">
+          <label style="color: var(--primary); font-size: 11px;">DESTINO DEL ANUNCIO (¿DÓNDE SE VA A PUBLICAR?)</label>
+          <select id="community-selector" style="margin-bottom: 0; font-weight: bold;"></select>
         </div>
 
         <label>TÍTULO DEL ANUNCIO</label>
