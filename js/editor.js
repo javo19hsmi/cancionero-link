@@ -887,24 +887,57 @@ function autoExpandBio() {
    ========================================================== */
 let allAnnouncements = {};
 let currentAnnKey = null;
-let userNodePath = "parroquia_default"; // Se debe sobreescribir desde auth.js
+let currentAnnouncementsRef = null; // Guarda el listener activo para poder apagarlo al cambiar de capilla
 
-// 1. CARGA DE ANUNCIOS SEGÚN PERMISOS
-function loadAnnouncementsModule(path) {
-    if (path) userNodePath = path;
+// 1. CARGA DE ANUNCIOS SEGÚN PERMISOS Y SELECTOR
+function loadAnnouncementsModule(communities, role) {
+    const selector = document.getElementById('community-selector');
+    if (!selector) return;
     
-    // Asume que userRole viene de tu archivo auth.js
-    const role = typeof userRole !== 'undefined' ? userRole : 'editor';
-    const target = (role === 'super_admin') ? 'anuncios_globales' : `${userNodePath}/anuncios`;
-
+    selector.innerHTML = ''; // Limpiamos opciones
+    
+    // Si es Súper Admin, le agregamos la opción global primero
     if (role === 'super_admin') {
-        document.getElementById('ann-global-zone').style.display = 'block';
+        const opt = document.createElement('option');
+        opt.value = 'anuncios_globales';
+        opt.text = '🌎 Anuncio Global (Todas las comunidades)';
+        selector.appendChild(opt);
     }
 
-    db.ref(target).on('value', snap => {
-        allAnnouncements = snap.val() || {};
-        renderAnnouncementList();
-    });
+    // Llenamos el desplegable con las comunidades autorizadas
+    if (communities && communities.length > 0) {
+        communities.forEach(com => {
+            const opt = document.createElement('option');
+            opt.value = com.path;
+            opt.text = `⛪ ${com.id}`;
+            selector.appendChild(opt);
+        });
+    }
+
+    // Evento clave: Al cambiar de comunidad en el desplegable, recargamos la lista
+    selector.onchange = () => {
+        const selectedPath = selector.value;
+        const targetDbPath = selectedPath === 'anuncios_globales' ? 'anuncios_globales' : `${selectedPath}/anuncios`;
+        
+        // Apagamos la escucha de la comunidad anterior para no mezclar datos en pantalla
+        if (currentAnnouncementsRef) {
+            currentAnnouncementsRef.off('value');
+        }
+        
+        // Encendemos la escucha en la nueva comunidad
+        currentAnnouncementsRef = db.ref(targetDbPath);
+        currentAnnouncementsRef.on('value', snap => {
+            allAnnouncements = snap.val() || {};
+            renderAnnouncementList();
+        });
+        
+        newAnnouncement(); // Resetea el formulario al cambiar
+    };
+
+    // Disparamos el primer cambio automáticamente para que cargue la lista inicial
+    if (selector.options.length > 0) {
+        selector.onchange();
+    }
 }
 
 // Renderiza la lista izquierda
@@ -941,9 +974,6 @@ function loadSingleAnnouncement(key, ann) {
     document.getElementById('ann-btn-text').value = ann.linkTexto || "";
     document.getElementById('ann-btn-url').value = ann.link || "";
     
-    const isGlobal = document.getElementById('ann-is-global');
-    if (isGlobal) isGlobal.checked = ann.esGlobal || false;
-
     // Vista previa de imagen
     const prev = document.getElementById('flyer-preview');
     const img = document.getElementById('ann-img-preview');
@@ -969,16 +999,12 @@ function newAnnouncement() {
     document.getElementById('ann-btn-text').value = "";
     document.getElementById('ann-btn-url').value = "";
     
-    const role = typeof userRole !== 'undefined' ? userRole : 'editor';
-    const isGlobal = document.getElementById('ann-is-global');
-    if (isGlobal) isGlobal.checked = (role === 'super_admin');
-    
     document.getElementById('flyer-preview').style.display = 'none';
     document.getElementById('ann-delete-btn').style.display = 'none';
     renderAnnouncementList();
 }
 
-// 2. GUARDADO INTELIGENTE
+// 2. GUARDADO INTELIGENTE LEYENDO EL SELECTOR
 async function saveAnnouncement() {
     const title = document.getElementById('ann-title').value.trim();
     const text = document.getElementById('ann-text').value.trim();
@@ -986,12 +1012,11 @@ async function saveAnnouncement() {
 
     setBusy(true, "Guardando anuncio...");
 
-    const isGlobalCheck = document.getElementById('ann-is-global');
-    const isGlobal = isGlobalCheck ? isGlobalCheck.checked : false;
+    const selectedPath = document.getElementById('community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
     const key = currentAnnKey || Date.now().toString();
     
-    // Corrección de rutas con comillas invertidas
-    const targetPath = isGlobal ? `anuncios_globales/${key}` : `${userNodePath}/anuncios/${key}`;
+    const targetPath = isGlobal ? `anuncios_globales/${key}` : `${selectedPath}/anuncios/${key}`;
 
     const data = {
         id: key,
@@ -1024,7 +1049,6 @@ async function uploadFlyer(input) {
     setBusy(true, "Subiendo Flyer...");
     try {
         const fileName = `ann_${Date.now()}_${file.name}`;
-        // Corrección: Usando tu variable 'storage' en vez de firebase.storage()
         const ref = storage.ref(`anuncios/images/${fileName}`);
         await ref.put(file);
         const url = await ref.getDownloadURL();
@@ -1039,16 +1063,15 @@ async function uploadFlyer(input) {
     }
 }
 
-// 4. ELIMINACIÓN DE ANUNCIO
+// 4. ELIMINACIÓN DE ANUNCIO LEYENDO EL SELECTOR
 async function deleteAnnouncement() {
     if(!currentAnnKey || !confirm("⚠️ ¿Eliminar este anuncio definitivamente? Esta acción no se puede deshacer.")) return;
     
     setBusy(true, "Eliminando...");
-    const isGlobalCheck = document.getElementById('ann-is-global');
-    const isGlobal = isGlobalCheck ? isGlobalCheck.checked : false;
+    const selectedPath = document.getElementById('community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
     
-    // Corrección de rutas con comillas invertidas
-    const targetPath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${userNodePath}/anuncios/${currentAnnKey}`;
+    const targetPath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${selectedPath}/anuncios/${currentAnnKey}`;
 
     try {
         await db.ref(targetPath).remove();
