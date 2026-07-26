@@ -170,8 +170,80 @@
       </section>
     </main>
 
-    <!-- MÓDULOS EN CONSTRUCCIÓN -->
-    <main id="mod-announcements" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📢 Anuncios</h2></section></main>
+    <!-- ANUNCIOS PARROQUIALES -->
+<!-- MÓDULO 2: ANUNCIOS PARROQUIALES -->
+    <main id="mod-announcements" class="main-grid" style="display:none;">
+      <!-- COLUMNA 1: LISTA DE ANUNCIOS -->
+      <section class="glass-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+          <label style="margin:0">ANUNCIOS ACTIVOS</label>
+          <button class="btn" style="padding: 4px 10px; font-size: 11px; background: var(--primary); color:black" onclick="newAnnouncement()">NUEVO +</button>
+        </div>
+        <div id="announcement-list" class="search-results"></div>
+      </section>
+
+      <!-- COLUMNA 2: EDITOR DEL ANUNCIO -->
+      <section class="glass-panel" style="grid-column: span 2; overflow-y: auto;">
+        
+        <!-- ZONA SUPER ADMIN (Oculta por defecto) -->
+        <div id="ann-global-zone" style="display:none; margin-bottom:15px; background:rgba(255,167,38,0.1); border:1px solid var(--warning); padding:10px; border-radius:8px;">
+          <label style="color:var(--warning)">ZONA SÚPER ADMIN</label>
+          <div style="display:flex; align-items:center; gap:10px; font-size:13px; color: white;">
+            <input type="checkbox" id="ann-is-global" style="width:auto; margin:0;">
+            <span>Publicar como Anuncio Global (visible en TODAS las comunidades)</span>
+          </div>
+        </div>
+
+        <label>TÍTULO DEL ANUNCIO</label>
+        <input type="text" id="ann-title" placeholder="Ej: Retiro de Jóvenes 2026">
+
+        <label>TEXTO / DESCRIPCIÓN</label>
+        <textarea id="ann-text" rows="4" placeholder="Escribí los detalles acá..."></textarea>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div>
+            <label>FECHA (ETIQUETA VISUAL)</label>
+            <input type="text" id="ann-date-label" placeholder="Ej: Sábado 15 de Agosto">
+          </div>
+          <div>
+            <label>FECHA DE VENCIMIENTO (Opcional)</label>
+            <input type="date" id="ann-expiry">
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+          <div>
+            <label>TEXTO DEL BOTÓN (Opcional)</label>
+            <input type="text" id="ann-btn-text" placeholder="Ej: Inscribirse al Retiro">
+          </div>
+          <div>
+            <label>LINK DEL BOTÓN (Opcional)</label>
+            <input type="text" id="ann-btn-url" placeholder="https://forms.gle/...">
+          </div>
+        </div>
+
+        <label>FLYER / IMAGEN (LINK O SUBIR)</label>
+        <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+          <input type="text" id="ann-image-url" placeholder="Link de la imagen..." style="flex:1; margin-bottom:0;">
+          <button class="btn btn-save" onclick="document.getElementById('fileInputFlyer').click()" style="padding: 5px 10px;" title="Subir Flyer">📁</button>
+        </div>
+        <input type="file" id="fileInputFlyer" accept="image/*" style="display:none" onchange="uploadFlyer(this)">
+
+        <!-- VISTA PREVIA DEL FLYER -->
+        <div id="flyer-preview" style="display:none; text-align:center; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
+           <img id="ann-img-preview" src="" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid var(--glass-border); object-fit:contain;">
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:auto;">
+          <button id="ann-delete-btn" class="btn" style="flex:1; background:rgba(255,82,82,0.1); color:var(--danger); border:1px solid var(--danger); display:none;" onclick="deleteAnnouncement()">ELIMINAR</button>
+          <button class="btn btn-save" style="flex:2;" onclick="saveAnnouncement()">GUARDAR ANUNCIO 💾</button>
+        </div>
+      </section>
+    </main>
+
+
+    
+        <!-- MÓDULOS EN CONSTRUCCIÓN -->
     <main id="mod-prayers" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">🙏 Oraciones</h2></section></main>
     <main id="mod-scripts" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📜 Guiones</h2></section></main>
   </div>
