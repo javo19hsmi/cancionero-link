@@ -981,7 +981,7 @@ function renderAnnouncementList() {
     // Filtramos para ignorar nodos basura y ordenamos
     Object.entries(allAnnouncements).forEach(([key, ann]) => {
         
-        // 🛡️ ESCUDO ANTI-CRASH: Evita que los "nulls" de Firebase rompan la lista
+        // 🛡️ ESCUDO ANTI-CRASH: Evita que la lista se rompa si Firebase devuelve un dato vacío
         if (!ann || typeof ann !== 'object') return;
 
         const div = document.createElement('div');
