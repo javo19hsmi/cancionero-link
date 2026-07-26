@@ -887,16 +887,16 @@ function autoExpandBio() {
    ========================================================== */
 let allAnnouncements = {};
 let currentAnnKey = null;
-let currentAnnouncementsRef = null; // Guarda el listener activo para poder apagarlo al cambiar de capilla
+let currentAnnouncementsRef = null;
+let isViewingArchive = false; // 🚀 NUEVO: Controla si vemos activos o archivados
 
-// 1. CARGA DE ANUNCIOS SEGÚN PERMISOS Y SELECTOR
+// 1. CARGA DE ANUNCIOS Y CONTROL DE VISTAS
 function loadAnnouncementsModule(communities, role) {
     const selector = document.getElementById('community-selector');
     if (!selector) return;
     
-    selector.innerHTML = ''; // Limpiamos opciones
+    selector.innerHTML = '';
     
-    // Si es Súper Admin, le agregamos la opción global primero
     if (role === 'super_admin') {
         const opt = document.createElement('option');
         opt.value = 'anuncios_globales';
@@ -904,7 +904,6 @@ function loadAnnouncementsModule(communities, role) {
         selector.appendChild(opt);
     }
 
-    // Llenamos el desplegable con las comunidades autorizadas
     if (communities && communities.length > 0) {
         communities.forEach(com => {
             const opt = document.createElement('option');
@@ -914,44 +913,79 @@ function loadAnnouncementsModule(communities, role) {
         });
     }
 
-    // Evento clave: Al cambiar de comunidad en el desplegable, recargamos la lista
     selector.onchange = () => {
-        const selectedPath = selector.value;
-        const targetDbPath = selectedPath === 'anuncios_globales' ? 'anuncios_globales' : `${selectedPath}/anuncios`;
-        
-        // Apagamos la escucha de la comunidad anterior para no mezclar datos en pantalla
-        if (currentAnnouncementsRef) {
-            currentAnnouncementsRef.off('value');
-        }
-        
-        // Encendemos la escucha en la nueva comunidad
-        currentAnnouncementsRef = db.ref(targetDbPath);
-        currentAnnouncementsRef.on('value', snap => {
-            allAnnouncements = snap.val() || {};
-            renderAnnouncementList();
-        });
-        
-        newAnnouncement(); // Resetea el formulario al cambiar
+        reloadAnnouncementsList();
+        newAnnouncement(); 
     };
 
-    // Disparamos el primer cambio automáticamente para que cargue la lista inicial
     if (selector.options.length > 0) {
         selector.onchange();
     }
 }
 
-// Renderiza la lista izquierda
+// 🚀 NUEVO: Botón para alternar entre Activos y Archivados
+function toggleArchiveView() {
+    isViewingArchive = !isViewingArchive;
+    
+    const titleLabel = document.getElementById('ann-list-title');
+    const toggleBtn = document.getElementById('btn-toggle-archive');
+    
+    if (isViewingArchive) {
+        titleLabel.innerText = "ANUNCIOS ARCHIVADOS";
+        titleLabel.style.color = "var(--warning)";
+        toggleBtn.innerText = "VER ACTIVOS 📢";
+        toggleBtn.style.background = "var(--warning)";
+        toggleBtn.style.color = "black";
+    } else {
+        titleLabel.innerText = "ANUNCIOS ACTIVOS";
+        titleLabel.style.color = "var(--primary)";
+        toggleBtn.innerText = "ARCHIVO 📦";
+        toggleBtn.style.background = "rgba(255,255,255,0.1)";
+        toggleBtn.style.color = "white";
+    }
+    
+    reloadAnnouncementsList();
+    newAnnouncement();
+}
+
+// 🚀 NUEVO: Recarga la lista leyendo la ruta correcta según el modo actual
+function reloadAnnouncementsList() {
+    const selectedPath = document.getElementById('community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    let targetDbPath = '';
+
+    // Cambiamos el nodo dependiendo de qué estemos viendo
+    if (isViewingArchive) {
+        targetDbPath = isGlobal ? 'anuncios_globales_archivados' : `${selectedPath}/anuncios_archivados`;
+    } else {
+        targetDbPath = isGlobal ? 'anuncios_globales' : `${selectedPath}/anuncios`;
+    }
+    
+    if (currentAnnouncementsRef) currentAnnouncementsRef.off('value');
+    
+    currentAnnouncementsRef = db.ref(targetDbPath);
+    currentAnnouncementsRef.on('value', snap => {
+        allAnnouncements = snap.val() || {};
+        renderAnnouncementList();
+    });
+}
+
 function renderAnnouncementList() {
     const res = document.getElementById('announcement-list');
     if (!res) return;
     res.innerHTML = "";
 
+    // Filtramos para ignorar nodos basura y ordenamos
     Object.entries(allAnnouncements).forEach(([key, ann]) => {
         const div = document.createElement('div');
         div.className = `result-item glass ${currentAnnKey === key ? 'active' : ''}`;
+        
+        // Si está en archivo, le ponemos un tint naranja para diferenciar visualmente
+        const borderStyle = isViewingArchive ? 'border-left: 3px solid var(--warning);' : '';
+
         div.innerHTML = `
-            <div style="display:flex; align-items:center; gap:10px">
-                ${ann.imagenUrl ? `<img src="${ann.imagenUrl}" width="36" height="36" style="border-radius:6px; object-fit:cover">` : `<span class="material-symbols-outlined" style="font-size:24px; color:var(--primary)">campaign</span>`}
+            <div style="display:flex; align-items:center; gap:10px; ${borderStyle} padding-left:5px;">
+                ${ann.imagenUrl ? `<img src="${ann.imagenUrl}" width="36" height="36" style="border-radius:6px; object-fit:cover">` : `<span class="material-symbols-outlined" style="font-size:24px; color:${isViewingArchive ? 'var(--warning)' : 'var(--primary)'}">${isViewingArchive ? 'inventory_2' : 'campaign'}</span>`}
                 <div style="flex:1; overflow:hidden;">
                     <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${ann.titulo}</div>
                     <div style="font-size:10px; opacity:0.6">${ann.fecha || 'Sin fecha'}</div>
@@ -963,7 +997,7 @@ function renderAnnouncementList() {
     });
 }
 
-// Carga los datos al hacer clic
+// 2. GESTIÓN DE LA UI DEL EDITOR Y BOTONES
 function loadSingleAnnouncement(key, ann) {
     currentAnnKey = key;
     document.getElementById('ann-title').value = ann.titulo || "";
@@ -974,7 +1008,6 @@ function loadSingleAnnouncement(key, ann) {
     document.getElementById('ann-btn-text').value = ann.linkTexto || "";
     document.getElementById('ann-btn-url').value = ann.link || "";
     
-    // Vista previa de imagen
     const prev = document.getElementById('flyer-preview');
     const img = document.getElementById('ann-img-preview');
     if (ann.imagenUrl) { 
@@ -984,11 +1017,31 @@ function loadSingleAnnouncement(key, ann) {
         prev.style.display = 'none'; 
     }
 
-    document.getElementById('ann-delete-btn').style.display = 'block';
-    renderAnnouncementList(); // Actualiza la clase visual 'active'
+    // 🚀 LÓGICA DE BOTONES SEGÚN EL MODO
+    const actionBtn = document.getElementById('ann-action-btn');
+    const saveBtn = document.getElementById('ann-save-btn');
+    
+    actionBtn.style.display = 'block';
+
+    if (isViewingArchive) {
+        // Modo Restaurar
+        actionBtn.innerText = "RESTAURAR ♻️";
+        actionBtn.style.color = "var(--primary)";
+        actionBtn.style.borderColor = "var(--primary)";
+        actionBtn.style.background = "rgba(77,182,172,0.1)";
+        saveBtn.style.display = 'none'; // No se edita en el archivo
+    } else {
+        // Modo Archivar (Lo que antes era Eliminar)
+        actionBtn.innerText = "ARCHIVAR 📦";
+        actionBtn.style.color = "var(--warning)";
+        actionBtn.style.borderColor = "var(--warning)";
+        actionBtn.style.background = "rgba(255,167,38,0.1)";
+        saveBtn.style.display = 'block'; 
+    }
+
+    renderAnnouncementList();
 }
 
-// Limpia el formulario para un anuncio nuevo
 function newAnnouncement() {
     currentAnnKey = null;
     document.getElementById('ann-title').value = "";
@@ -1000,11 +1053,14 @@ function newAnnouncement() {
     document.getElementById('ann-btn-url').value = "";
     
     document.getElementById('flyer-preview').style.display = 'none';
-    document.getElementById('ann-delete-btn').style.display = 'none';
+    document.getElementById('ann-action-btn').style.display = 'none';
+    
+    // Si creás uno nuevo, asegúrate de que el botón de guardar esté visible
+    document.getElementById('ann-save-btn').style.display = 'block'; 
+    
     renderAnnouncementList();
 }
 
-// 2. GUARDADO INTELIGENTE LEYENDO EL SELECTOR
 async function saveAnnouncement() {
     const title = document.getElementById('ann-title').value.trim();
     const text = document.getElementById('ann-text').value.trim();
@@ -1041,7 +1097,68 @@ async function saveAnnouncement() {
     }
 }
 
-// 3. SUBIDA DE IMÁGENES A STORAGE
+// 3. ARCHIVAR Y RESTAURAR LÓGICO
+function handleAnnouncementAction() {
+    if (isViewingArchive) {
+        restoreAnnouncement();
+    } else {
+        archiveAnnouncement();
+    }
+}
+
+async function archiveAnnouncement() {
+    if(!currentAnnKey || !confirm("⚠️ ¿Mover este anuncio al archivo? Quedará guardado por 180 días en el historial antes de su eliminación definitiva.")) return;
+    
+    setBusy(true, "Archivando...");
+    const selectedPath = document.getElementById('community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    
+    const activePath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${selectedPath}/anuncios/${currentAnnKey}`;
+    const archivePath = isGlobal ? `anuncios_globales_archivados/${currentAnnKey}` : `${selectedPath}/anuncios_archivados/${currentAnnKey}`;
+
+    try {
+        const anuncioToArchive = { ...allAnnouncements[currentAnnKey] };
+        anuncioToArchive.fecha_archivado = Date.now(); 
+
+        await db.ref(archivePath).set(anuncioToArchive);
+        await db.ref(activePath).remove();
+        
+        alert("📦 Anuncio archivado correctamente.");
+        newAnnouncement();
+    } catch(e) { 
+        alert("Error al archivar: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+async function restoreAnnouncement() {
+    if(!currentAnnKey || !confirm("♻️ ¿Restaurar este anuncio? Volverá a estar visible inmediatamente en la app.")) return;
+    
+    setBusy(true, "Restaurando...");
+    const selectedPath = document.getElementById('community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    
+    const activePath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${selectedPath}/anuncios/${currentAnnKey}`;
+    const archivePath = isGlobal ? `anuncios_globales_archivados/${currentAnnKey}` : `${selectedPath}/anuncios_archivados/${currentAnnKey}`;
+
+    try {
+        const anuncioToRestore = { ...allAnnouncements[currentAnnKey] };
+        delete anuncioToRestore.fecha_archivado; // Le sacamos la marca de muerte
+        
+        await db.ref(activePath).set(anuncioToRestore);
+        await db.ref(archivePath).remove();
+        
+        alert("📢 Anuncio restaurado. Ya está activo nuevamente.");
+        newAnnouncement();
+    } catch(e) { 
+        alert("Error al restaurar: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+// 4. SUBIDA DE IMÁGENES A STORAGE
 async function uploadFlyer(input) {
     const file = input.files[0];
     if (!file) return;
@@ -1058,26 +1175,6 @@ async function uploadFlyer(input) {
         document.getElementById('ann-img-preview').src = url;
     } catch (e) { 
         alert("Error al subir: " + e.message); 
-    } finally { 
-        setBusy(false); 
-    }
-}
-
-// 4. ELIMINACIÓN DE ANUNCIO LEYENDO EL SELECTOR
-async function deleteAnnouncement() {
-    if(!currentAnnKey || !confirm("⚠️ ¿Eliminar este anuncio definitivamente? Esta acción no se puede deshacer.")) return;
-    
-    setBusy(true, "Eliminando...");
-    const selectedPath = document.getElementById('community-selector').value;
-    const isGlobal = (selectedPath === 'anuncios_globales');
-    
-    const targetPath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${selectedPath}/anuncios/${currentAnnKey}`;
-
-    try {
-        await db.ref(targetPath).remove();
-        newAnnouncement();
-    } catch(e) { 
-        alert("Error al eliminar: " + e.message); 
     } finally { 
         setBusy(false); 
     }
