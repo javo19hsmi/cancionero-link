@@ -880,3 +880,185 @@ function autoExpandBio() {
   el.style.height = 'auto'; // Resetea la altura para recalcular
   el.style.height = (el.scrollHeight) + 'px'; // Se adapta al contenido real
 }
+
+
+/* ==========================================================
+   13. MÓDULO DE GESTIÓN DE ANUNCIOS PARROQUIALES
+   ========================================================== */
+let allAnnouncements = {};
+let currentAnnKey = null;
+let userNodePath = "parroquia_default"; // Se debe sobreescribir desde auth.js
+
+// 1. CARGA DE ANUNCIOS SEGÚN PERMISOS
+function loadAnnouncementsModule(path) {
+    if (path) userNodePath = path;
+    
+    // Asume que userRole viene de tu archivo auth.js
+    const role = typeof userRole !== 'undefined' ? userRole : 'editor';
+    const target = (role === 'super_admin') ? 'anuncios_globales' : `${userNodePath}/anuncios`;
+
+    if (role === 'super_admin') {
+        document.getElementById('ann-global-zone').style.display = 'block';
+    }
+
+    db.ref(target).on('value', snap => {
+        allAnnouncements = snap.val() || {};
+        renderAnnouncementList();
+    });
+}
+
+// Renderiza la lista izquierda
+function renderAnnouncementList() {
+    const res = document.getElementById('announcement-list');
+    if (!res) return;
+    res.innerHTML = "";
+
+    Object.entries(allAnnouncements).forEach(([key, ann]) => {
+        const div = document.createElement('div');
+        div.className = `result-item glass ${currentAnnKey === key ? 'active' : ''}`;
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px">
+                ${ann.imagenUrl ? `<img src="${ann.imagenUrl}" width="36" height="36" style="border-radius:6px; object-fit:cover">` : `<span class="material-symbols-outlined" style="font-size:24px; color:var(--primary)">campaign</span>`}
+                <div style="flex:1; overflow:hidden;">
+                    <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${ann.titulo}</div>
+                    <div style="font-size:10px; opacity:0.6">${ann.fecha || 'Sin fecha'}</div>
+                </div>
+            </div>
+        `;
+        div.onclick = () => loadSingleAnnouncement(key, ann);
+        res.appendChild(div);
+    });
+}
+
+// Carga los datos al hacer clic
+function loadSingleAnnouncement(key, ann) {
+    currentAnnKey = key;
+    document.getElementById('ann-title').value = ann.titulo || "";
+    document.getElementById('ann-text').value = ann.texto || "";
+    document.getElementById('ann-date-label').value = ann.fecha || "";
+    document.getElementById('ann-expiry').value = ann.fechaVencimiento || "";
+    document.getElementById('ann-image-url').value = ann.imagenUrl || "";
+    document.getElementById('ann-btn-text').value = ann.linkTexto || "";
+    document.getElementById('ann-btn-url').value = ann.link || "";
+    
+    const isGlobal = document.getElementById('ann-is-global');
+    if (isGlobal) isGlobal.checked = ann.esGlobal || false;
+
+    // Vista previa de imagen
+    const prev = document.getElementById('flyer-preview');
+    const img = document.getElementById('ann-img-preview');
+    if (ann.imagenUrl) { 
+        prev.style.display = 'block'; 
+        img.src = ann.imagenUrl; 
+    } else { 
+        prev.style.display = 'none'; 
+    }
+
+    document.getElementById('ann-delete-btn').style.display = 'block';
+    renderAnnouncementList(); // Actualiza la clase visual 'active'
+}
+
+// Limpia el formulario para un anuncio nuevo
+function newAnnouncement() {
+    currentAnnKey = null;
+    document.getElementById('ann-title').value = "";
+    document.getElementById('ann-text').value = "";
+    document.getElementById('ann-date-label').value = "";
+    document.getElementById('ann-expiry').value = "";
+    document.getElementById('ann-image-url').value = "";
+    document.getElementById('ann-btn-text').value = "";
+    document.getElementById('ann-btn-url').value = "";
+    
+    const role = typeof userRole !== 'undefined' ? userRole : 'editor';
+    const isGlobal = document.getElementById('ann-is-global');
+    if (isGlobal) isGlobal.checked = (role === 'super_admin');
+    
+    document.getElementById('flyer-preview').style.display = 'none';
+    document.getElementById('ann-delete-btn').style.display = 'none';
+    renderAnnouncementList();
+}
+
+// 2. GUARDADO INTELIGENTE
+async function saveAnnouncement() {
+    const title = document.getElementById('ann-title').value.trim();
+    const text = document.getElementById('ann-text').value.trim();
+    if(!title || !text) return alert("❌ Título y Mensaje son obligatorios.");
+
+    setBusy(true, "Guardando anuncio...");
+
+    const isGlobalCheck = document.getElementById('ann-is-global');
+    const isGlobal = isGlobalCheck ? isGlobalCheck.checked : false;
+    const key = currentAnnKey || Date.now().toString();
+    
+    // Corrección de rutas con comillas invertidas
+    const targetPath = isGlobal ? `anuncios_globales/${key}` : `${userNodePath}/anuncios/${key}`;
+
+    const data = {
+        id: key,
+        titulo: title,
+        texto: text,
+        fecha: document.getElementById('ann-date-label').value.trim(),
+        fechaVencimiento: document.getElementById('ann-expiry').value,
+        imagenUrl: document.getElementById('ann-image-url').value.trim(),
+        link: document.getElementById('ann-btn-url').value.trim(),
+        linkTexto: document.getElementById('ann-btn-text').value.trim(),
+        esGlobal: isGlobal
+    };
+
+    try {
+        await db.ref(targetPath).set(data);
+        alert("✅ Anuncio guardado con éxito.");
+        newAnnouncement();
+    } catch(e) { 
+        alert("Error al guardar: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+// 3. SUBIDA DE IMÁGENES A STORAGE
+async function uploadFlyer(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    setBusy(true, "Subiendo Flyer...");
+    try {
+        const fileName = `ann_${Date.now()}_${file.name}`;
+        // Corrección: Usando tu variable 'storage' en vez de firebase.storage()
+        const ref = storage.ref(`anuncios/images/${fileName}`);
+        await ref.put(file);
+        const url = await ref.getDownloadURL();
+        
+        document.getElementById('ann-image-url').value = url;
+        document.getElementById('flyer-preview').style.display = 'block';
+        document.getElementById('ann-img-preview').src = url;
+    } catch (e) { 
+        alert("Error al subir: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+// 4. ELIMINACIÓN DE ANUNCIO
+async function deleteAnnouncement() {
+    if(!currentAnnKey || !confirm("⚠️ ¿Eliminar este anuncio definitivamente? Esta acción no se puede deshacer.")) return;
+    
+    setBusy(true, "Eliminando...");
+    const isGlobalCheck = document.getElementById('ann-is-global');
+    const isGlobal = isGlobalCheck ? isGlobalCheck.checked : false;
+    
+    // Corrección de rutas con comillas invertidas
+    const targetPath = isGlobal ? `anuncios_globales/${currentAnnKey}` : `${userNodePath}/anuncios/${currentAnnKey}`;
+
+    try {
+        await db.ref(targetPath).remove();
+        newAnnouncement();
+    } catch(e) { 
+        alert("Error al eliminar: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+
+
