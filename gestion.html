@@ -170,13 +170,16 @@
       </section>
     </main>
 
-    <!-- MÓDULO 2: ANUNCIOS PARROQUIALES -->
+   <!-- MÓDULO 2: ANUNCIOS PARROQUIALES -->
     <main id="mod-announcements" class="main-grid" style="display:none;">
       <!-- COLUMNA 1: LISTA DE ANUNCIOS -->
       <section class="glass-panel">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
-          <label style="margin:0">ANUNCIOS ACTIVOS</label>
-          <button class="btn" style="padding: 4px 10px; font-size: 11px; background: var(--primary); color:black" onclick="newAnnouncement()">NUEVO +</button>
+          <label id="ann-list-title" style="margin:0">ANUNCIOS ACTIVOS</label>
+          <div style="display:flex; gap:5px">
+            <button id="btn-toggle-archive" class="btn" style="padding: 4px 8px; font-size: 10px; background: rgba(255,255,255,0.1); color:white" onclick="toggleArchiveView()">ARCHIVO 📦</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 10px; background: var(--primary); color:black" onclick="newAnnouncement()">NUEVO +</button>
+          </div>
         </div>
         <div id="announcement-list" class="search-results"></div>
       </section>
@@ -184,7 +187,7 @@
       <!-- COLUMNA 2: EDITOR DEL ANUNCIO -->
       <section class="glass-panel" style="grid-column: span 2; overflow-y: auto;">
         
-        <!-- NUEVO: SELECTOR DE COMUNIDAD DESTINO -->
+        <!-- SELECTOR DE COMUNIDAD DESTINO -->
         <div class="form-group" style="margin-bottom: 20px; background: rgba(77,182,172,0.1); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary);">
           <label style="color: var(--primary); font-size: 11px;">DESTINO DEL ANUNCIO (¿DÓNDE SE VA A PUBLICAR?)</label>
           <select id="community-selector" style="margin-bottom: 0; font-weight: bold;"></select>
@@ -231,8 +234,11 @@
         </div>
 
         <div style="display:flex; gap:10px; margin-top:auto;">
-          <button id="ann-delete-btn" class="btn" style="flex:1; background:rgba(255,82,82,0.1); color:var(--danger); border:1px solid var(--danger); display:none;" onclick="deleteAnnouncement()">ELIMINAR</button>
-          <button class="btn btn-save" style="flex:2;" onclick="saveAnnouncement()">GUARDAR ANUNCIO 💾</button>
+          <!-- Botón de archivo/restauración dinámico -->
+          <button id="ann-action-btn" class="btn" style="flex:1; display:none;" onclick="handleAnnouncementAction()"></button>
+          
+          <!-- Botón de guardado -->
+          <button id="ann-save-btn" class="btn btn-save" style="flex:2;" onclick="saveAnnouncement()">GUARDAR ANUNCIO 💾</button>
         </div>
       </section>
     </main>
