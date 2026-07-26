@@ -961,10 +961,13 @@ function reloadAnnouncementsList() {
         targetDbPath = isGlobal ? 'anuncios_globales' : `${selectedPath}/anuncios`;
     }
     
+    console.log("🔍 Intentando leer ruta Firebase:", targetDbPath); // DEBUG
+    
     if (currentAnnouncementsRef) currentAnnouncementsRef.off('value');
     
     currentAnnouncementsRef = db.ref(targetDbPath);
     currentAnnouncementsRef.on('value', snap => {
+        console.log("📦 Datos recibidos:", snap.val()); // DEBUG
         allAnnouncements = snap.val() || {};
         renderAnnouncementList();
     });
@@ -977,6 +980,10 @@ function renderAnnouncementList() {
 
     // Filtramos para ignorar nodos basura y ordenamos
     Object.entries(allAnnouncements).forEach(([key, ann]) => {
+        
+        // 🛡️ ESCUDO ANTI-CRASH: Evita que los "nulls" de Firebase rompan la lista
+        if (!ann || typeof ann !== 'object') return;
+
         const div = document.createElement('div');
         div.className = `result-item glass ${currentAnnKey === key ? 'active' : ''}`;
         
@@ -987,7 +994,7 @@ function renderAnnouncementList() {
             <div style="display:flex; align-items:center; gap:10px; ${borderStyle} padding-left:5px;">
                 ${ann.imagenUrl ? `<img src="${ann.imagenUrl}" width="36" height="36" style="border-radius:6px; object-fit:cover">` : `<span class="material-symbols-outlined" style="font-size:24px; color:${isViewingArchive ? 'var(--warning)' : 'var(--primary)'}">${isViewingArchive ? 'inventory_2' : 'campaign'}</span>`}
                 <div style="flex:1; overflow:hidden;">
-                    <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${ann.titulo}</div>
+                    <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${ann.titulo || 'Sin Título'}</div>
                     <div style="font-size:10px; opacity:0.6">${ann.fecha || 'Sin fecha'}</div>
                 </div>
             </div>
