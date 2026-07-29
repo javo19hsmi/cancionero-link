@@ -1420,6 +1420,20 @@ async function saveScript() {
     
     if(!title || !content || !date) return alert("❌ Título, Fecha y Contenido son obligatorios.");
 
+    // 🚀 NUEVO: Validación de duplicados
+    // Recorremos allScripts para ver si hay coincidencias exactas de título y fecha
+    const isDuplicate = Object.entries(allScripts || {}).some(([key, script]) => {
+        // Ignoramos el guion actual (si estamos editando) para que nos deje guardar nuestros propios cambios
+        if (key === currentScriptKey) return false; 
+        
+        // Comparamos ignorando mayúsculas/minúsculas para ser más precisos
+        return script.title.toLowerCase() === title.toLowerCase() && script.date === date;
+    });
+
+    if (isDuplicate) {
+        return alert("⚠️ ¡Alto ahí! Ya existe otro guion con ese mismo título y fecha. Cambiá alguno de los dos para no generar duplicados.");
+    }
+   
     setBusy(true, "Guardando guion...");
     const selectedPath = document.getElementById('script-community-selector').value;
     const isGlobal = (selectedPath === 'anuncios_globales');
