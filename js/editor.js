@@ -289,21 +289,29 @@ function applyPermissions(permissionsArray) {
 
 // Cambia de pestaña principal en la interfaz
 function switchMod(mod) {
+  // Ocultamos todos los modulares principales
   document.querySelectorAll('main').forEach(m => m.style.display = 'none');
+  // Quitamos la clase active de los botones del menú superior
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-
+  
+  // Buscamos el módulo seleccionado
   const targetMain = document.getElementById(`mod-${mod}`);
-  if (targetMain) targetMain.style.display = 'grid'; // O su display correspondiente
-  if(event && event.target) event.target.classList.add('active');
-
-  // 🚀 CONTROL INTELIGENTE DEL BOTÓN DE PUBLICAR
-  const pubBtn = document.getElementById('global-pub-btn');
-  if (pubBtn && userRole === 'super_admin') {
-      // Solo se muestra si estamos en la solapa 'songs' (cancionero)
-      pubBtn.style.display = (mod === 'songs') ? 'block' : 'none';
+  if (targetMain) {
+      // Si es anuncios usa 'grid', si es cancionero también, pero respetando su clase CSS
+      targetMain.style.display = 'grid'; 
   }
+  
+  // Activamos visualmente el botón superior correspondiente
+  const activeBtn = document.getElementById(`tab-${mod}`);
+  if (activeBtn) activeBtn.classList.add('active');
 
-  // 🚀 CONTROL DEL TECLADO MÓVIL DE ACORDES
+  // Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
+  const pubBtn = document.getElementById('global-pub-btn');
+  if (pubBtn) {
+      pubBtn.style.display = (mod === 'songs' && userRole === 'super_admin') ? 'block' : 'none';
+  }
+  
+  // Control del teclado móvil de acordes (Solo visible en Cancionero)
   const chordBar = document.getElementById('mobileChordBar');
   if (chordBar) {
       chordBar.style.display = (mod === 'songs') ? chordBar.style.display : 'none';
