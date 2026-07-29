@@ -890,48 +890,29 @@ let currentAnnKey = null;
 let currentAnnouncementsRef = null;
 let isViewingArchive = false; // 🚀 NUEVO: Controla si vemos activos o archivados
 
-// 1. CARGA DE ANUNCIOS Y CONTROL DE VISTAS
-function loadAnnouncementsModule(communities, role) {
-    const selector = document.getElementById('community-selector');
-    if (!selector) return;
-    
-    selector.innerHTML = '';
-    
-    if (role === 'super_admin') {
-        const opt = document.createElement('option');
-        opt.value = 'anuncios_globales';
-        opt.text = '🌎 Anuncio Global (Todas las comunidades)';
-        selector.appendChild(opt);
-    }
-
-    if (communities && communities.length > 0) {
-        communities.forEach(com => {
-            const opt = document.createElement('option');
+// 🚀 NUEVO: Array para guardar TODAS las comunidades autorizadas
+      let authorizedCommunities = []; 
+      
+      // Procesamos los permisos extrayendo la clave y armando la ruta
+      Object.entries(perms).forEach(([id, p]) => { 
+        if (p.musica || p.admin) canS = true; 
+        if (p.anuncios || p.admin) {
+            canA = true;
+            let path = "";
             
-            // 🛡️ PARCHE INTELIGENTE: Verificamos si la ruta viene incompleta desde auth.js
-            let finalPath = com.path;
-            
-            // Si el path no tiene 'sub_nodos' pero sabemos que es la capilla montserrat (o cualquier otra que no sea la parroquia central)
-            if (com.id !== 'pst_001' && !finalPath.includes('sub_nodos') && !finalPath.includes('anuncios_globales')) {
-                // Forzamos la jerarquía correcta de la base de datos
-                finalPath = `comunidades/pst_001/sub_nodos/${com.id}`;
+            // 🚀 LÓGICA DIRECTA: Usamos la ruta oficial guardada por la App
+            if (p.ruta_base) {
+                path = p.ruta_base;
+            } else {
+                // Modo rescate (por si quedó algún permiso viejísimo sin actualizar en la App)
+                path = `comunidades/${id}`;
             }
-
-            opt.value = finalPath;
-            opt.text = `⛪ ${com.id}`;
-            selector.appendChild(opt);
-        });
-    }
-
-    selector.onchange = () => {
-        reloadAnnouncementsList();
-        newAnnouncement(); 
-    };
-
-    if (selector.options.length > 0) {
-        selector.onchange();
-    }
-}
+            
+            // Agregamos la comunidad y su ruta a la lista
+            authorizedCommunities.push({ id: id, path: path });
+        }
+        if (p.guiones || p.admin) canG = true; 
+      });
 
 // 🚀 NUEVO: Botón para alternar entre Activos y Archivados
 function toggleArchiveView() {
