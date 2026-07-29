@@ -497,3 +497,13 @@ input, select, textarea {
 .clear-search-btn:hover {
   color: var(--danger); /* Se pone rojo (tu color danger) al pasar el mouse */
 }
+
+.announcements-grid {
+  display: grid; 
+  grid-template-columns: 320px 1fr; /* 2 columnas perfectas para Anuncios */
+  gap: 15px; 
+  padding: 15px; 
+  flex: 1; 
+  overflow: hidden;
+  min-height: 0;
+}
