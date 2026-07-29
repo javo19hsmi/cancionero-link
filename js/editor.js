@@ -354,7 +354,7 @@ function switchMod(mod) {
    if (mod === 'announcements' && typeof reloadAnnouncementsList === 'function') {
       reloadAnnouncementsList();
   }
-  // 🚀 INICIALIZAR GUIONES
+  // INICIALIZAR GUIONES
   if (mod === 'scripts') {
       if (!easyMDEInstance) {
           easyMDEInstance = new EasyMDE({ 
@@ -363,6 +363,10 @@ function switchMod(mod) {
               status: false,
               toolbar: ["bold", "italic", "heading", "|", "unordered-list", "ordered-list", "|", "preview", "guide"],
               placeholder: "Escribí el guion acá..."
+          });
+         // Escuchar cambios en el editor Markdown para encender la advertencia
+         easyMDEInstance.codemirror.on("change", () => {
+              markUnsavedChanges();
           });
       }
       setTimeout(() => easyMDEInstance.codemirror.refresh(), 100); // Evita bug visual de CodeMirror
