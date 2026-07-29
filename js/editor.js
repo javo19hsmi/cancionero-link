@@ -298,8 +298,13 @@ function switchMod(mod) {
   // 3. Buscamos el módulo seleccionado y le aplicamos el display correcto
   const targetMain = document.getElementById(`mod-${mod}`);
   if (targetMain) {
-      // Usamos 'grid' para que tome la estructura de columnas correspondiente
-      targetMain.style.display = 'grid'; 
+      // Si estamos en celular, aseguramos que use flex vertical, sino grid de PC
+      if (window.innerWidth <= 1100) {
+          targetMain.style.display = 'flex';
+          targetMain.style.flexDirection = 'column';
+      } else {
+          targetMain.style.display = 'grid'; 
+      }
   }
   
   // 4. Activamos visualmente el botón superior correspondiente
@@ -316,6 +321,10 @@ function switchMod(mod) {
   const chordBar = document.getElementById('mobileChordBar');
   if (chordBar) {
       chordBar.style.display = (mod === 'songs') ? chordBar.style.display : 'none';
+  }
+  
+   if (mod === 'announcements' && typeof reloadAnnouncementsList === 'function') {
+      reloadAnnouncementsList();
   }
 }
 
