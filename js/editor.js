@@ -354,6 +354,24 @@ function switchMod(mod) {
    if (mod === 'announcements' && typeof reloadAnnouncementsList === 'function') {
       reloadAnnouncementsList();
   }
+  // 🚀 INICIALIZAR GUIONES
+  if (mod === 'scripts') {
+      if (!easyMDEInstance) {
+          easyMDEInstance = new EasyMDE({ 
+              element: document.getElementById('script-content'),
+              spellChecker: false,
+              status: false,
+              toolbar: ["bold", "italic", "heading", "|", "unordered-list", "ordered-list", "|", "preview", "guide"],
+              placeholder: "Escribí el guion acá..."
+          });
+      }
+      setTimeout(() => easyMDEInstance.codemirror.refresh(), 100); // Evita bug visual de CodeMirror
+      if (document.getElementById('script-community-selector').options.length === 0) {
+          // Copia las opciones del selector de anuncios al de guiones
+          document.getElementById('script-community-selector').innerHTML = document.getElementById('community-selector').innerHTML;
+      }
+      reloadScriptsList();
+  }
 }
 
 // Alterna entre el Modo Acordes visuales y el Modo Letra (Texto maestro con corchetes)
@@ -1258,5 +1276,197 @@ async function uploadFlyer(input) {
     }
 }
 
+/* ==========================================================
+   14. MÓDULO DE GESTIÓN DE GUIONES LITÚRGICOS
+   ========================================================== */
+let allScripts = {};
+let currentScriptKey = null;
+let currentScriptsRef = null;
+let isViewingScriptArchive = false;
+let easyMDEInstance = null;
 
+function toggleScriptArchiveView() {
+    isViewingScriptArchive = !isViewingScriptArchive;
+    const titleLabel = document.getElementById('script-list-title');
+    const toggleBtn = document.getElementById('btn-toggle-script-archive');
+    
+    if (isViewingScriptArchive) {
+        titleLabel.innerText = "BAÚL DE GUIONES";
+        titleLabel.style.color = "var(--warning)";
+        toggleBtn.innerText = "VER ACTIVOS 📜";
+        toggleBtn.style.background = "var(--warning)";
+        toggleBtn.style.color = "black";
+    } else {
+        titleLabel.innerText = "GUIONES ACTIVOS";
+        titleLabel.style.color = "var(--primary)";
+        toggleBtn.innerText = "ARCHIVO 📦";
+        toggleBtn.style.background = "rgba(255,255,255,0.1)";
+        toggleBtn.style.color = "white";
+    }
+    reloadScriptsList();
+    newScript();
+}
+
+function reloadScriptsList() {
+    const selectedPath = document.getElementById('script-community-selector').value;
+    if (!selectedPath) return;
+    
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    let targetDbPath = isViewingScriptArchive 
+        ? (isGlobal ? 'guiones_globales_archivados' : `${selectedPath}/guiones_archivados`)
+        : (isGlobal ? 'guiones_globales' : `${selectedPath}/guiones`);
+    
+    if (currentScriptsRef) currentScriptsRef.off('value');
+    
+    currentScriptsRef = db.ref(targetDbPath);
+    currentScriptsRef.on('value', snap => {
+        allScripts = snap.val() || {};
+        renderScriptList();
+    });
+}
+
+function renderScriptList() {
+    const res = document.getElementById('script-list');
+    if (!res) return;
+    res.innerHTML = "";
+
+    // Convertimos a array y ordenamos por fecha descendente
+    const sortedScripts = Object.entries(allScripts)
+        .filter(([_, g]) => g && typeof g === 'object')
+        .sort((a, b) => (b[1].date || "").localeCompare(a[1].date || ""));
+
+    sortedScripts.forEach(([key, g]) => {
+        const div = document.createElement('div');
+        div.className = `result-item glass ${currentScriptKey === key ? 'active' : ''}`;
+        const borderStyle = isViewingScriptArchive ? 'border-left: 3px solid var(--warning);' : '';
+
+        // Formatear fecha a dd/mm/yyyy si es posible
+        let fechaLegible = g.date;
+        if (g.date && g.date.includes('-')) {
+            const parts = g.date.split('-');
+            if (parts.length === 3) fechaLegible = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        div.innerHTML = `
+            <div style="display:flex; align-items:center; gap:10px; ${borderStyle} padding-left:5px;">
+                <span class="material-symbols-outlined" style="font-size:24px; color:${isViewingScriptArchive ? 'var(--warning)' : 'var(--primary)'}">description</span>
+                <div style="flex:1; overflow:hidden;">
+                    <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${g.title || 'Sin Título'}</div>
+                    <div style="font-size:10px; opacity:0.6">${fechaLegible || 'Sin fecha'}</div>
+                </div>
+            </div>
+        `;
+        div.onclick = () => loadSingleScript(key, g);
+        res.appendChild(div);
+    });
+}
+
+function loadSingleScript(key, g) {
+    currentScriptKey = key;
+    document.getElementById('script-title').value = g.title || "";
+    document.getElementById('script-date').value = g.date || "";
+    if (easyMDEInstance) easyMDEInstance.value(g.content || "");
+    
+    const actionBtn = document.getElementById('script-action-btn');
+    const saveBtn = document.getElementById('script-save-btn');
+    actionBtn.style.display = 'block';
+
+    if (isViewingScriptArchive) {
+        actionBtn.innerText = "RESTAURAR ♻️";
+        actionBtn.style.color = "var(--primary)";
+        actionBtn.style.borderColor = "var(--primary)";
+        actionBtn.style.background = "rgba(77,182,172,0.1)";
+        saveBtn.style.display = 'none'; 
+    } else {
+        actionBtn.innerText = "ARCHIVAR 📦";
+        actionBtn.style.color = "var(--warning)";
+        actionBtn.style.borderColor = "var(--warning)";
+        actionBtn.style.background = "rgba(255,167,38,0.1)";
+        saveBtn.style.display = 'block'; 
+    }
+    renderScriptList();
+}
+
+function newScript() {
+    currentScriptKey = null;
+    document.getElementById('script-title').value = "";
+    // Poner fecha de hoy por defecto
+    document.getElementById('script-date').value = new Date().toISOString().split('T')[0];
+    if (easyMDEInstance) easyMDEInstance.value("");
+    
+    document.getElementById('script-action-btn').style.display = 'none';
+    document.getElementById('script-save-btn').style.display = 'block'; 
+    renderScriptList();
+}
+
+async function saveScript() {
+    const title = document.getElementById('script-title').value.trim();
+    const date = document.getElementById('script-date').value;
+    const content = easyMDEInstance ? easyMDEInstance.value().trim() : "";
+    
+    if(!title || !content || !date) return alert("❌ Título, Fecha y Contenido son obligatorios.");
+
+    setBusy(true, "Guardando guion...");
+    const selectedPath = document.getElementById('script-community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    const key = currentScriptKey || Date.now().toString();
+    
+    const targetPath = isGlobal ? `guiones_globales/${key}` : `${selectedPath}/guiones/${key}`;
+
+    const data = { id: key, title: title, date: date, content: content };
+
+    try {
+        await db.ref(targetPath).set(data);
+        alert("✅ Guion guardado con éxito.");
+        newScript();
+    } catch(e) { 
+        alert("Error al guardar: " + e.message); 
+    } finally { 
+        setBusy(false); 
+    }
+}
+
+function handleScriptAction() {
+    if (isViewingScriptArchive) restoreScript(); else archiveScript();
+}
+
+async function archiveScript() {
+    if(!currentScriptKey || !confirm("⚠️ ¿Mover este guion al baúl?")) return;
+    setBusy(true, "Archivando...");
+    
+    const selectedPath = document.getElementById('script-community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    const activePath = isGlobal ? `guiones_globales/${currentScriptKey}` : `${selectedPath}/guiones/${currentScriptKey}`;
+    const archivePath = isGlobal ? `guiones_globales_archivados/${currentScriptKey}` : `${selectedPath}/guiones_archivados/${currentScriptKey}`;
+
+    try {
+        const guionToArchive = { ...allScripts[currentScriptKey] };
+        guionToArchive.fecha_archivado = Date.now(); 
+        await db.ref(archivePath).set(guionToArchive);
+        await db.ref(activePath).remove();
+        alert("📦 Guion archivado correctamente.");
+        newScript();
+    } catch(e) { alert("Error al archivar: " + e.message); } 
+    finally { setBusy(false); }
+}
+
+async function restoreScript() {
+    if(!currentScriptKey || !confirm("♻️ ¿Restaurar este guion?")) return;
+    setBusy(true, "Restaurando...");
+    
+    const selectedPath = document.getElementById('script-community-selector').value;
+    const isGlobal = (selectedPath === 'anuncios_globales');
+    const activePath = isGlobal ? `guiones_globales/${currentScriptKey}` : `${selectedPath}/guiones/${currentScriptKey}`;
+    const archivePath = isGlobal ? `guiones_globales_archivados/${currentScriptKey}` : `${selectedPath}/guiones_archivados/${currentScriptKey}`;
+
+    try {
+        const guionToRestore = { ...allScripts[currentScriptKey] };
+        delete guionToRestore.fecha_archivado;
+        await db.ref(activePath).set(guionToRestore);
+        await db.ref(archivePath).remove();
+        alert("📜 Guion restaurado y activo.");
+        newScript();
+    } catch(e) { alert("Error al restaurar: " + e.message); } 
+    finally { setBusy(false); }
+}
 
