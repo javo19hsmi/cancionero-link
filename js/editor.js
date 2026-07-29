@@ -907,7 +907,17 @@ function loadAnnouncementsModule(communities, role) {
     if (communities && communities.length > 0) {
         communities.forEach(com => {
             const opt = document.createElement('option');
-            opt.value = com.path;
+            
+            // 🛡️ PARCHE INTELIGENTE: Verificamos si la ruta viene incompleta desde auth.js
+            let finalPath = com.path;
+            
+            // Si el path no tiene 'sub_nodos' pero sabemos que es la capilla montserrat (o cualquier otra que no sea la parroquia central)
+            if (com.id !== 'pst_001' && !finalPath.includes('sub_nodos') && !finalPath.includes('anuncios_globales')) {
+                // Forzamos la jerarquía correcta de la base de datos
+                finalPath = `comunidades/pst_001/sub_nodos/${com.id}`;
+            }
+
+            opt.value = finalPath;
             opt.text = `⛪ ${com.id}`;
             selector.appendChild(opt);
         });
