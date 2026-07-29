@@ -19,25 +19,30 @@ auth.onAuthStateChanged(async user => {
       let authorizedCommunities = []; 
       
       // Procesamos los permisos extrayendo la clave y armando la ruta
-      Object.entries(perms).forEach(([id, p]) => { 
+      // 🚀 CAMBIO: Usamos for...of para poder usar 'await' y traer el nombre real
+      for (const [id, p] of Object.entries(perms)) {
         if (p.musica || p.admin) canS = true; 
+        if (p.guiones || p.admin) canG = true; 
+        
         if (p.anuncios || p.admin) {
             canA = true;
-            let path = "";
+            let path = p.ruta_base ? p.ruta_base : `comunidades/${id}`;
             
-            // 🚀 LÓGICA DIRECTA: Usamos la ruta oficial guardada por la App
-            if (p.ruta_base) {
-                path = p.ruta_base;
-            } else {
-                // Modo rescate (por si quedó algún permiso viejísimo sin actualizar en la App)
-                path = `comunidades/${id}`;
+            // 🚀 MAGIA: Buscamos el nombre oficial de la comunidad en Firebase
+            let nombreOficial = id; // Dejamos el ID por defecto por si algo falla
+            try {
+                const nameSnap = await db.ref(`${path}/nombre`).once('value');
+                if (nameSnap.exists()) {
+                    nombreOficial = nameSnap.val();
+                }
+            } catch(e) { 
+                console.warn("No se pudo cargar el nombre de", path); 
             }
             
-            // Agregamos la comunidad y su ruta a la lista
-            authorizedCommunities.push({ id: id, path: path });
+            // Agregamos la comunidad con su nombre real
+            authorizedCommunities.push({ id: id, path: path, nombre: nombreOficial });
         }
-        if (p.guiones || p.admin) canG = true; 
-      });
+      }
 
       if (canS || canA || canG) {
         document.getElementById('login-overlay').style.display = 'none';
