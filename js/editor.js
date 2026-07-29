@@ -1365,7 +1365,10 @@ function renderScriptList() {
                 </div>
             </div>
         `;
-        div.onclick = () => loadSingleScript(key, g);
+        div.onclick = () => {
+            if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar en este guion. ¿Seguro que querés salir y perderlos? (Atte: El programador sin finde)")) return;
+            loadSingleScript(key, g);
+        };
         res.appendChild(div);
     });
 }
@@ -1394,6 +1397,7 @@ function loadSingleScript(key, g) {
         saveBtn.style.display = 'block'; 
     }
     renderScriptList();
+   hasUnsavedChanges = false; // Reseteamos al terminar de cargar
 }
 
 function newScript() {
@@ -1406,6 +1410,7 @@ function newScript() {
     document.getElementById('script-action-btn').style.display = 'none';
     document.getElementById('script-save-btn').style.display = 'block'; 
     renderScriptList();
+   hasUnsavedChanges = false; // Reseteamos al crear uno nuevo
 }
 
 async function saveScript() {
