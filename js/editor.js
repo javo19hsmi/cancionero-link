@@ -291,9 +291,23 @@ function applyPermissions(permissionsArray) {
 function switchMod(mod) {
   document.querySelectorAll('main').forEach(m => m.style.display = 'none');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
   const targetMain = document.getElementById(`mod-${mod}`);
-  if (targetMain) targetMain.style.display = 'grid';
+  if (targetMain) targetMain.style.display = 'grid'; // O su display correspondiente
   if(event && event.target) event.target.classList.add('active');
+
+  // 🚀 CONTROL INTELIGENTE DEL BOTÓN DE PUBLICAR
+  const pubBtn = document.getElementById('global-pub-btn');
+  if (pubBtn && userRole === 'super_admin') {
+      // Solo se muestra si estamos en la solapa 'songs' (cancionero)
+      pubBtn.style.display = (mod === 'songs') ? 'block' : 'none';
+  }
+
+  // 🚀 CONTROL DEL TECLADO MÓVIL DE ACORDES
+  const chordBar = document.getElementById('mobileChordBar');
+  if (chordBar) {
+      chordBar.style.display = (mod === 'songs') ? chordBar.style.display : 'none';
+  }
 }
 
 // Alterna entre el Modo Acordes visuales y el Modo Letra (Texto maestro con corchetes)
