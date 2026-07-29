@@ -48,41 +48,42 @@ header {
 }
 
 /* ==========================================================
-   ADAPTACIÓN MÓVIL Y PANTALLAS CHICAS (Reemplaza al anterior de 1100px)
+   ADAPTACIÓN MÓVIL Y PANTALLAS CHICAS (1 columna fluida)
    ========================================================== */
-@media (max-width: 1100px) { 
-  /* 1. Liberamos la altura del body para permitir scroll natural en toda la página */
-  body, .app-container { 
-    height: auto !important; 
-    overflow: visible !important; 
-    display: block; 
+@media (max-width: 1100px) {  
+  /* 1. Permite scroll natural en toda la página y quita los altos fijos */
+  body, .app-container {  
+    height: auto !important;  
+    overflow: visible !important;  
+    display: block !important;  
   }
   
-  /* 2. La grilla principal pasa a ser una columna que se estira hacia abajo */
-  .main-grid { 
-    display: flex;
-    flex-direction: column;
-    height: auto;
-    overflow: visible;
-  }
-
-  /* 3. Liberamos la altura de los paneles de cristal */
-  .glass-panel {
+  /* 2. TODAS las grillas pasan a ser una sola columna vertical */
+  .main-grid, .announcements-grid {  
+    display: flex !important;
+    flex-direction: column !important;
     height: auto !important;
     overflow: visible !important;
   }
 
-  /* 4. Limitamos la lista de búsqueda para que no ocupe toda la pantalla y te deje ver el editor */
-  .search-results {
-    max-height: 200px;
-    overflow-y: auto;
+  /* 3. Los paneles de cristal se expanden de forma natural con su contenido */
+  .glass-panel {
+    height: auto !important;
+    overflow: visible !important;
+    margin-bottom: 15px;
   }
 
-  /* 5. El editor de letras ahora no tiene scroll interno, crece con el contenido */
+  /* 4. Altura cómoda para la lista de búsqueda o anuncios en celulares */
+  .search-results, #announcement-list {
+    max-height: 250px !important;
+    overflow-y: auto !important;
+  }
+
+  /* 5. El editor de canciones crece libremente sin scroll interno forzado */
   #lyrics-editor {
-    min-height: 60vh;
+    min-height: 50vh !important;
     height: auto !important;
-    overflow-y: visible !important; 
+    overflow-y: visible !important;  
     margin-bottom: 20px !important;
   }
 }
