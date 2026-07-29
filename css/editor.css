@@ -498,12 +498,28 @@ input, select, textarea {
   color: var(--danger); /* Se pone rojo (tu color danger) al pasar el mouse */
 }
 
+/* Grilla específica de 2 columnas para Anuncios que se adapta perfectamente */
 .announcements-grid {
-  display: grid; 
-  grid-template-columns: 320px 1fr; /* 2 columnas perfectas para Anuncios */
-  gap: 15px; 
-  padding: 15px; 
-  flex: 1; 
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 15px;
+  padding: 15px;
+  flex: 1;
   overflow: hidden;
+  min-height: 0;
+  height: calc(100vh - 120px); /* Ocupa el espacio justo debajo del header */
+}
+
+/* Asegurar que el panel izquierdo de anuncios llene el alto y su lista crezca */
+#mod-announcements .glass-panel:first-child {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+#announcement-list {
+  flex: 1;
+  overflow-y: auto;
   min-height: 0;
 }
