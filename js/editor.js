@@ -1347,9 +1347,14 @@ function renderScriptList() {
             if (parts.length === 3) fechaLegible = `${parts[2]}/${parts[1]}/${parts[0]}`;
         }
 
+        // 🚀 EL FIX: Calculamos el color del ícono dinámicamente
+        const iconColor = (currentScriptKey === key) 
+            ? '#ffffff' // Blanco puro cuando está seleccionado
+            : (isViewingScriptArchive ? 'var(--warning)' : 'var(--primary)'); // Color normal si no está seleccionado
+
         div.innerHTML = `
             <div style="display:flex; align-items:center; gap:10px; ${borderStyle} padding-left:5px;">
-                <span class="material-symbols-outlined" style="font-size:24px; color:${isViewingScriptArchive ? 'var(--warning)' : 'var(--primary)'}">description</span>
+                <span class="material-symbols-outlined" style="font-size:24px; color:${iconColor}; transition: color 0.2s;">description</span>
                 <div style="flex:1; overflow:hidden;">
                     <div style="font-weight:bold; white-space:nowrap; text-overflow:ellipsis; overflow:hidden;">${g.title || 'Sin Título'}</div>
                     <div style="font-size:10px; opacity:0.6">${fechaLegible || 'Sin fecha'}</div>
