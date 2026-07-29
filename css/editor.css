@@ -265,44 +265,45 @@ header {
 @media (max-width: 768px) {
   /* Ocultamos el teclado lateral de PC en pantallas chicas */
   #acordesCol { display: none !important; } 
-
-  /* Barra móvil inferior fija */
-  .app-container #mobileChordBar {
-    display: none; /* Arranca oculta y se muestra con el botón */
-    position: fixed !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: #0A0A0B !important;
-    border-top: 2px solid var(--primary) !important;
-    padding: 8px !important;
-    z-index: 99999 !important;
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.9);
-    box-sizing: border-box;
-  }
-  
-  #mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
-  #mobileChordBar .mb-row:last-child { margin-bottom: 0; }
-  
-  #mobileChordBar .mb-btn {
-    flex: 1; 
-    text-align: center; 
-    padding: 10px 0; 
-    border-radius: 8px;
-    border: 1px solid var(--glass-border); 
-    background: rgba(255,255,255,0.05); 
-    color: white; 
-    font-weight: bold; 
-    font-size: 13px;
-    cursor: pointer;
-  }
-  #mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
-
   /* Margen inferior extra en el editor para que la barra no tape el texto */
   #lyrics-editor { 
     margin-bottom: 180px !important; 
   }
 }
+
+/* ==========================================================
+   BARRA MÓVIL INFERIOR FIJA (Global y flotante en pantallas chicas)
+   ========================================================== */
+#mobileChordBar {
+  display: none; /* Arranca oculta y se muestra con el JS */
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: #0A0A0B !important;
+  border-top: 2px solid var(--primary) !important;
+  padding: 8px !important;
+  z-index: 99999 !important;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.9);
+  box-sizing: border-box;
+}
+
+#mobileChordBar .mb-row { display: flex; gap: 6px; margin-bottom: 6px; }
+#mobileChordBar .mb-row:last-child { margin-bottom: 0; }
+
+#mobileChordBar .mb-btn {
+  flex: 1; 
+  text-align: center; 
+  padding: 10px 0; 
+  border-radius: 8px;
+  border: 1px solid var(--glass-border); 
+  background: rgba(255,255,255,0.05); 
+  color: white; 
+  font-weight: bold; 
+  font-size: 13px;
+  cursor: pointer;
+}
+#mobileChordBar .mb-btn:active { background: var(--primary); color: black; }
 
 /* ==========================================================
    8. FORMULARIOS, BOTONES Y CAPAS GENERALES
