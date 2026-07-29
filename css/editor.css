@@ -498,7 +498,9 @@ input, select, textarea {
   color: var(--danger); /* Se pone rojo (tu color danger) al pasar el mouse */
 }
 
-/* Grilla específica de 2 columnas para Anuncios que se adapta perfectamente */
+/* ==========================================================
+   GRILLA DE 2 COLUMNAS PARA ANUNCIOS (Armonizada con el Cancionero)
+   ========================================================== */
 .announcements-grid {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -506,11 +508,10 @@ input, select, textarea {
   padding: 15px;
   flex: 1;
   overflow: hidden;
-  min-height: 0;
-  height: calc(100vh - 120px); /* Ocupa el espacio justo debajo del header */
+  min-height: 0; /* Mantiene la magia del flexbox para evitar desbordes */
 }
 
-/* Asegurar que el panel izquierdo de anuncios llene el alto y su lista crezca */
+/* Asegurar que el panel izquierdo de anuncios llene el alto y su lista crezca prolija */
 #mod-announcements .glass-panel:first-child {
   display: flex;
   flex-direction: column;
