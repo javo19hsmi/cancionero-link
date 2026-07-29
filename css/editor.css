@@ -97,9 +97,15 @@ header {
   flex-direction: column; 
   padding: 15px; 
   overflow: hidden;
+  height: 100%;
 }
 
-.search-results { flex: 1; overflow-y: auto; margin-top: 10px; }
+.search-results { 
+  flex: 1; 
+  overflow-y: auto; 
+  margin-top: 10px; 
+  min-height: 0; /* Vital para que el flexbox respete el alto disponible */
+}
 .result-item {
   padding: 8px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px;
   font-size: 13px; border: 1px solid transparent; transition: 0.2s;
