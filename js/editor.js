@@ -101,6 +101,11 @@ function initApp() {
   });
   
   setupEditorListeners();
+
+  // 🚀 DISPARADOR INICIAL: Fuerza la adaptación visual al cargar la página por primera vez
+  if (window.innerWidth <= 1100) {
+      switchMod('songs');
+  }
 }
 
 /* ==========================================================
