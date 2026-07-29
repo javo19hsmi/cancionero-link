@@ -25,12 +25,11 @@ auth.onAuthStateChanged(async user => {
             canA = true;
             let path = "";
             
-            // Si el ID tiene guiones bajos, es una capilla
-            if (id.includes('_cap_')) {
-                const parts = id.split('_cap_');
-                path = `comunidades/${parts[0]}/sub_nodos/${parts[1]}`;
+            // 🚀 LÓGICA DIRECTA: Usamos la ruta oficial guardada por la App
+            if (p.ruta_base) {
+                path = p.ruta_base;
             } else {
-                // Es una parroquia principal
+                // Modo rescate (por si quedó algún permiso viejísimo sin actualizar en la App)
                 path = `comunidades/${id}`;
             }
             
