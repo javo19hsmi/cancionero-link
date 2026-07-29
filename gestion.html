@@ -9,8 +9,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+  <script src="js/firebase-config.js"></script>
+  
   
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
   <link rel="stylesheet" href="css/editor.css" />
 </head>
 <body>
@@ -244,9 +248,52 @@
     </main>
 
 
+    <!-- MÓDULO 4: GUIONES LITÚRGICOS -->
+    <main id="mod-scripts" class="announcements-grid" style="display:none;">
+      <!-- COLUMNA 1: LISTA DE GUIONES -->
+      <section class="glass-panel">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
+          <label id="script-list-title" style="margin:0">GUIONES ACTIVOS</label>
+          <div style="display:flex; gap:5px">
+            <button id="btn-toggle-script-archive" class="btn" style="padding: 4px 8px; font-size: 10px; background: rgba(255,255,255,0.1); color:white" onclick="toggleScriptArchiveView()">ARCHIVO 📦</button>
+            <button class="btn" style="padding: 4px 8px; font-size: 10px; background: var(--primary); color:black" onclick="newScript()">NUEVO +</button>
+          </div>
+        </div>
+        <div id="script-list" class="search-results"></div>
+      </section>
+
+      <!-- COLUMNA 2: EDITOR DEL GUION -->
+      <section class="glass-panel" style="overflow-y: auto;">
+        
+        <!-- SELECTOR DE COMUNIDAD DESTINO -->
+        <div class="form-group" style="margin-bottom: 20px; background: rgba(77,182,172,0.1); padding: 15px; border-radius: 12px; border: 1px dashed var(--primary);">
+          <label style="color: var(--primary); font-size: 11px;">DESTINO DEL GUION (¿DÓNDE SE VA A USAR?)</label>
+          <select id="script-community-selector" style="margin-bottom: 0; font-weight: bold;" onchange="reloadScriptsList(); newScript();"></select>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px">
+          <div>
+            <label>FECHA DE LA MISA</label>
+            <input type="date" id="script-date">
+          </div>
+          <div>
+            <label>TÍTULO DEL GUION</label>
+            <input type="text" id="script-title" placeholder="Ej: Domingo de Pascua - Ciclo B">
+          </div>
+        </div>
+
+        <label>CONTENIDO DEL GUION</label>
+        <!-- Textarea oculto que será reemplazado por EasyMDE -->
+        <textarea id="script-content"></textarea>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+          <button id="script-action-btn" class="btn" style="flex:1; display:none;" onclick="handleScriptAction()"></button>
+          <button id="script-save-btn" class="btn btn-save" style="flex:2;" onclick="saveScript()">GUARDAR GUION 💾</button>
+        </div>
+      </section>
+    </main>
     
         <!-- MÓDULOS EN CONSTRUCCIÓN -->
-    <main id="mod-prayers" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">🙏 Oraciones</h2></section></main>
     <main id="mod-scripts" class="main-grid" style="display:none;"><section class="glass-panel"><h2 style="text-align:center;">📜 Guiones</h2></section></main>
   </div>
 
