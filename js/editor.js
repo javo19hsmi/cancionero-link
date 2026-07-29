@@ -890,29 +890,49 @@ let currentAnnKey = null;
 let currentAnnouncementsRef = null;
 let isViewingArchive = false; // 🚀 NUEVO: Controla si vemos activos o archivados
 
-// 🚀 NUEVO: Array para guardar TODAS las comunidades autorizadas
-      let authorizedCommunities = []; 
-      
-      // Procesamos los permisos extrayendo la clave y armando la ruta
-      Object.entries(perms).forEach(([id, p]) => { 
-        if (p.musica || p.admin) canS = true; 
-        if (p.anuncios || p.admin) {
-            canA = true;
-            let path = "";
+// 1. CARGA DE ANUNCIOS Y CONTROL DE VISTAS
+function loadAnnouncementsModule(communities, role) {
+    const selector = document.getElementById('community-selector');
+    if (!selector) return;
+    
+    selector.innerHTML = '';
+    
+    if (role === 'super_admin') {
+        const opt = document.createElement('option');
+        opt.value = 'anuncios_globales';
+        opt.text = '🌎 Anuncio Global (Todas las comunidades)';
+        // 🎨 ARREGLO VISUAL: Fondo oscuro y letra blanca
+        opt.style.background = "#1e1e1e"; 
+        opt.style.color = "#ffffff";
+        selector.appendChild(opt);
+    }
+
+    if (communities && communities.length > 0) {
+        communities.forEach(com => {
+            const opt = document.createElement('option');
             
-            // 🚀 LÓGICA DIRECTA: Usamos la ruta oficial guardada por la App
-            if (p.ruta_base) {
-                path = p.ruta_base;
-            } else {
-                // Modo rescate (por si quedó algún permiso viejísimo sin actualizar en la App)
-                path = `comunidades/${id}`;
-            }
+            opt.value = com.path;
+            // 🚀 Usamos el nombre real que buscamos en auth.js
+            opt.text = `⛪ ${com.nombre.toUpperCase()}`;
             
-            // Agregamos la comunidad y su ruta a la lista
-            authorizedCommunities.push({ id: id, path: path });
-        }
-        if (p.guiones || p.admin) canG = true; 
-      });
+            // 🎨 ARREGLO VISUAL: Fondo oscuro y letra blanca
+            opt.style.background = "#1e1e1e"; 
+            opt.style.color = "#ffffff";
+            
+            selector.appendChild(opt);
+        });
+    }
+
+    selector.onchange = () => {
+        reloadAnnouncementsList();
+        newAnnouncement(); 
+    };
+
+    if (selector.options.length > 0) {
+        selector.onchange();
+    }
+}
+
 
 // 🚀 NUEVO: Botón para alternar entre Activos y Archivados
 function toggleArchiveView() {
