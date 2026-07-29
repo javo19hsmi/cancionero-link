@@ -558,3 +558,17 @@ input, select, textarea {
   background: var(--bg);
   color: var(--text);
 }
+/* Hacer visible el cursor titilante en modo oscuro */
+.EasyMDEContainer .CodeMirror-cursor {
+    border-left: 2px solid white !important;
+}
+
+/* Por las dudas, también forzamos el color del cursor nativo si hace falta */
+.EasyMDEContainer .CodeMirror {
+    caret-color: white !important;
+}
+
+/* Ajuste de tamaño para los títulos en la vista de edición */
+.EasyMDEContainer .CodeMirror .cm-header-1 { font-size: 1.6em; line-height: 1.2; }
+.EasyMDEContainer .CodeMirror .cm-header-2 { font-size: 1.4em; line-height: 1.2; }
+.EasyMDEContainer .CodeMirror .cm-header-3 { font-size: 1.2em; line-height: 1.2; }
