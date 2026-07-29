@@ -274,11 +274,11 @@
         <div style="display:grid; grid-template-columns:1fr 2fr; gap:10px">
           <div>
             <label>FECHA DE LA MISA</label>
-            <input type="date" id="script-date">
+            <input type="date" id="script-date" oninput="markUnsavedChanges()">
           </div>
           <div>
             <label>TÍTULO DEL GUION</label>
-            <input type="text" id="script-title" placeholder="Ej: Domingo de Pascua - Ciclo B">
+            <input type="text" id="script-title" placeholder="Ej: Domingo de Pascua - Ciclo B" oninput="markUnsavedChanges()">
           </div>
         </div>
 
