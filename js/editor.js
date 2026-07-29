@@ -106,6 +106,29 @@ function initApp() {
   if (window.innerWidth <= 1100) {
       switchMod('songs');
   }
+   /* ==========================================================
+   ESCUCHADOR INTELIGENTE DE CAMBIO DE TAMAÑO (RESPONSIVE)
+   ========================================================== */
+window.addEventListener('resize', () => {
+    // Detectamos cuál es la solapa que se encuentra activa actualmente
+    const activeTabBtn = document.querySelector('.tab-btn.active');
+    if (!activeTabBtn) return;
+
+    // Extraemos el nombre del módulo actual (ej: 'songs', 'announcements')
+    const activeModId = activeTabBtn.id.replace('tab-', '');
+    
+    // Forzamos al módulo activo a recalcular su diseño (grid o flex) según el nuevo ancho
+    const targetMain = document.getElementById(`mod-${activeModId}`);
+    if (targetMain) {
+        if (window.innerWidth <= 1100) {
+            targetMain.style.display = 'flex';
+            targetMain.style.flexDirection = 'column';
+        } else {
+            // Si vuelve a ser pantalla grande de PC, restauramos su grilla correspondiente
+            targetMain.style.display = 'grid';
+        }
+    }
+});
 }
 
 /* ==========================================================
