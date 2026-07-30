@@ -1545,27 +1545,55 @@ function loadPrayersModule(path) {
         // ADMIN LOCAL: Oculta la opción 'oficial' en el constructor
         const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
         if (optionOficial) optionOficial.style.display = 'none';
-        document.getElementById('prayer-level-container').style.display = 'flex';
+        
+        const levelContainer = document.getElementById('prayer-level-container');
+        if(levelContainer) levelContainer.style.display = 'flex';
+
+        // 🎯 Llenar el selector local de destinos
+        const localSelector = document.getElementById('prayer-local-destination');
+        const containerDestino = document.getElementById('prayer-local-destination-container');
+        
+        if (localSelector && containerDestino) {
+            localSelector.innerHTML = '';
+            
+            // Opción 1: Sede Parroquial principal
+            const optSede = document.createElement('option');
+            optSede.value = `${path}/oraciones`;
+            optSede.text = '⛪ Sede Parroquial Principal';
+            localSelector.appendChild(optSede);
+
+            // Opción 2: Capillas dependientes (tal cual como ya las leías en tu código)
+            db.ref(`${path}/capillas`).once('value', snap => {
+                const capillas = snap.val() || {};
+                Object.keys(capillas).forEach(capId => {
+                    const capNombre = capillas[capId].nombre || capId;
+                    const optCap = document.createElement('option');
+                    optCap.value = `${path}/capillas/${capId}/oraciones`;
+                    optCap.text = `🏛️ Capilla: ${capNombre.toUpperCase()}`;
+                    localSelector.appendChild(optCap);
+                });
+                containerDestino.style.display = 'block';
+            });
+        }
 
         // Carga 1: Oraciones de la Parroquia (Sede Central)
         db.ref(`${path}/oraciones`).on('value', snap => {
-            procesarNodos(snap.val(), 'local', 'Mi Parroquia');
+            procesarNodos(snap.val(), 'local', 'Mi Parroquia', `${path}/oraciones`);
         });
 
         // Carga 2: Oraciones de las Capillas dependientes
-        // Asume que las capillas están anidadas en path/capillas o path/sub_nodos
         db.ref(`${path}/capillas`).on('value', snap => {
             const capillas = snap.val() || {};
             Object.keys(capillas).forEach(capId => {
                 if (capillas[capId].oraciones) {
-                    procesarNodos(capillas[capId].oraciones, 'local', capillas[capId].nombre || capId);
+                    procesarNodos(capillas[capId].oraciones, 'local', capillas[capId].nombre || capId, `${path}/capillas/${capId}/oraciones`);
                 }
             });
         });
 
         // Carga 3: Sus propias oraciones en la Galería Pública
         db.ref('oraciones_publicas').orderByChild('origen').equalTo(comunidadId).on('value', snap => {
-            procesarNodos(snap.val(), 'publica', 'Pública (Mía)');
+            procesarNodos(snap.val(), 'publica', 'Pública (Mía)', 'oraciones_publicas');
         });
     }
 }
@@ -1661,13 +1689,17 @@ async function savePrayer() {
     const nivel = document.getElementById('prayer-level').value;
     const key = currentPrayerKey || Date.now().toString();
     
-    // Determinamos la NUEVA ruta donde debe guardarse
+    // Determinamos la NUEVA ruta donde debe guardarse de forma inteligente
     let nuevaRuta = '';
-    if (nivel === 'oficial') nuevaRuta = `oraciones_oficiales/${key}`;
-    else if (nivel === 'publica') nuevaRuta = `oraciones_publicas/${key}`;
-    else {
-        // Si es local, por defecto al crear/editar va a la sede parroquial del admin
-        nuevaRuta = `${userNodePath}/oraciones/${key}`;
+    if (nivel === 'oficial') {
+        nuevaRuta = `oraciones_oficiales/${key}`;
+    } else if (nivel === 'publica') {
+        nuevaRuta = `oraciones_publicas/${key}`;
+    } else {
+        // 🎯 Si es local, leemos el destino exacto (Sede o Capilla específica) elegido en el selector
+        const selectDestino = document.getElementById('prayer-local-destination');
+        const rutaLocalElegida = selectDestino && selectDestino.value ? selectDestino.value : `${userNodePath}/oraciones`;
+        nuevaRuta = `${rutaLocalElegida}/${key}`;
     }
 
     const data = {
@@ -1759,6 +1791,9 @@ function addPrayerBlock(tipo, texto = "") {
 }
 
 function loadSinglePrayer(key, p) {
+    // 🛡️ Protección por si hay cambios sin guardar en la oración anterior
+    if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar en esta oración. ¿Querés salir y perderlos?")) return;
+
     currentPrayerKey = key;
     document.getElementById('prayer-title').value = p.titulo || "";
     document.getElementById('prayer-cat').value = (p.categorias || []).join(', ');
@@ -1780,9 +1815,15 @@ function loadSinglePrayer(key, p) {
     }
 
     document.getElementById('prayer-delete-btn').style.display = 'block';
+    
+    hasUnsavedChanges = false; // 🛡️ Reseteamos la bandera porque acabamos de cargar datos limpios
+    renderPrayerList(); // Actualiza la clase 'active' visualmente en la lista de la izquierda
 }
 
 function newPrayer() {
+    // 🛡️ Protección por si querés crear una nueva perdiendo lo que estabas editando
+    if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar. ¿Seguro que querés crear una nueva y descartarlos?")) return;
+
     currentPrayerKey = null;
     document.getElementById('prayer-title').value = "";
     document.getElementById('prayer-cat').value = "";
@@ -1790,5 +1831,7 @@ function newPrayer() {
     document.getElementById('prayer-level').value = "local";
     document.getElementById('prayer-blocks-container').innerHTML = "";
     document.getElementById('prayer-delete-btn').style.display = 'none';
+    
+    hasUnsavedChanges = false; // 🛡️ Reseteamos la bandera
     renderPrayerList();
 }
