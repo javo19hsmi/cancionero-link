@@ -1764,13 +1764,12 @@ function loadSinglePrayer(key, p) {
     document.getElementById('prayer-cat').value = (p.categorias || []).join(', ');
     document.getElementById('prayer-img-url').value = p.imageUrl || "";
     
+    // 🛡️ FIX: Usamos directamente el nivel que ya sabemos que tiene, sin depender de userNodePath
     const levelSelect = document.getElementById('prayer-level');
-    if (p.esOficial) {
-        levelSelect.value = 'oficial';
-    } else if (p.origen && p.origen !== 'sistema' && !p.origen.includes(userNodePath)) {
-        levelSelect.value = 'publica';
+    if (p._nivelGuardado) {
+        levelSelect.value = p._nivelGuardado;
     } else {
-        levelSelect.value = 'local';
+        levelSelect.value = 'local'; // Valor por defecto por las dudas
     }
 
     const container = document.getElementById('prayer-blocks-container');
@@ -1781,7 +1780,6 @@ function loadSinglePrayer(key, p) {
     }
 
     document.getElementById('prayer-delete-btn').style.display = 'block';
-    renderPrayerList();
 }
 
 function newPrayer() {
