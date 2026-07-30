@@ -376,6 +376,12 @@ function switchMod(mod) {
       }
       reloadScriptsList();
   }
+   // PARA "ENCHUFAR" LAS ORACIONES
+  if (mod === 'prayers') {
+      if (typeof loadPrayersModule === 'function') {
+          loadPrayersModule(userNodePath); // userNodePath viene de tu auth.js
+      }
+  }
 }
 
 // Alterna entre el Modo Acordes visuales y el Modo Letra (Texto maestro con corchetes)
