@@ -1498,3 +1498,211 @@ async function restoreScript() {
     finally { setBusy(false); }
 }
 
+// ==========================================================
+// 🙏 MÓDULO DE GESTIÓN DE ORACIONES (BLOQUES DINÁMICOS)
+// ==========================================================
+let allPrayers = {};
+let currentPrayerKey = null;
+
+// 1. CARGA DEL MÓDULO
+function loadPrayersModule(path) {
+    const target = (userRole === 'super_admin') ? 'oraciones_oficiales' : `${path}/oraciones`;
+    
+    if (userRole === 'super_admin') {
+        document.getElementById('prayer-level-container').style.display = 'flex';
+    }
+
+    db.ref(target).on('value', snap => {
+        allPrayers = snap.val() || {};
+        renderPrayerList();
+    });
+}
+
+function renderPrayerList() {
+    const res = document.getElementById('prayer-list');
+    res.innerHTML = "";
+    Object.entries(allPrayers).forEach(([key, p]) => {
+        const div = document.createElement('div');
+        div.className = `result-item glass ${currentPrayerKey === key ? 'active' : ''}`;
+        div.style.padding = "10px";
+        div.style.marginBottom = "8px";
+        div.style.cursor = "pointer";
+        div.style.borderRadius = "8px";
+        div.innerHTML = `<b>${p.titulo}</b><br><small style="opacity:0.5">${(p.categorias || []).join(', ')}</small>`;
+        div.onclick = () => loadSinglePrayer(key, p);
+        res.appendChild(div);
+    });
+}
+
+// 2. CONSTRUCTOR DE BLOQUES VISUALES
+function addPrayerBlock(tipo, texto = "") {
+    const container = document.getElementById('prayer-blocks-container');
+    const id = 'block-' + Date.now() + Math.random().toString(36).substr(2, 9);
+    
+    const div = document.createElement('div');
+    div.id = id;
+    div.className = 'glass';
+    div.style = 'padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.1); position:relative; background:rgba(0,0,0,0.3)';
+    div.dataset.tipo = tipo;
+
+    let label = tipo.toUpperCase();
+    let color = 'var(--primary)';
+    
+    if (tipo === 'versiculo') label = 'V. / R.';
+    if (tipo === 'titulo_seccion') { label = 'TÍTULO DE SECCIÓN'; color = 'var(--warning)'; }
+
+    div.innerHTML = `
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+            <small style="color:${color}; font-weight:bold; font-size:9px">${label}</small>
+            <span style="cursor:pointer; color:var(--danger); font-weight:bold; font-size:14px" onclick="document.getElementById('${id}').remove()">×</span>
+        </div>
+        <textarea style="width:100%; background:none; border:none; color:white; font-size:13px; resize:none; outline:none" rows="2" placeholder="Escribí acá...">${texto}</textarea>
+    `;
+    container.appendChild(div);
+    
+    const txt = div.querySelector('textarea');
+    txt.style.height = 'auto';
+    txt.style.height = txt.scrollHeight + 'px';
+    txt.oninput = function() { 
+        this.style.height = 'auto'; 
+        this.style.height = this.scrollHeight + 'px'; 
+    };
+}
+
+function loadSinglePrayer(key, p) {
+    currentPrayerKey = key;
+    document.getElementById('prayer-title').value = p.titulo || "";
+    document.getElementById('prayer-cat').value = (p.categorias || []).join(', ');
+    document.getElementById('prayer-img-url').value = p.imageUrl || "";
+    
+    const levelSelect = document.getElementById('prayer-level');
+    if (p.esOficial) {
+        levelSelect.value = 'oficial';
+    } else if (p.origen && p.origen !== 'sistema' && !p.origen.includes(userNodePath)) {
+        levelSelect.value = 'publica';
+    } else {
+        levelSelect.value = 'local';
+    }
+
+    const container = document.getElementById('prayer-blocks-container');
+    container.innerHTML = "";
+    
+    if (p.contenido) {
+        p.contenido.forEach(b => addPrayerBlock(b.tipo, b.texto));
+    }
+
+    document.getElementById('prayer-delete-btn').style.display = 'block';
+    renderPrayerList();
+}
+
+function newPrayer() {
+    currentPrayerKey = null;
+    document.getElementById('prayer-title').value = "";
+    document.getElementById('prayer-cat').value = "";
+    document.getElementById('prayer-img-url').value = "";
+    document.getElementById('prayer-level').value = "local";
+    document.getElementById('prayer-blocks-container').innerHTML = "";
+    document.getElementById('prayer-delete-btn').style.display = 'none';
+    renderPrayerList();
+}
+
+// 3. GUARDADO ESTRUCTURADO Y LIMPIEZA DE DUPLICADOS
+async function savePrayer() {
+    const title = document.getElementById('prayer-title').value.trim();
+    if (!title) return alert("El título es obligatorio.");
+
+    const blocks = [];
+    document.querySelectorAll('#prayer-blocks-container > div').forEach(div => {
+        blocks.push({
+            tipo: div.dataset.tipo,
+            texto: div.querySelector('textarea').value.trim()
+        });
+    });
+
+    if (blocks.length === 0) return alert("Agregá al menos un bloque de contenido.");
+
+    // Muestra tu indicador de carga habitual
+    if (typeof setBusy === "function") setBusy(true, "Guardando oración...");
+    
+    const nivel = document.getElementById('prayer-level').value;
+    const key = currentPrayerKey || Date.now().toString();
+    
+    let finalPath = '';
+    if (nivel === 'oficial') finalPath = `oraciones_oficiales/${key}`;
+    else if (nivel === 'publica') finalPath = `oraciones_publicas/${key}`;
+    else finalPath = `${userNodePath}/oraciones/${key}`;
+
+    const data = {
+        id: key,
+        titulo: title,
+        categorias: document.getElementById('prayer-cat').value.split(',').map(s => s.trim()).filter(Boolean),
+        imageUrl: document.getElementById('prayer-img-url').value.trim(),
+        contenido: blocks,
+        esOficial: nivel === 'oficial',
+        origen: nivel === 'oficial' ? 'sistema' : userNodePath.split('/').pop(),
+        tipoUI: 'estructurada',
+        iconName: 'book' // Por defecto, se puede ampliar luego
+    };
+
+    try {
+        // 1. Guardar en la ruta correspondiente
+        await db.ref(finalPath).set(data);
+
+        // 2. Lógica de limpieza cruzada (basada en el código de Flutter)
+        if (nivel === 'oficial') {
+            await db.ref(`oraciones_publicas/${key}`).remove();
+            await db.ref(`${userNodePath}/oraciones/${key}`).remove();
+        } else if (nivel === 'publica') {
+            await db.ref(`oraciones_oficiales/${key}`).remove();
+            await db.ref(`${userNodePath}/oraciones/${key}`).remove();
+        } else {
+            await db.ref(`oraciones_oficiales/${key}`).remove();
+            await db.ref(`oraciones_publicas/${key}`).remove();
+        }
+
+        alert("✅ Oración guardada correctamente.");
+        newPrayer();
+    } catch(e) { 
+        alert("Error al guardar: " + e.message); 
+    } finally { 
+        if (typeof setBusy === "function") setBusy(false); 
+    }
+}
+
+async function uploadPrayerImg(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    if (typeof setBusy === "function") setBusy(true, "Subiendo imagen...");
+    try {
+        // Usa tu instancia de storage existente
+        const ref = firebase.storage().ref(`oraciones/images/img_${Date.now()}`);
+        await ref.put(file);
+        document.getElementById('prayer-img-url').value = await ref.getDownloadURL();
+    } catch (e) { 
+        alert("Error al subir la imagen."); 
+    } finally { 
+        if (typeof setBusy === "function") setBusy(false); 
+    }
+}
+
+async function deletePrayer() {
+    if (!currentPrayerKey || !confirm("¿Eliminar esta oración de forma permanente?")) return;
+    
+    const nivel = document.getElementById('prayer-level').value;
+    let target = '';
+    
+    if (nivel === 'oficial') target = `oraciones_oficiales/${currentPrayerKey}`;
+    else if (nivel === 'publica') target = `oraciones_publicas/${currentPrayerKey}`;
+    else target = `${userNodePath}/oraciones/${currentPrayerKey}`;
+
+    if (typeof setBusy === "function") setBusy(true, "Eliminando...");
+    try {
+        await db.ref(target).remove();
+        newPrayer();
+    } catch(e) {
+        alert("Error al eliminar.");
+    } finally {
+        if (typeof setBusy === "function") setBusy(false);
+    }
+}
