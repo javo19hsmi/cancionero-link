@@ -1545,7 +1545,7 @@ function loadPrayersModule(path) {
                         const subNombre = sub.nombre || subId;
                         const optSub = document.createElement('option');
                         optSub.value = `${comPath}/sub_nodes/${subId}/oraciones`;
-                        optSub.text = `🏛️ ${comNombre.toUpperCase()}`;
+                        optSub.text = `🏛️ ${subNombre.toUpperCase()}`;
                         localSelector.appendChild(optSub);
                     });
                 });
@@ -1568,12 +1568,11 @@ function loadPrayersModule(path) {
             });
 
         } else {
-            // ADMIN / USUARIO LOCAL CON MULTI-ACCESOS EN FIREBASE
+            // ADMIN / USUARIO LOCAL: Leemos los accesos reales del usuario logueado en Firebase
             const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
             if (optionOficial) optionOficial.style.display = 'none';
             document.getElementById('prayer-level-container').style.display = 'flex';
 
-            // Leemos los accesos reales del usuario logueado desde su nodo en Firebase
             const userEmailKey = firebase.auth().currentUser.email.replace('.', ',');
             db.ref(`usuarios/${userEmailKey}/accesos`).once('value', accesosSnap => {
                 const accesos = accesosSnap.val() || {};
@@ -1581,12 +1580,12 @@ function loadPrayersModule(path) {
 
                 Object.keys(accesos).forEach(accKey => {
                     const acceso = accesos[accKey];
-                    // Validamos si tiene permiso de oraciones en este acceso específico
+                    // Si este acceso tiene permiso para oraciones y una ruta base definida
                     if (acceso.oraciones === true && acceso.ruta_base) {
                         tienePermisoOraciones = true;
-                        const rutaBase = acceso.ruta_base; // Ej: comunidades/parroquia_loreto o comunidades/parroquia_loreto/sub_nodes/montserrat
+                        const rutaBase = acceso.ruta_base; // Ej: comunidades/parroquia_loreto o sub_nodes/montserrat
                         
-                        // Agregamos esta ruta al selector local
+                        // 🎯 AGREGAMOS CADA ACCESO (Parroquia o Capilla) AL SELECTOR LOCAL
                         const opt = document.createElement('option');
                         opt.value = `${rutaBase}/oraciones`;
                         opt.text = `⛪ Acceso: ${accKey.toUpperCase()}`;
