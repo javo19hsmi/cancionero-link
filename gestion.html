@@ -325,7 +325,8 @@
           
           <!-- Selector de Nivel -->
           <div id="prayer-level-container" style="display:none; align-items:center; gap:8px">
-             <select id="prayer-level" style="background:rgba(255,255,255,0.1); color:var(--warning); border:1px solid rgba(255,255,255,0.2); border-radius:5px; padding:4px 8px; font-size:11px; font-weight:bold; outline:none;">
+            
+             <select id="prayer-level" onchange="toggleLocalDestinationVisibility()" style="background:rgba(255,255,255,0.1); color:var(--warning); border:1px solid rgba(255,255,255,0.2); border-radius:5px; padding:4px 8px; font-size:11px; font-weight:bold; outline:none;">
                 <option value="local">📍 Local</option>
                 <option value="publica">🌍 Galería Pública</option>
                 <option value="oficial">🛡️ Oficial (Sistema)</option>
