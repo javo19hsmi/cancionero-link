@@ -1504,34 +1504,157 @@ async function restoreScript() {
 let allPrayers = {};
 let currentPrayerKey = null;
 
-// 1. CARGA DEL MÓDULO
+// 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO
 function loadPrayersModule(path) {
-    const target = (userRole === 'super_admin') ? 'oraciones_oficiales' : `${path}/oraciones`;
-    
-    if (userRole === 'super_admin') {
-        document.getElementById('prayer-level-container').style.display = 'flex';
-    }
+    allPrayers = {}; // Limpiamos el objeto maestro antes de cargar
+    const comunidadId = path.split('/').pop(); 
 
-    db.ref(target).on('value', snap => {
-        allPrayers = snap.val() || {};
-        renderPrayerList();
-    });
+    if (userRole === 'super_admin') {
+        // SUPER ADMIN: Habilitamos el selector de nivel oficial
+        document.getElementById('prayer-level-container').style.display = 'flex';
+        
+        // Carga 1: Oficiales
+        db.ref('oraciones_oficiales').on('value', snap => {
+            procesarNodos(snap.val(), 'oficial', 'Sistema');
+        });
+        
+        // Carga 2: Públicas (Galería global)
+        db.ref('oraciones_publicas').on('value', snap => {
+            procesarNodos(snap.val(), 'publica', 'Galería');
+        });
+
+        // Carga 3: Todas las locales del sistema
+        db.ref('comunidades').on('value', snap => {
+            const comunidades = snap.val() || {};
+            Object.keys(comunidades).forEach(cId => {
+                if (comunidades[cId].oraciones) {
+                    procesarNodos(comunidades[cId].oraciones, 'local', comunidades[cId].nombre || cId);
+                }
+            });
+        });
+
+    } else {
+        // ADMIN LOCAL: Oculta la opción 'oficial' en el constructor
+        const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
+        if (optionOficial) optionOficial.style.display = 'none';
+        document.getElementById('prayer-level-container').style.display = 'flex';
+
+        // Carga 1: Oraciones de la Parroquia (Sede Central)
+        db.ref(`${path}/oraciones`).on('value', snap => {
+            procesarNodos(snap.val(), 'local', 'Mi Parroquia');
+        });
+
+        // Carga 2: Oraciones de las Capillas dependientes
+        // Asume que las capillas están anidadas en path/capillas o path/sub_nodos
+        db.ref(`${path}/capillas`).on('value', snap => {
+            const capillas = snap.val() || {};
+            Object.keys(capillas).forEach(capId => {
+                if (capillas[capId].oraciones) {
+                    procesarNodos(capillas[capId].oraciones, 'local', capillas[capId].nombre || capId);
+                }
+            });
+        });
+
+        // Carga 3: Sus propias oraciones en la Galería Pública
+        db.ref('oraciones_publicas').orderByChild('origen').equalTo(comunidadId).on('value', snap => {
+            procesarNodos(snap.val(), 'publica', 'Pública (Mía)');
+        });
+    }
 }
 
-function renderPrayerList() {
-    const res = document.getElementById('prayer-list');
-    res.innerHTML = "";
-    Object.entries(allPrayers).forEach(([key, p]) => {
-        const div = document.createElement('div');
-        div.className = `result-item glass ${currentPrayerKey === key ? 'active' : ''}`;
-        div.style.padding = "10px";
-        div.style.marginBottom = "8px";
-        div.style.cursor = "pointer";
-        div.style.borderRadius = "8px";
-        div.innerHTML = `<b>${p.titulo}</b><br><small style="opacity:0.5">${(p.categorias || []).join(', ')}</small>`;
-        div.onclick = () => loadSinglePrayer(key, p);
-        res.appendChild(div);
+// Función auxiliar para unificar datos e inyectar origen
+function procesarNodos(data, nivel, origenTag, rutaBase) {
+    if (!data) return;
+    Object.keys(data).forEach(key => {
+        allPrayers[key] = { 
+            ...data[key], 
+            _nivelGuardado: nivel,
+            _origenVisual: origenTag,
+            _rutaFirebase: `${rutaBase}/${key}` // La ubicación exacta en la base de datos
+        };
     });
+    renderPrayerList();
+}
+
+// 3. GUARDADO ESTRUCTURADO (Actualizado para Mover/Ascender de nivel sin fallas)
+async function savePrayer() {
+    const title = document.getElementById('prayer-title').value.trim();
+    if (!title) return alert("El título es obligatorio.");
+
+    const blocks = [];
+    document.querySelectorAll('#prayer-blocks-container > div').forEach(div => {
+        blocks.push({
+            tipo: div.dataset.tipo,
+            texto: div.querySelector('textarea').value.trim()
+        });
+    });
+
+    if (blocks.length === 0) return alert("Agregá al menos un bloque de contenido.");
+    if (typeof setBusy === "function") setBusy(true, "Guardando oración...");
+    
+    const nivel = document.getElementById('prayer-level').value;
+    const key = currentPrayerKey || Date.now().toString();
+    
+    // Determinamos la NUEVA ruta donde debe guardarse
+    let nuevaRuta = '';
+    if (nivel === 'oficial') nuevaRuta = `oraciones_oficiales/${key}`;
+    else if (nivel === 'publica') nuevaRuta = `oraciones_publicas/${key}`;
+    else {
+        // Si es local, por defecto al crear/editar va a la sede parroquial del admin
+        nuevaRuta = `${userNodePath}/oraciones/${key}`;
+    }
+
+    const data = {
+        id: key,
+        titulo: title,
+        categorias: document.getElementById('prayer-cat').value.split(',').map(s => s.trim()).filter(Boolean),
+        imageUrl: document.getElementById('prayer-img-url').value.trim(),
+        contenido: blocks,
+        esOficial: nivel === 'oficial',
+        origen: nivel === 'oficial' ? 'sistema' : userNodePath.split('/').pop(),
+        tipoUI: 'estructurada',
+        iconName: 'book'
+    };
+
+    try {
+        // 1. Guardamos en la nueva ubicación
+        await db.ref(nuevaRuta).set(data);
+
+        // 2. Si estábamos editando, verificamos si la oración cambió de ruta
+        if (currentPrayerKey && allPrayers[currentPrayerKey]) {
+            const rutaAntigua = allPrayers[currentPrayerKey]._rutaFirebase;
+            
+            // Si la ruta antigua es diferente a la nueva, borramos la vieja para moverla de verdad
+            if (rutaAntigua && rutaAntigua !== nuevaRuta) {
+                await db.ref(rutaAntigua).remove();
+            }
+        }
+
+        alert("✅ Oración guardada correctamente.");
+        newPrayer();
+    } catch(e) { 
+        alert("Error al guardar: " + e.message); 
+    } finally { 
+        if (typeof setBusy === "function") setBusy(false); 
+    }
+}
+
+// 4. ELIMINACIÓN (Usando la ruta exacta)
+async function deletePrayer() {
+    if (!currentPrayerKey || !allPrayers[currentPrayerKey]) return;
+    if (!confirm("¿Eliminar esta oración de forma permanente?")) return;
+    
+    const rutaExacta = allPrayers[currentPrayerKey]._rutaFirebase;
+
+    if (typeof setBusy === "function") setBusy(true, "Eliminando...");
+    try {
+        await db.ref(rutaExacta).remove();
+        newPrayer();
+    } catch(e) {
+        alert("Error al eliminar.");
+    } finally {
+        if (typeof setBusy === "function") setBusy(false);
+    }
 }
 
 // 2. CONSTRUCTOR DE BLOQUES VISUALES
