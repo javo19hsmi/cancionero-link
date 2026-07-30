@@ -1886,3 +1886,26 @@ function newPrayer() {
     hasUnsavedChanges = false; // 🛡️ Reseteamos la bandera
     renderPrayerList();
 }
+
+// Controla si se muestra o se oculta el selector local según la categoría elegida
+function toggleLocalDestinationVisibility() {
+    const nivel = document.getElementById('prayer-level').value;
+    const containerDestino = document.getElementById('prayer-local-destination-container');
+    
+    if (!containerDestino) return;
+
+    // Solo se muestra si elige 'local' y si hay opciones disponibles en el selector
+    if (nivel === 'local') {
+        const selectDestino = document.getElementById('prayer-local-destination');
+        if (selectDestino && selectDestino.options.length > 0) {
+            containerDestino.style.display = 'block';
+        } else {
+            containerDestino.style.display = 'none';
+        }
+    } else {
+        // Si elige Oficial o Pública, se oculta automáticamente
+        containerDestino.style.display = 'none';
+    }
+   // Una vez que se llenaron las opciones del selector, ajustamos su visibilidad inicial
+        toggleLocalDestinationVisibility();
+}
