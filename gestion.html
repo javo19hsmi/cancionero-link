@@ -293,14 +293,23 @@
       </section>
     </main>
     
-        <!-- MÓDULO DE ORACIONES -->
-    <main id="mod-prayers" class="main-grid" style="display:none;">
-  <!-- COLUMNA 1: LISTADO DE ORACIONES -->
+       <!-- COLUMNA 1: LISTADO DE ORACIONES -->
   <section class="glass-panel">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px">
       <label style="margin:0; font-weight:bold; color:var(--primary)">MIS ORACIONES</label>
       <button class="btn btn-save" style="padding:4px 12px; font-size:11px; font-weight:bold" onclick="newPrayer()">NUEVA +</button>
     </div>
+
+    <!-- Filtro de Oraciones -->
+    <div style="margin-bottom: 15px;">
+        <select id="prayer-view-filter" onchange="renderPrayerList()" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; outline: none; cursor: pointer; font-size: 12px;">
+            <option value="todas" style="background: #1a1a1a;">👁️ Mostrar Todas</option>
+            <option value="oficial" style="background: #1a1a1a;">🛡️ Oficiales</option>
+            <option value="publica" style="background: #1a1a1a;">🌍 Públicas (Globales)</option>
+            <option value="local" style="background: #1a1a1a;">📍 Locales</option>
+        </select>
+    </div>
+
     <div id="prayer-list" class="search-results">
       <!-- Se carga dinámicamente -->
     </div>
