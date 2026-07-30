@@ -1576,6 +1576,64 @@ function procesarNodos(data, nivel, origenTag, rutaBase) {
     renderPrayerList();
 }
 
+// ==========================================
+// FUNCIÓN PARA DIBUJAR Y FILTRAR LA LISTA
+// ==========================================
+function renderPrayerList() {
+    const res = document.getElementById('prayer-list');
+    if (!res) return;
+    res.innerHTML = "";
+    
+    // 1. Obtenemos qué filtro quiere ver el usuario
+    const filtroSelect = document.getElementById('prayer-view-filter');
+    const filtroActivo = filtroSelect ? filtroSelect.value : 'todas';
+    
+    // 2. Filtramos la lista maestra (allPrayers)
+    const oracionesFiltradas = Object.entries(allPrayers).filter(([key, p]) => {
+        if (filtroActivo === 'todas') return true;
+        return p._nivelGuardado === filtroActivo;
+    });
+
+    if (oracionesFiltradas.length === 0) {
+        res.innerHTML = '<div style="padding:15px; text-align:center; opacity:0.5; font-size:12px;">No hay oraciones para este filtro.</div>';
+        return;
+    }
+
+    // 3. Dibujamos solo las que pasaron el filtro
+    oracionesFiltradas.forEach(([key, p]) => {
+        const div = document.createElement('div');
+        div.className = `result-item glass ${currentPrayerKey === key ? 'active' : ''}`;
+        div.style.padding = "10px";
+        div.style.marginBottom = "8px";
+        div.style.cursor = "pointer";
+        div.style.borderRadius = "8px";
+        div.style.border = "1px solid rgba(255,255,255,0.05)";
+        
+        let badgeStyle = 'background:rgba(255,255,255,0.1); color:white;';
+        let badgeIcon = '📍';
+        
+        if (p._nivelGuardado === 'oficial') {
+            badgeStyle = 'background:rgba(255,193,7,0.2); color:var(--warning);';
+            badgeIcon = '🛡️';
+        } else if (p._nivelGuardado === 'publica') {
+            badgeStyle = 'background:rgba(0,140,186,0.2); color:var(--primary);';
+            badgeIcon = '🌍';
+        }
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                <b style="font-size:14px;">${p.titulo}</b>
+                <span style="font-size:9px; ${badgeStyle} padding:3px 6px; border-radius:10px; white-space:nowrap; margin-left:8px;">
+                    ${badgeIcon} ${p._origenVisual}
+                </span>
+            </div>
+            <small style="opacity:0.5; font-size:11px;">${(p.categorias || []).join(', ')}</small>
+        `;
+        div.onclick = () => loadSinglePrayer(key, p);
+        res.appendChild(div);
+    });
+}
+
 // 3. GUARDADO ESTRUCTURADO (Actualizado para Mover/Ascender de nivel sin fallas)
 async function savePrayer() {
     const title = document.getElementById('prayer-title').value.trim();
