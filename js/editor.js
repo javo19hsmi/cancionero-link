@@ -1515,20 +1515,63 @@ let currentPrayerKey = null;
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO
 function loadPrayersModule(path) {
     allPrayers = {}; // Limpiamos el objeto maestro antes de cargar
-    const comunidadId = path.split('/').pop(); 
+    const comunidadId = path ? path.split('/').pop() : ""; 
 
     if (userRole === 'super_admin') {
-        // SUPER ADMIN: Habilitamos el selector de nivel oficial
+        // SUPER ADMIN: Habilitamos el selector de nivel oficial y el contenedor local
         document.getElementById('prayer-level-container').style.display = 'flex';
+        
+        // 🎯 CARGAR EL SELECTOR LOCAL TAMBIÉN PARA EL SUPER ADMIN
+        const localSelector = document.getElementById('prayer-local-destination');
+        const containerDestino = document.getElementById('prayer-local-destination-container');
+        
+        if (localSelector && containerDestino) {
+            localSelector.innerHTML = '';
+            
+            // Buscamos todas las comunidades en Firebase para que el Super Admin elija dónde guardarla
+            db.ref('comunidades').once('value', snap => {
+                const comunidades = snap.val() || {};
+                let hayComunidades = false;
+
+                Object.keys(comunidades).forEach(cId => {
+                    const com = comunidades[cId];
+                    const comNombre = com.nombre || cId;
+                    const comPath = `comunidades/${cId}`;
+
+                    // Opción 1: Sede Parroquial de esa comunidad
+                    const optSede = document.createElement('option');
+                    optSede.value = `${comPath}/oraciones`;
+                    optSede.text = `⛪ ${comNombre.toUpperCase()} (Sede Principal)`;
+                    localSelector.appendChild(optSede);
+                    hayComunidades = true;
+
+                    // Opción 2: Si esa comunidad tiene capillas
+                    if (com.capillas) {
+                        Object.keys(com.capillas).forEach(capId => {
+                            const cap = com.capillas[capId];
+                            const capNombre = cap.nombre || capId;
+                            const optCap = document.createElement('option');
+                            optCap.value = `${comPath}/capillas/${capId}/oraciones`;
+                            optCap.text = `🏛️ ${comNombre.toUpperCase()} > Capilla: ${capNombre}`;
+                            localSelector.appendChild(optCap);
+                        });
+                    }
+                });
+
+                if (hayComunidades) {
+                    containerDestino.style.display = 'block';
+                }
+            });
+        }
         
         // Carga 1: Oficiales
         db.ref('oraciones_oficiales').on('value', snap => {
-            procesarNodos(snap.val(), 'oficial', 'Sistema');
+            procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales');
         });
         
         // Carga 2: Públicas (Galería global)
         db.ref('oraciones_publicas').on('value', snap => {
-            procesarNodos(snap.val(), 'publica', 'Galería');
+            procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas');
         });
 
         // Carga 3: Todas las locales del sistema
@@ -1536,7 +1579,15 @@ function loadPrayersModule(path) {
             const comunidades = snap.val() || {};
             Object.keys(comunidades).forEach(cId => {
                 if (comunidades[cId].oraciones) {
-                    procesarNodos(comunidades[cId].oraciones, 'local', comunidades[cId].nombre || cId);
+                    procesarNodos(comunidades[cId].oraciones, 'local', comunidades[cId].nombre || cId, `comunidades/${cId}/oraciones`);
+                }
+                // También leemos si hay oraciones en capillas para el super admin
+                if (comunidades[cId].capillas) {
+                    Object.keys(comunidades[cId].capillas).forEach(capId => {
+                        if (comunidades[cId].capillas[capId].oraciones) {
+                            procesarNodos(comunidades[cId].capillas[capId].oraciones, 'local', comunidades[cId].capillas[capId].nombre || capId, `comunidades/${cId}/capillas/${capId}/oraciones`);
+                        }
+                    });
                 }
             });
         });
