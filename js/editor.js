@@ -1907,23 +1907,35 @@ function loadSinglePrayer(key, p) {
     // 🚀 2. FIX CRÍTICO: Ajustar el Selector de Destino Local
     const localDestSelect = document.getElementById('prayer-local-destination');
     if (p._rutaFirebase && localDestSelect) {
-        // La ruta viene así: "comunidades/parroquia_loreto/oraciones/123456"
-        // Le cortamos el ID del final para sacar el destino exacto: "comunidades/parroquia_loreto/oraciones"
         const basePath = p._rutaFirebase.substring(0, p._rutaFirebase.lastIndexOf('/'));
-        
-        // Verificamos si tenemos esa parroquia/capilla en el desplegable y la seleccionamos
         const optionExists = Array.from(localDestSelect.options).some(opt => opt.value === basePath);
         if (optionExists) {
             localDestSelect.value = basePath;
         }
     }
 
-    // 3. Cargar los bloques de contenido
+    // 🚀 3. LÓGICA INTELIGENTE DE VISTA (CORREGIDA)
     const container = document.getElementById('prayer-blocks-container');
     container.innerHTML = "";
+    document.getElementById('prayer-simple-text').value = ""; 
     
-    if (p.contenido) {
-        p.contenido.forEach(b => addPrayerBlock(b.tipo, b.texto));
+    // Evaluamos la realidad del contenido, ignorando si Firebase decía 'estructurada' por error
+    let modoVisual = 'estructurada';
+    if (p.contenido && p.contenido.length === 1 && p.contenido[0].tipo === 'parrafo') {
+        modoVisual = 'simple'; // Si es un solo párrafo, forzamos la vista simple siempre
+    } else if (p.tipoUI === 'simple') {
+        modoVisual = 'simple';
+    }
+
+    // Renderizamos según el modo detectado
+    if (modoVisual === 'simple' && p.contenido && p.contenido.length > 0) {
+        document.getElementById('prayer-simple-text').value = p.contenido[0].texto;
+        switchPrayerMode('simple');
+    } else {
+        if (p.contenido) {
+            p.contenido.forEach(b => addPrayerBlock(b.tipo, b.texto));
+        }
+        switchPrayerMode('estructurada');
     }
 
     document.getElementById('prayer-delete-btn').style.display = 'block';
