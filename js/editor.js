@@ -1988,8 +1988,20 @@ function newPrayer() {
     document.getElementById('prayer-title').value = "";
     document.getElementById('prayer-cat').value = "";
     document.getElementById('prayer-img-url').value = "";
-    document.getElementById('prayer-level').value = "local";
+    
+    // 🚀 Limpiamos ambos contenedores (Simple y Bloques)
+    document.getElementById('prayer-simple-text').value = "";
     document.getElementById('prayer-blocks-container').innerHTML = "";
+    
+    // Volvemos a poner la vista por defecto en "Simple"
+    switchPrayerMode('simple');
+
+    // Actualizamos la vista previa de la imagen para que se oculte
+    if (typeof updatePrayerImgPreview === 'function') {
+        updatePrayerImgPreview();
+    }
+
+    document.getElementById('prayer-level').value = "local";
     document.getElementById('prayer-delete-btn').style.display = 'none';
     
     hasUnsavedChanges = false;
