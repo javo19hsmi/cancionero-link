@@ -1984,22 +1984,34 @@ function switchPrayerMode(mode) {
 
     if (mode === 'simple') {
         // Visual
-        btnSimple.classList.add('active'); // O la clase de color sólido que uses
-        btnEstructurada.classList.remove('active');
+        btnSimple.style.background = 'rgba(77, 182, 172, 0.2)';
+        btnSimple.style.color = 'var(--primary)';
+        btnSimple.style.border = '1px solid var(--primary)';
+        
+        btnEstructurada.style.background = 'rgba(255, 255, 255, 0.05)';
+        btnEstructurada.style.color = 'white';
+        btnEstructurada.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        
         containerSimple.style.display = 'block';
         containerStructured.style.display = 'none';
         
     } else {
         // Visual
-        btnEstructurada.classList.add('active');
-        btnSimple.classList.remove('active');
+        btnEstructurada.style.background = 'rgba(77, 182, 172, 0.2)';
+        btnEstructurada.style.color = 'var(--primary)';
+        btnEstructurada.style.border = '1px solid var(--primary)';
+        
+        btnSimple.style.background = 'rgba(255, 255, 255, 0.05)';
+        btnSimple.style.color = 'white';
+        btnSimple.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        
         containerStructured.style.display = 'block';
         containerSimple.style.display = 'none';
 
         // CONVERSIÓN: Si pasamos a estructurado y no hay bloques, creamos uno con el texto simple
         const currentBlocks = document.querySelectorAll('#prayer-blocks-container > div');
         if (currentBlocks.length === 0 && simpleTextarea.value.trim() !== '') {
-            addBlock('parrafo', simpleTextarea.value.trim()); // Asumo que tenés una función addBlock(tipo, texto)
+            addPrayerBlock('parrafo', simpleTextarea.value.trim()); 
         }
     }
 }
