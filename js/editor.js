@@ -1514,18 +1514,18 @@ let currentPrayerKey = null;
 
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
-    allPrayers = {}; // Limpiamos el objeto maestro
+    allPrayers = {}; 
     const localSelector = document.getElementById('prayer-local-destination');
     const containerDestino = document.getElementById('prayer-local-destination-container');
 
     if (!localSelector || !containerDestino) return;
     localSelector.innerHTML = '';
 
-    // Habilitamos siempre el contenedor general del selector de nivel
+    // Forzamos la visibilidad del contenedor de nivel
     const levelContainer = document.getElementById('prayer-level-container');
     if (levelContainer) levelContainer.style.display = 'flex';
 
-    // Controlamos si la opción 'oficial' se muestra según el rol
+    // 🎯 LÍNEA CLAVE: Si el rol es super_admin, mostramos la opción oficial. Si no, la ocultamos.
     const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
     if (optionOficial) {
         optionOficial.style.display = (role === 'super_admin') ? 'block' : 'none';
