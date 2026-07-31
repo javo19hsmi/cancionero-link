@@ -1512,105 +1512,99 @@ async function restoreScript() {
 let allPrayers = {};
 let currentPrayerKey = null;
 
-// 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
-function loadPrayersModule(path) {
+// 1. CARGA DEL MÓDULO (Recibe authorizedCommunities y userRole igual que Anuncios)
+function loadPrayersModule(communities, role) {
     allPrayers = {}; // Limpiamos el objeto maestro
     const localSelector = document.getElementById('prayer-local-destination');
     const containerDestino = document.getElementById('prayer-local-destination-container');
 
-    if (localSelector && containerDestino) {
-        localSelector.innerHTML = '';
-        
-        // Si es Super Admin, cargamos todas las comunidades y sus sub_nodes del sistema
-        if (userRole === 'super_admin') {
-            document.getElementById('prayer-level-container').style.display = 'flex';
-            
-            db.ref('comunidades').once('value', snap => {
-                const comunidades = snap.val() || {};
-                Object.keys(comunidades).forEach(cId => {
-                    const com = comunidades[cId];
-                    const comNombre = com.nombre || cId;
-                    const comPath = `comunidades/${cId}`;
+    if (!localSelector || !containerDestino) return;
+    localSelector.innerHTML = '';
 
-                    // Sede Principal
-                    const optSede = document.createElement('option');
-                    optSede.value = `${comPath}/oraciones`;
-                    optSede.text = `⛪ ${comNombre.toUpperCase()} (Sede Principal)`;
-                    localSelector.appendChild(optSede);
+    // Si es Super Admin, le damos la opción Global o recorremos todas las comunidades del sistema
+    if (role === 'super_admin') {
+        const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
+        if (optionOficial) optionOficial.style.display = 'block';
+        document.getElementById('prayer-level-container').style.display = 'flex';
 
-                    // Sub-nodos / Capillas reales en sub_nodes
-                    const subNodos = com.sub_nodes || com.capillas || {};
-                    Object.keys(subNodos).forEach(subId => {
-                        const sub = subNodos[subId];
-                        const subNombre = sub.nombre || subId;
-                        const optSub = document.createElement('option');
-                        optSub.value = `${comPath}/sub_nodes/${subId}/oraciones`;
-                        optSub.text = `🏛️ ${subNombre.toUpperCase()}`;
-                        localSelector.appendChild(optSub);
-                    });
-                });
-                toggleLocalDestinationVisibility();
-            });
+        // Buscamos todas las comunidades directamente de Firebase para el super admin
+        db.ref('comunidades').once('value', snap => {
+            const comps = snap.val() || {};
+            Object.keys(comps).forEach(cId => {
+                const com = comps[cId];
+                const comNombre = com.nombre || cId;
+                const comPath = `comunidades/${cId}`;
 
-            // Cargas globales para Super Admin
-            db.ref('oraciones_oficiales').on('value', snap => procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales'));
-            db.ref('oraciones_publicas').on('value', snap => procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas'));
-            db.ref('comunidades').on('value', snap => {
-                const comunidades = snap.val() || {};
-                Object.keys(comunidades).forEach(cId => {
-                    const com = comunidades[cId];
-                    if (com.oraciones) procesarNodos(com.oraciones, 'local', com.nombre || cId, `comunidades/${cId}/oraciones`);
-                    const subs = com.sub_nodes || com.capillas || {};
-                    Object.keys(subs).forEach(sId => {
-                        if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodes/${sId}/oraciones`);
-                    });
+                // Sede Principal
+                const optSede = document.createElement('option');
+                optSede.value = `${comPath}/oraciones`;
+                optSede.text = `⛪ ${comNombre.toUpperCase()} (Sede Principal)`;
+                optSede.style.background = "#1e1e1e";
+                optSede.style.color = "#ffffff";
+                localSelector.appendChild(optSede);
+
+                // Sub-nodos / Capillas
+                const subNodos = com.sub_nodes || com.capillas || {};
+                Object.keys(subNodos).forEach(subId => {
+                    const sub = subNodos[subId];
+                    const subNombre = sub.nombre || subId;
+                    const optSub = document.createElement('option');
+                    optSub.value = `${comPath}/sub_nodes/${subId}/oraciones`;
+                    optSub.text = `🏛️ ${subNombre.toUpperCase()}`;
+                    optSub.style.background = "#1e1e1e";
+                    optSub.style.color = "#ffffff";
+                    localSelector.appendChild(optSub);
                 });
             });
+            toggleLocalDestinationVisibility();
+        });
 
-        } else {
-            // ADMIN / USUARIO LOCAL: Leemos los accesos reales del usuario logueado en Firebase
-            const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
-            if (optionOficial) optionOficial.style.display = 'none';
-            document.getElementById('prayer-level-container').style.display = 'flex';
-
-            const userEmailKey = firebase.auth().currentUser.email.replace('.', ',');
-            db.ref(`usuarios/${userEmailKey}/accesos`).once('value', accesosSnap => {
-                const accesos = accesosSnap.val() || {};
-                let tienePermisoOraciones = false;
-
-                Object.keys(accesos).forEach(accKey => {
-                    const acceso = accesos[accKey];
-                    // Si este acceso tiene permiso para oraciones y una ruta base definida
-                    if (acceso.oraciones === true && acceso.ruta_base) {
-                        tienePermisoOraciones = true;
-                        const rutaBase = acceso.ruta_base; // Ej: comunidades/parroquia_loreto o sub_nodes/montserrat
-                        
-                        // 🎯 AGREGAMOS CADA ACCESO (Parroquia o Capilla) AL SELECTOR LOCAL
-                        const opt = document.createElement('option');
-                        opt.value = `${rutaBase}/oraciones`;
-                        opt.text = `⛪ Acceso: ${accKey.toUpperCase()}`;
-                        localSelector.appendChild(opt);
-
-                        // Escuchamos las oraciones de esta ruta específica en tiempo real
-                        db.ref(`${rutaBase}/oraciones`).on('value', snap => {
-                            procesarNodos(snap.val(), 'local', accKey, `${rutaBase}/oraciones`);
-                        });
-                    }
+        // Cargas en tiempo real para Super Admin
+        db.ref('oraciones_oficiales').on('value', snap => procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales'));
+        db.ref('oraciones_publicas').on('value', snap => procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas'));
+        db.ref('comunidades').on('value', snap => {
+            const comps = snap.val() || {};
+            Object.keys(comps).forEach(cId => {
+                const com = comps[cId];
+                if (com.oraciones) procesarNodos(com.oraciones, 'local', com.nombre || cId, `comunidades/${cId}/oraciones`);
+                const subs = com.sub_nodes || com.capillas || {};
+                Object.keys(subs).forEach(sId => {
+                    if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodes/${sId}/oraciones`);
                 });
-
-                if (tienePermisoOraciones) {
-                    containerDestino.style.display = 'block';
-                }
-                toggleLocalDestinationVisibility();
             });
+        });
 
-            // Sus propias oraciones en la Galería Pública
-            const comunidadId = path ? path.split('/').pop() : "";
-            db.ref('oraciones_publicas').orderByChild('origen').equalTo(comunidadId).on('value', snap => {
-                procesarNodos(snap.val(), 'publica', 'Pública (Mía)', 'oraciones_publicas');
+    } else {
+        // ADMIN LOCAL / USUARIO: Usamos exactamente el array 'authorizedCommunities' que ya validó auth.js
+        const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
+        if (optionOficial) optionOficial.style.display = 'none';
+        document.getElementById('prayer-level-container').style.display = 'flex';
+
+        if (communities && communities.length > 0) {
+            communities.forEach(com => {
+                const opt = document.createElement('option');
+                // com.path ya viene resuelto desde auth.js (ej: comunidades/parroquia_loreto o sub_nodes/montserrat)
+                opt.value = `${com.path}/oraciones`;
+                opt.text = `⛪ ${com.nombre.toUpperCase()}`;
+                opt.style.background = "#1e1e1e";
+                opt.style.color = "#ffffff";
+                localSelector.appendChild(opt);
+
+                // Escuchamos las oraciones en tiempo real de cada comunidad/capilla autorizada
+                db.ref(`${com.path}/oraciones`).on('value', snap => {
+                    procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
+                });
             });
+            containerDestino.style.display = 'block';
         }
+
+        // Sus propias oraciones en la Galería Pública
+        db.ref('oraciones_publicas').orderByChild('origen').on('value', snap => {
+            procesarNodos(snap.val(), 'publica', 'Pública (Mía)', 'oraciones_publicas');
+        });
     }
+
+    toggleLocalDestinationVisibility();
 }
 
 // Función auxiliar para unificar datos e inyectar origen
