@@ -14,22 +14,21 @@ auth.onAuthStateChanged(async user => {
       let canS = data.es_editor_global || userRole === 'super_admin';
       let canA = userRole === 'super_admin';
       let canG = userRole === 'super_admin';
+      let canP = userRole === 'super_admin'; // Variable para permisos de oraciones
       
-      // 🚀 NUEVO: Array para guardar TODAS las comunidades autorizadas
       let authorizedCommunities = []; 
       
-      // Procesamos los permisos extrayendo la clave y armando la ruta
-      // 🚀 CAMBIO: Usamos for...of para poder usar 'await' y traer el nombre real
       for (const [id, p] of Object.entries(perms)) {
         if (p.musica || p.admin) canS = true; 
         if (p.guiones || p.admin) canG = true; 
+        if (p.oraciones || p.admin) canP = true; // Detecta si tiene acceso a oraciones en este nodo
         
-        if (p.anuncios || p.admin) {
+        // Ahora evalúa si tiene anuncios, oraciones O admin para cargar la comunidad
+        if (p.anuncios || p.oraciones || p.admin) {
             canA = true;
             let path = p.ruta_base ? p.ruta_base : `comunidades/${id}`;
             
-            // 🚀 MAGIA: Buscamos el nombre oficial de la comunidad en Firebase
-            let nombreOficial = id; // Dejamos el ID por defecto por si algo falla
+            let nombreOficial = id; 
             try {
                 const nameSnap = await db.ref(`${path}/nombre`).once('value');
                 if (nameSnap.exists()) {
@@ -39,44 +38,43 @@ auth.onAuthStateChanged(async user => {
                 console.warn("No se pudo cargar el nombre de", path); 
             }
             
-            // Agregamos la comunidad con su nombre real
             authorizedCommunities.push({ id: id, path: path, nombre: nombreOficial });
         }
       }
 
-      if (canS || canA || canG) {
+      if (canS || canA || canG || canP) {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('app').style.display = 'flex';
         document.getElementById('header-email').innerText = user.email;
         
         if (canS) document.getElementById('tab-songs').style.display = 'block';
         if (canA) document.getElementById('tab-announcements').style.display = 'block';
-        if (canG) { 
-          document.getElementById('tab-prayers').style.display = 'block'; 
-          document.getElementById('tab-scripts').style.display = 'block'; 
+        if (canG) document.getElementById('tab-scripts').style.display = 'block';
+        
+        // 🚀 Mostramos la pestaña de oraciones si tiene permiso canP
+        if (canP) { 
+            document.getElementById('tab-prayers').style.display = 'block'; 
         }
         
         if (userRole === 'super_admin') { 
-          document.getElementById('pencil-btn').style.display = 'block'; 
-          document.getElementById('global-pub-btn').style.display = 'block'; 
+            document.getElementById('pencil-btn').style.display = 'block'; 
+            document.getElementById('global-pub-btn').style.display = 'block'; 
         }
         
-        initApp(); // Llamada a la función principal del editor
+        initApp(); 
 
         // --- INICIO INTEGRACIÓN DE ANUNCIOS ---
-        if (canA) {
+        if (canA && authorizedCommunities.length > 0) {
           try {
             if (typeof loadAnnouncementsModule === "function") {
-               // 🚀 AHORA PASAMOS EL ARRAY COMPLETO DE COMUNIDADES
                loadAnnouncementsModule(authorizedCommunities, userRole);
             }
           } catch (error) {
             console.error("Error al cargar módulo de anuncios:", error);
           }
         }
-        // --- FIN INTEGRACIÓN DE ANUNCIOS ---
-        // 🚀 --- INICIO INTEGRACIÓN DE ORACIONES ---
-        if (canG || canA || canS) { // O la validación de permisos que uses para oraciones
+        // --- INICIO INTEGRACIÓN DE ORACIONES ---
+        if (canP) { 
           try {
             if (typeof loadPrayersModule === "function") {
                loadPrayersModule(authorizedCommunities, userRole);
@@ -85,8 +83,6 @@ auth.onAuthStateChanged(async user => {
             console.error("Error al cargar módulo de oraciones:", error);
           }
         }
-        // 🚀 --- FIN INTEGRACIÓN DE ORACIONES ---
-
       } else { 
         alert("Sin permisos."); 
         auth.signOut(); 
