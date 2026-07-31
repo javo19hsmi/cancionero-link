@@ -1926,6 +1926,11 @@ function loadSinglePrayer(key, p) {
     
     document.getElementById('prayer-img-url').value = p.imageUrl || "";
     
+    // 🚀 ACÁ VA: Actualizamos la vista previa de la imagen al cargar la oración
+    if (typeof updatePrayerImgPreview === 'function') {
+        updatePrayerImgPreview();
+    }
+    
     // 1. Ajustar el Nivel (Local / Pública / Oficial)
     const levelSelect = document.getElementById('prayer-level');
     if (p._nivelGuardado && levelSelect) {
@@ -2086,4 +2091,18 @@ function uploadPrayerImg(input) {
         if (typeof setBusy === "function") setBusy(false);
         alert("❌ Error al subir la imagen: " + error.message);
     });
+}
+
+function updatePrayerImgPreview() {
+    const url = document.getElementById('prayer-img-url').value.trim();
+    const container = document.getElementById('prayer-img-preview-container');
+    const imgTag = document.getElementById('prayer-img-tag');
+
+    if (url) {
+        imgTag.src = url;
+        container.style.display = 'block';
+    } else {
+        imgTag.src = '';
+        container.style.display = 'none';
+    }
 }
