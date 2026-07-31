@@ -359,18 +359,34 @@
         </div>
         <input type="file" id="fileInputPrayerImg" accept="image/*" style="display:none" onchange="uploadPrayerImg(this)">
 
-        <!-- ÁREA DE BLOQUES DINÁMICOS -->
-        <label style="color:var(--primary); font-size:11px; font-weight:bold; margin-top:10px; display:block;">CONTENIDO ESTRUCTURADO</label>
-        <div id="prayer-blocks-container" style="display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.2); padding:15px; border-radius:15px; border:1px dashed rgba(255,255,255,0.2); min-height:100px; margin-bottom:15px;">
-           <!-- Aquí se inyectan los bloques de V., R. y Párrafos -->
+        <!-- Selector de Modo de Interfaz -->
+        <div style="display: flex; gap: 10px; margin-top: 15px; margin-bottom: 10px;">
+            <button type="button" id="btn-mode-simple" class="btn" style="flex: 1; padding: 8px; font-size: 11px; font-weight: bold; background: rgba(77, 182, 172, 0.2); color: var(--primary); border: 1px solid var(--primary); border-radius: 8px;" onclick="switchPrayerMode('simple')">
+                TEXTO SIMPLE
+            </button>
+            <button type="button" id="btn-mode-estructurada" class="btn" style="flex: 1; padding: 8px; font-size: 11px; font-weight: bold; background: rgba(255, 255, 255, 0.05); color: white; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px;" onclick="switchPrayerMode('estructurada')">
+                BLOQUES
+            </button>
         </div>
 
-        <!-- BOTONERA DE BLOQUES -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px;">
-           <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('parrafo')">+ PÁRRAFO</button>
-           <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('versiculo')">+ V. (Vers.)</button>
-           <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('respuesta')">+ R. (Resp.)</button>
-           <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('titulo_seccion')">+ TÍTULO SEC.</button>
+        <!-- CONTENEDOR MODO SIMPLE -->
+        <div id="prayer-simple-container" style="display: block; margin-bottom: 15px;">
+            <textarea id="prayer-simple-text" style="width: 100%; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; border-radius: 8px; resize: vertical; min-height: 150px; outline: none; font-size: 13px;" placeholder="Escribí la oración completa acá..."></textarea>
+        </div>
+
+        <!-- CONTENEDOR MODO ESTRUCTURADO (El que ya tenías) -->
+        <div id="prayer-structured-container" style="display: none;">
+            <div id="prayer-blocks-container" style="display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.2); padding:15px; border-radius:15px; border:1px dashed rgba(255,255,255,0.2); min-height:100px; margin-bottom:15px;">
+               <!-- Aquí se inyectan los bloques de V., R. y Párrafos -->
+            </div>
+
+            <!-- BOTONERA DE BLOQUES -->
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:8px; margin-bottom: 15px;">
+               <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('parrafo')">+ PÁRRAFO</button>
+               <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('versiculo')">+ V. (Vers.)</button>
+               <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('respuesta')">+ R. (Resp.)</button>
+               <button class="btn" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:10px; padding:8px; color:white;" onclick="addPrayerBlock('titulo_seccion')">+ TÍTULO SEC.</button>
+            </div>
         </div>
 
         <button class="btn btn-save" style="width:100%; margin-top:30px; height:50px; font-weight:bold; font-size:14px" onclick="savePrayer()">GUARDAR ORACIÓN 🙏</button>
