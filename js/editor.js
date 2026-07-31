@@ -1811,7 +1811,8 @@ function addPrayerBlock(tipo, texto = "") {
     let label = tipo.toUpperCase();
     let color = 'var(--primary)';
     
-    if (tipo === 'versiculo') label = 'V. / R.';
+    if (tipo === 'versiculo') label = 'V.';
+    if (tipo === 'respuesta') label = 'R.';
     if (tipo === 'titulo_seccion') { label = 'TÍTULO DE SECCIÓN'; color = 'var(--warning)'; }
 
     div.innerHTML = `
