@@ -1513,6 +1513,7 @@ let allPrayers = {};
 let currentPrayerKey = null;
 
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
+// 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
     allPrayers = {}; 
     const localSelector = document.getElementById('prayer-local-destination');
@@ -1532,30 +1533,37 @@ function loadPrayersModule(communities, role) {
     let tieneOpcionesLocales = false;
 
     // 2. LLENAR EL SELECTOR LOCAL CON LAS COMUNIDADES / CAPILLAS AUTORIZADAS
-    if (communities && communities.length > 0) {
+    if (communities && Array.isArray(communities) && communities.length > 0) {
         communities.forEach(com => {
+            if (!com || !com.path) return; // 🛡️ Evita crash si auth.js manda un dato incompleto
+
             const opt = document.createElement('option');
             opt.value = `${com.path}/oraciones`;
-            opt.text = `⛪ ${com.nombre.toUpperCase()}`;
+            opt.text = `⛪ ${(com.nombre || 'Comunidad').toUpperCase()}`;
             opt.style.background = "#1e1e1e";
             opt.style.color = "#ffffff";
             localSelector.appendChild(opt);
             tieneOpcionesLocales = true;
 
             db.ref(`${com.path}/oraciones`).on('value', snap => {
-                procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
+                if (snap.exists()) {
+                    procesarNodos(snap.val(), 'local', com.nombre || 'Local', `${com.path}/oraciones`);
+                }
             });
         });
     }
 
-    // Si es super_admin, traemos TODAS las comunidades respetando "sub_nodos"
+    // Si es super_admin, traemos TODAS las comunidades con blindaje
     if (role === 'super_admin') {
         db.ref('comunidades').once('value', snap => {
             const comps = snap.val() || {};
             Object.keys(comps).forEach(cId => {
                 const com = comps[cId];
+                if (!com) return; // 🛡️ Blindaje anti-nulos que cortaba la carga
+
                 const comPath = `comunidades/${cId}`;
-                
+
+                // Sede principal
                 const exists = Array.from(localSelector.options).some(o => o.value === `${comPath}/oraciones`);
                 if (!exists) {
                     const optSede = document.createElement('option');
@@ -1567,15 +1575,19 @@ function loadPrayersModule(communities, role) {
                     tieneOpcionesLocales = true;
                 }
 
-                // 🚀 FIX: Usamos "sub_nodos" tal como lo lee la App de Flutter
-                const subNodos = com.sub_nodos || com.capillas || {};
+                // 🚀 FIX HÍBRIDO: Leemos el viejo (sub_nodes) y el nuevo (sub_nodos) para no perder nada histórico
+                const subNodos = com.sub_nodos || com.sub_nodes || com.capillas || {};
                 Object.keys(subNodos).forEach(subId => {
+                    const cap = subNodos[subId];
+                    if (!cap) return;
+
+                    // Armamos la ruta obligando a que use sub_nodos para guardar compatible con Flutter
                     const subPath = `${comPath}/sub_nodos/${subId}`;
                     const subExists = Array.from(localSelector.options).some(o => o.value === `${subPath}/oraciones`);
                     if (!subExists) {
                         const optSub = document.createElement('option');
                         optSub.value = `${subPath}/oraciones`;
-                        optSub.text = `🏛️ ${(subNodos[subId].nombre || subId).toUpperCase()}`;
+                        optSub.text = `🏛️ ${(cap.nombre || subId).toUpperCase()}`;
                         optSub.style.background = "#1e1e1e";
                         optSub.style.color = "#ffffff";
                         localSelector.appendChild(optSub);
@@ -1591,12 +1603,16 @@ function loadPrayersModule(communities, role) {
             const comps = snap.val() || {};
             Object.keys(comps).forEach(cId => {
                 const com = comps[cId];
+                if (!com) return;
+
                 if (com.oraciones) procesarNodos(com.oraciones, 'local', com.nombre || cId, `comunidades/${cId}/oraciones`);
-                
-                // 🚀 FIX: Usamos "sub_nodos"
-                const subs = com.sub_nodos || com.capillas || {};
+
+                const subs = com.sub_nodos || com.sub_nodes || com.capillas || {};
                 Object.keys(subs).forEach(sId => {
-                    if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodos/${sId}/oraciones`);
+                    const cap = subs[sId];
+                    if (cap && cap.oraciones) {
+                        procesarNodos(cap.oraciones, 'local', cap.nombre || sId, `comunidades/${cId}/sub_nodos/${sId}/oraciones`);
+                    }
                 });
             });
         });
@@ -1608,14 +1624,15 @@ function loadPrayersModule(communities, role) {
 
     // 3. 🛡️ CARGAS GLOBALES OBLIGATORIAS (Oficiales y Públicas)
     db.ref('oraciones_oficiales').on('value', snap => {
-        procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales');
+        if (snap.exists()) procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales');
     });
     
     db.ref('oraciones_publicas').on('value', snap => {
-        procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas');
+        if (snap.exists()) procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas');
     });
 
-    toggleLocalDestinationVisibility();
+    // Pequeño delay para asegurar que el select HTML ya tiene las opciones antes de intentar mostrarlo
+    setTimeout(() => toggleLocalDestinationVisibility(), 300); 
 }
 
 function procesarNodos(data, nivel, origenTag, rutaBase) {
