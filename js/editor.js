@@ -1872,7 +1872,7 @@ function loadSinglePrayer(key, p) {
     currentPrayerKey = key;
     document.getElementById('prayer-title').value = p.titulo || "";
     
-    // 🚀 FIX ANTI-CRASH: Restauramos la categoría correctamente sin importar cómo se guardó antes
+    // 🚀 FIX ANTI-CRASH: Restauramos la categoría correctamente
     let catVal = "Otras Oraciones";
     if (Array.isArray(p.categorias)) {
         catVal = p.categorias.join(', ');
@@ -1883,11 +1883,27 @@ function loadSinglePrayer(key, p) {
     
     document.getElementById('prayer-img-url').value = p.imageUrl || "";
     
+    // 1. Ajustar el Nivel (Local / Pública / Oficial)
     const levelSelect = document.getElementById('prayer-level');
     if (p._nivelGuardado && levelSelect) {
         levelSelect.value = p._nivelGuardado;
     }
 
+    // 🚀 2. FIX CRÍTICO: Ajustar el Selector de Destino Local
+    const localDestSelect = document.getElementById('prayer-local-destination');
+    if (p._rutaFirebase && localDestSelect) {
+        // La ruta viene así: "comunidades/parroquia_loreto/oraciones/123456"
+        // Le cortamos el ID del final para sacar el destino exacto: "comunidades/parroquia_loreto/oraciones"
+        const basePath = p._rutaFirebase.substring(0, p._rutaFirebase.lastIndexOf('/'));
+        
+        // Verificamos si tenemos esa parroquia/capilla en el desplegable y la seleccionamos
+        const optionExists = Array.from(localDestSelect.options).some(opt => opt.value === basePath);
+        if (optionExists) {
+            localDestSelect.value = basePath;
+        }
+    }
+
+    // 3. Cargar los bloques de contenido
     const container = document.getElementById('prayer-blocks-container');
     container.innerHTML = "";
     
