@@ -1509,8 +1509,23 @@ async function restoreScript() {
 // ==========================================================
 // 🙏 MÓDULO DE GESTIÓN DE ORACIONES (BLOQUES DINÁMICOS)
 // ==========================================================
+
 let allPrayers = {};
 let currentPrayerKey = null;
+
+// --- LISTA MAESTRA DE CATEGORÍAS DE ORACIONES ---
+const PRAYER_CATEGORIES_LIST = [
+  'Oraciones Principales',
+  'Santo Rosario',
+  'Vía Crucis',
+  'Oraciones a María',
+  'Espíritu Santo',
+  'Novenas y Triduos',
+  'Oraciones de la Misa',
+  'Oraciones Diarias',
+  'Santos y Devociones',
+  'Otras Oraciones',
+];
 
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
@@ -1794,7 +1809,7 @@ async function savePrayer() {
 
     const data = {
         titulo: title,
-        categorias: catArray,
+        categorias: currentPrayerCategories,
         imageUrl: document.getElementById('prayer-img-url').value.trim() || null,
         contenido: blocks,
         esOficial: nivel === 'oficial',
@@ -1915,14 +1930,14 @@ function loadSinglePrayer(key, p) {
     currentPrayerKey = key;
     document.getElementById('prayer-title').value = p.titulo || "";
     
-    // 🚀 FIX ANTI-CRASH: Restauramos la categoría correctamente
-    let catVal = "Otras Oraciones";
+    // Cargar categorías en forma de chips unificados
+    let catVal = ['Otras Oraciones'];
     if (Array.isArray(p.categorias)) {
-        catVal = p.categorias.join(', ');
-    } else if (typeof p.categorias === 'string') {
         catVal = p.categorias;
+    } else if (typeof p.categorias === 'string') {
+        catVal = [p.categorias];
     }
-    document.getElementById('prayer-cat').value = catVal;
+    renderPrayerCategoriesChips(catVal);
     
     document.getElementById('prayer-img-url').value = p.imageUrl || "";
     
@@ -2006,6 +2021,7 @@ function newPrayer() {
     
     hasUnsavedChanges = false;
     toggleLocalDestinationVisibility();
+    renderPrayerCategoriesChips(['Otras Oraciones']);
     renderPrayerList();
 }
 
@@ -2116,4 +2132,78 @@ function updatePrayerImgPreview() {
         imgTag.src = '';
         container.style.display = 'none';
     }
+}
+
+// Variable temporal para las categorías de la oración que se está editando
+let currentPrayerCategories = ['Otras Oraciones'];
+
+// Dibuja los chips seleccionados en el panel de la oración
+function renderPrayerCategoriesChips(categoriesArray) {
+    const container = document.getElementById("prayer-categories-container");
+    if (!container) return;
+    container.innerHTML = "";
+    
+    currentPrayerCategories = (categoriesArray && categoriesArray.length > 0) ? categoriesArray : ['Otras Oraciones'];
+    
+    currentPrayerCategories.forEach(cat => {
+        const chip = document.createElement("div");
+        chip.className = "chip-selected";
+        // Reutilizamos estilos visuales de los chips o aplicamos un diseño limpio en línea
+        chip.style.cssText = "background: rgba(77,182,172,0.2); border: 1px solid var(--primary); color: white; padding: 4px 10px; border-radius: 15px; font-size: 11px; display: flex; align-items: center; gap: 6px;";
+        chip.innerHTML = `
+            <span>${cat}</span>
+            <span style="cursor:pointer; color:var(--danger); font-weight:bold;" onclick="removePrayerCategory('${cat}')">×</span>
+        `;
+        container.appendChild(chip);
+    });
+}
+
+// Abre el diálogo modal con la lista maestra
+function openPrayerCategoriesDialog() {
+    const listEl = document.getElementById("full-prayer-categories-list");
+    if (!listEl) return;
+    listEl.innerHTML = "";
+    
+    const activeSet = new Set(currentPrayerCategories);
+
+    PRAYER_CATEGORIES_LIST.forEach(cat => {
+        const d = document.createElement("div");
+        const isOn = activeSet.has(cat);
+        d.className = "chip" + (isOn ? " on" : "");
+        d.textContent = cat;
+        // Estilo visual para los botones del modal
+        d.style.cssText = `padding: 6px 12px; border-radius: 20px; font-size: 11px; cursor: pointer; border: 1px solid ${isOn ? 'var(--primary)' : 'rgba(255,255,255,0.2)'}; background: ${isOn ? 'rgba(77,182,172,0.3)' : 'rgba(0,0,0,0.2)'}; color: white;`;
+        
+        d.onclick = () => {
+            togglePrayerCategory(cat);
+            openPrayerCategoriesDialog(); // Recarga el diálogo para reflejar el cambio de color
+        };
+        listEl.appendChild(d);
+    });
+    
+    document.getElementById("prayer-categories-dialog").style.display = "flex";
+}
+
+// Alterna una categoría dentro del array activo
+function togglePrayerCategory(cat) {
+    const idx = currentPrayerCategories.indexOf(cat);
+    if (idx > -1) {
+        // Evitamos quedarnos sin ninguna categoría por seguridad
+        if (currentPrayerCategories.length > 1) {
+            currentPrayerCategories.splice(idx, 1);
+        }
+    } else {
+        currentPrayerCategories.push(cat);
+    }
+    renderPrayerCategoriesChips(currentPrayerCategories);
+    if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
+}
+
+function removePrayerCategory(cat) {
+    togglePrayerCategory(cat);
+}
+
+function closePrayerCategoriesDialog() {
+    const dlg = document.getElementById("prayer-categories-dialog");
+    if (dlg) dlg.style.display = "none";
 }
