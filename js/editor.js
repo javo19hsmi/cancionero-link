@@ -1521,13 +1521,13 @@ function loadPrayersModule(communities, role) {
     if (!localSelector || !containerDestino) return;
     localSelector.innerHTML = '';
 
-    // Si es Super Admin, le damos la opción Global o recorremos todas las comunidades del sistema
+    // Si es Super Admin, cargamos todo el sistema
     if (role === 'super_admin') {
         const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
         if (optionOficial) optionOficial.style.display = 'block';
         document.getElementById('prayer-level-container').style.display = 'flex';
 
-        // Buscamos todas las comunidades directamente de Firebase para el super admin
+        // 1. Llenamos el selector local con todas las comunidades y capillas del sistema
         db.ref('comunidades').once('value', snap => {
             const comps = snap.val() || {};
             Object.keys(comps).forEach(cId => {
@@ -1535,7 +1535,6 @@ function loadPrayersModule(communities, role) {
                 const comNombre = com.nombre || cId;
                 const comPath = `comunidades/${cId}`;
 
-                // Sede Principal
                 const optSede = document.createElement('option');
                 optSede.value = `${comPath}/oraciones`;
                 optSede.text = `⛪ ${comNombre.toUpperCase()} (Sede Principal)`;
@@ -1543,7 +1542,6 @@ function loadPrayersModule(communities, role) {
                 optSede.style.color = "#ffffff";
                 localSelector.appendChild(optSede);
 
-                // Sub-nodos / Capillas
                 const subNodos = com.sub_nodes || com.capillas || {};
                 Object.keys(subNodos).forEach(subId => {
                     const sub = subNodos[subId];
@@ -1559,9 +1557,11 @@ function loadPrayersModule(communities, role) {
             toggleLocalDestinationVisibility();
         });
 
-        // Cargas en tiempo real para Super Admin
+        // 2. 🛡️ Carga obligatoria de oraciones Oficiales y Públicas para el Super Admin
         db.ref('oraciones_oficiales').on('value', snap => procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales'));
         db.ref('oraciones_publicas').on('value', snap => procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas'));
+        
+        // 3. Carga de todas las locales y capillas del sistema
         db.ref('comunidades').on('value', snap => {
             const comps = snap.val() || {};
             Object.keys(comps).forEach(cId => {
@@ -1575,7 +1575,7 @@ function loadPrayersModule(communities, role) {
         });
 
     } else {
-        // ADMIN LOCAL / USUARIO: Usamos exactamente el array 'authorizedCommunities' que ya validó auth.js
+        // ADMIN LOCAL / USUARIO: Usa authorizedCommunities filtrado correctamente
         const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
         if (optionOficial) optionOficial.style.display = 'none';
         document.getElementById('prayer-level-container').style.display = 'flex';
@@ -1583,14 +1583,12 @@ function loadPrayersModule(communities, role) {
         if (communities && communities.length > 0) {
             communities.forEach(com => {
                 const opt = document.createElement('option');
-                // com.path ya viene resuelto desde auth.js (ej: comunidades/parroquia_loreto o sub_nodes/montserrat)
                 opt.value = `${com.path}/oraciones`;
                 opt.text = `⛪ ${com.nombre.toUpperCase()}`;
                 opt.style.background = "#1e1e1e";
                 opt.style.color = "#ffffff";
                 localSelector.appendChild(opt);
 
-                // Escuchamos las oraciones en tiempo real de cada comunidad/capilla autorizada
                 db.ref(`${com.path}/oraciones`).on('value', snap => {
                     procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
                 });
@@ -1598,7 +1596,6 @@ function loadPrayersModule(communities, role) {
             containerDestino.style.display = 'block';
         }
 
-        // Sus propias oraciones en la Galería Pública
         db.ref('oraciones_publicas').orderByChild('origen').on('value', snap => {
             procesarNodos(snap.val(), 'publica', 'Pública (Mía)', 'oraciones_publicas');
         });
