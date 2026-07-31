@@ -77,8 +77,8 @@ auth.onAuthStateChanged(async user => {
         if (canP) { 
           try {
             if (typeof loadPrayersModule === "function") {
-               loadPrayersModule(authorizedCommunities, userRole);
-            }
+              loadPrayersModule(authorizedCommunities, 
+                                typeof userRole !== 'undefined' ? userRole : 'fiel');            }
           } catch (error) {
             console.error("Error al cargar módulo de oraciones:", error);
           }
