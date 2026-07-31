@@ -1521,19 +1521,17 @@ function loadPrayersModule(communities, role) {
     if (!localSelector || !containerDestino) return;
     localSelector.innerHTML = '';
 
-    // Forzamos la visibilidad del contenedor de nivel
     const levelContainer = document.getElementById('prayer-level-container');
     if (levelContainer) levelContainer.style.display = 'flex';
 
-    // 🎯 LÍNEA CLAVE: Si el rol es super_admin, mostramos la opción oficial. Si no, la ocultamos.
     const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
     if (optionOficial) {
         optionOficial.style.display = (role === 'super_admin') ? 'block' : 'none';
     }
 
-    // 2. LLENAR EL SELECTOR LOCAL CON LAS COMUNIDADES / CAPILLAS AUTORIZADAS
     let tieneOpcionesLocales = false;
 
+    // 2. LLENAR EL SELECTOR LOCAL CON LAS COMUNIDADES / CAPILLAS AUTORIZADAS
     if (communities && communities.length > 0) {
         communities.forEach(com => {
             const opt = document.createElement('option');
@@ -1544,14 +1542,13 @@ function loadPrayersModule(communities, role) {
             localSelector.appendChild(opt);
             tieneOpcionesLocales = true;
 
-            // Escuchamos las oraciones locales de cada comunidad o capilla autorizada
             db.ref(`${com.path}/oraciones`).on('value', snap => {
                 procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
             });
         });
     }
 
-    // Si es super_admin, traemos también todas las comunidades del sistema por las dudas
+    // Si es super_admin, traemos TODAS las comunidades respetando "sub_nodos"
     if (role === 'super_admin') {
         db.ref('comunidades').once('value', snap => {
             const comps = snap.val() || {};
@@ -1570,9 +1567,10 @@ function loadPrayersModule(communities, role) {
                     tieneOpcionesLocales = true;
                 }
 
-                const subNodos = com.sub_nodes || com.capillas || {};
+                // 🚀 FIX: Usamos "sub_nodos" tal como lo lee la App de Flutter
+                const subNodos = com.sub_nodos || com.capillas || {};
                 Object.keys(subNodos).forEach(subId => {
-                    const subPath = `${comPath}/sub_nodes/${subId}`;
+                    const subPath = `${comPath}/sub_nodos/${subId}`;
                     const subExists = Array.from(localSelector.options).some(o => o.value === `${subPath}/oraciones`);
                     if (!subExists) {
                         const optSub = document.createElement('option');
@@ -1585,7 +1583,6 @@ function loadPrayersModule(communities, role) {
                     }
                 });
             });
-            // Forzamos el estado de visibilidad una vez poblado el select
             toggleLocalDestinationVisibility();
         });
 
@@ -1595,9 +1592,11 @@ function loadPrayersModule(communities, role) {
             Object.keys(comps).forEach(cId => {
                 const com = comps[cId];
                 if (com.oraciones) procesarNodos(com.oraciones, 'local', com.nombre || cId, `comunidades/${cId}/oraciones`);
-                const subs = com.sub_nodes || com.capillas || {};
+                
+                // 🚀 FIX: Usamos "sub_nodos"
+                const subs = com.sub_nodos || com.capillas || {};
                 Object.keys(subs).forEach(sId => {
-                    if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodes/${sId}/oraciones`);
+                    if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodos/${sId}/oraciones`);
                 });
             });
         });
@@ -1619,7 +1618,6 @@ function loadPrayersModule(communities, role) {
     toggleLocalDestinationVisibility();
 }
 
-// Función auxiliar para unificar datos e inyectar origen sin perder referencias
 function procesarNodos(data, nivel, origenTag, rutaBase) {
     if (!data) return;
     Object.keys(data).forEach(key => {
@@ -1674,6 +1672,14 @@ function renderPrayerList() {
             badgeIcon = '🌍';
         }
 
+        // 🚀 FIX ANTI-CRASH: Evitamos que una categoría mal guardada rompa la lista
+        let catText = "Otras Oraciones";
+        if (Array.isArray(p.categorias)) {
+            catText = p.categorias.join(', ');
+        } else if (typeof p.categorias === 'string') {
+            catText = p.categorias;
+        }
+
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:flex-start;">
                 <b style="font-size:14px;">${p.titulo}</b>
@@ -1681,14 +1687,14 @@ function renderPrayerList() {
                     ${badgeIcon} ${p._origenVisual}
                 </span>
             </div>
-            <small style="opacity:0.5; font-size:11px;">${(p.categorias || []).join(', ')}</small>
+            <small style="opacity:0.5; font-size:11px;">${catText}</small>
         `;
         div.onclick = () => loadSinglePrayer(key, p);
         res.appendChild(div);
     });
 }
 
-// 3. GUARDADO ESTRUCTURADO Y JERÁRQUICO
+// 3. GUARDADO ESTRUCTURADO Y JERÁRQUICO (CON ADN DE FLUTTER)
 async function savePrayer() {
     const title = document.getElementById('prayer-title').value.trim();
     if (!title) return alert("El título es obligatorio.");
@@ -1708,36 +1714,55 @@ async function savePrayer() {
     const key = currentPrayerKey || Date.now().toString();
     
     let nuevaRuta = '';
+    let origenFinal = 'sistema'; // Por defecto sistema
+
+    // 🚀 LÓGICA DE RUTAS Y ORIGEN EXACTA COMO EN LA APP
     if (nivel === 'oficial') {
         nuevaRuta = `oraciones_oficiales/${key}`;
+        origenFinal = 'sistema';
     } else if (nivel === 'publica') {
         nuevaRuta = `oraciones_publicas/${key}`;
+        // Si ya existía, conservamos su origen original. Si es nueva, le ponemos la primera local disponible
+        if (currentPrayerKey && allPrayers[currentPrayerKey] && allPrayers[currentPrayerKey].origen) {
+            origenFinal = allPrayers[currentPrayerKey].origen;
+        } else {
+            const selectDestino = document.getElementById('prayer-local-destination');
+            const rutaLocal = selectDestino && selectDestino.value ? selectDestino.value : '';
+            origenFinal = rutaLocal ? rutaLocal.split('/').slice(-2, -1)[0] : 'comunidad';
+        }
     } else {
         const selectDestino = document.getElementById('prayer-local-destination');
         const rutaLocalElegida = selectDestino && selectDestino.value ? selectDestino.value : null;
         if (!rutaLocalElegida) {
-            setBusy(false);
+            if (typeof setBusy === "function") setBusy(false);
             return alert("❌ Seleccioná una comunidad o capilla de destino.");
         }
-        nuevaRuta = `${rutaLocalElegida}/${key}`;
+        nuevaRuta = `${rutaLocalElegida}/${key}`; // ej: comunidades/loreto/oraciones/key
+        
+        // Extraemos el ID del lugar de la ruta (penúltimo elemento, ej: 'loreto' de '.../loreto/oraciones')
+        const pathParts = rutaLocalElegida.split('/');
+        origenFinal = pathParts[pathParts.length - 2]; 
     }
 
+    // 🚀 FIX: Aseguramos que la categoría sea siempre un Array para Flutter
+    let catString = document.getElementById('prayer-cat').value.trim();
+    let catArray = catString ? catString.split(',').map(s => s.trim()).filter(Boolean) : ['Otras Oraciones'];
+
     const data = {
-        id: key,
         titulo: title,
-        categorias: document.getElementById('prayer-cat').value.split(',').map(s => s.trim()).filter(Boolean),
-        imageUrl: document.getElementById('prayer-img-url').value.trim(),
+        categorias: catArray,
+        imageUrl: document.getElementById('prayer-img-url').value.trim() || null,
         contenido: blocks,
         esOficial: nivel === 'oficial',
-        origen: nivel === 'oficial' ? 'sistema' : 'comunidad',
-        tipoUI: 'estructurada',
+        origen: origenFinal,
+        tipoUI: 'estructurada', // 🚀 REQUISITO OBLIGATORIO DE LA APP
         iconName: 'book'
     };
 
     try {
         await db.ref(nuevaRuta).set(data);
 
-        // Si estábamos editando y cambió de ruta (ej: de local a pública o oficial), borramos la vieja
+        // 🚀 LIMPIEZA CRUZADA: Si la movimos de nivel, borramos la vieja para no duplicar
         if (currentPrayerKey && allPrayers[currentPrayerKey]) {
             const rutaAntigua = allPrayers[currentPrayerKey]._rutaFirebase;
             if (rutaAntigua && rutaAntigua !== nuevaRuta) {
@@ -1813,7 +1838,16 @@ function loadSinglePrayer(key, p) {
 
     currentPrayerKey = key;
     document.getElementById('prayer-title').value = p.titulo || "";
-    document.getElementById('prayer-cat').value = (p.categorias || []).join(', ');
+    
+    // 🚀 FIX ANTI-CRASH: Restauramos la categoría correctamente sin importar cómo se guardó antes
+    let catVal = "Otras Oraciones";
+    if (Array.isArray(p.categorias)) {
+        catVal = p.categorias.join(', ');
+    } else if (typeof p.categorias === 'string') {
+        catVal = p.categorias;
+    }
+    document.getElementById('prayer-cat').value = catVal;
+    
     document.getElementById('prayer-img-url').value = p.imageUrl || "";
     
     const levelSelect = document.getElementById('prayer-level');
@@ -1831,7 +1865,6 @@ function loadSinglePrayer(key, p) {
     document.getElementById('prayer-delete-btn').style.display = 'block';
     hasUnsavedChanges = false;
     
-    // Forzamos el redibujado de la lista manteniendo el filtro activo sin borrar nodos
     toggleLocalDestinationVisibility();
     renderPrayerList(); 
 }
