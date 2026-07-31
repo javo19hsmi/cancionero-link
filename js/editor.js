@@ -1276,25 +1276,29 @@ async function restoreAnnouncement() {
     }
 }
 
-// 4. SUBIDA DE IMÁGENES A STORAGE
+// 4. SUBIDA DE IMÁGENES A STORAGE (CORREGIDA)
 async function uploadFlyer(input) {
     const file = input.files[0];
     if (!file) return;
 
-    setBusy(true, "Subiendo Flyer...");
+    if (typeof setBusy === "function") setBusy(true, "Subiendo Flyer...");
     try {
         const fileName = `ann_${Date.now()}_${file.name}`;
-        const ref = storage.ref(`anuncios/images/${fileName}`);
+        // 🚀 FIX: Usamos firebase.storage() en lugar de la variable global suelta
+        const ref = firebase.storage().ref(`anuncios/images/${fileName}`);
         await ref.put(file);
         const url = await ref.getDownloadURL();
         
         document.getElementById('ann-image-url').value = url;
         document.getElementById('flyer-preview').style.display = 'block';
         document.getElementById('ann-img-preview').src = url;
+        
+        if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
+        alert("✅ Flyer subido con éxito.");
     } catch (e) { 
         alert("Error al subir: " + e.message); 
     } finally { 
-        setBusy(false); 
+        if (typeof setBusy === "function") setBusy(false); 
     }
 }
 
