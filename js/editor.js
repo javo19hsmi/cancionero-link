@@ -1742,6 +1742,12 @@ async function savePrayer() {
     if (blocks.length === 0) return alert("Agregá al menos un bloque de contenido.");
     if (typeof setBusy === "function") setBusy(true, "Guardando oración...");
     
+    // 🚀 NUEVO: Lógica inteligente para definir tipoUI automáticamente
+    let tipoUIFinal = "estructurada";
+    if (blocks.length === 1 && blocks[0].tipo === "parrafo") {
+        tipoUIFinal = "simple";
+    }
+
     const nivel = document.getElementById('prayer-level').value;
     const key = currentPrayerKey || Date.now().toString();
     
@@ -1787,7 +1793,10 @@ async function savePrayer() {
         contenido: blocks,
         esOficial: nivel === 'oficial',
         origen: origenFinal,
-        tipoUI: 'estructurada', // 🚀 REQUISITO OBLIGATORIO DE LA APP
+        
+        // 🚀 NUEVO: Usamos la variable inteligente en lugar del texto fijo
+        tipoUI: tipoUIFinal, 
+        
         iconName: 'book'
     };
 
