@@ -376,12 +376,12 @@ function switchMod(mod) {
       }
       reloadScriptsList();
   }
-   // PARA "ENCHUFAR" LAS ORACIONES
+  // PARA "ENCHUFAR" LAS ORACIONES
   if (mod === 'prayers') {
-      if (typeof loadPrayersModule === 'function') {
-          // Validamos que la variable exista globalmente antes de usarla para evitar el ReferenceError
-          const safePath = typeof userNodePath !== 'undefined' ? userNodePath : "";
-          loadPrayersModule(safePath); 
+      // Como auth.js ya cargó las comunidades al inicio, solo necesitamos 
+      // forzar un renderizado por si algo quedó colgado visualmente.
+      if (typeof renderPrayerList === 'function') {
+          renderPrayerList();
       }
   }
 }
@@ -1513,7 +1513,6 @@ let allPrayers = {};
 let currentPrayerKey = null;
 
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
-// 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
     allPrayers = {}; 
     const localSelector = document.getElementById('prayer-local-destination');
@@ -1530,13 +1529,23 @@ function loadPrayersModule(communities, role) {
         optionOficial.style.display = (role === 'super_admin') ? 'block' : 'none';
     }
 
-    let tieneOpcionesLocales = false;
-
     // 2. LLENAR EL SELECTOR LOCAL CON LAS COMUNIDADES / CAPILLAS AUTORIZADAS
-    if (communities && Array.isArray(communities) && communities.length > 0) {
-        communities.forEach(com => {
-            if (!com || !com.path) return; // 🛡️ Evita crash si auth.js manda un dato incompleto
+    let comunidadesProcesadas = [];
+    
+    // Convertimos a Array sin importar en qué formato mande los datos el auth.js
+    if (communities) {
+        if (Array.isArray(communities)) {
+            comunidadesProcesadas = communities;
+        } else if (typeof communities === 'object') {
+            comunidadesProcesadas = Object.values(communities);
+        }
+    }
 
+    if (comunidadesProcesadas.length > 0) {
+        comunidadesProcesadas.forEach(com => {
+            if (!com || !com.path) return; // 🛡️ Si hay un dato corrupto, lo salta sin romper nada
+
+            // Crear la opción visual en el selector
             const opt = document.createElement('option');
             opt.value = `${com.path}/oraciones`;
             opt.text = `⛪ ${(com.nombre || 'Comunidad').toUpperCase()}`;
@@ -1545,9 +1554,15 @@ function loadPrayersModule(communities, role) {
             localSelector.appendChild(opt);
             tieneOpcionesLocales = true;
 
+            // Leer las oraciones de esa comunidad
             db.ref(`${com.path}/oraciones`).on('value', snap => {
                 if (snap.exists()) {
                     procesarNodos(snap.val(), 'local', com.nombre || 'Local', `${com.path}/oraciones`);
+                } else {
+                    // 🚀 FIX: Si la comunidad existe pero aún no tiene oraciones guardadas,
+                    // forzamos el renderizado igual para que la lista muestre "No hay oraciones" 
+                    // de forma prolija en lugar de romperse.
+                    renderPrayerList(); 
                 }
             });
         });
