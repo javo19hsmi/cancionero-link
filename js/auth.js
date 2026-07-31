@@ -75,6 +75,17 @@ auth.onAuthStateChanged(async user => {
           }
         }
         // --- FIN INTEGRACIÓN DE ANUNCIOS ---
+        // 🚀 --- INICIO INTEGRACIÓN DE ORACIONES ---
+        if (canG || canA || canS) { // O la validación de permisos que uses para oraciones
+          try {
+            if (typeof loadPrayersModule === "function") {
+               loadPrayersModule(authorizedCommunities, userRole);
+            }
+          } catch (error) {
+            console.error("Error al cargar módulo de oraciones:", error);
+          }
+        }
+        // 🚀 --- FIN INTEGRACIÓN DE ORACIONES ---
 
       } else { 
         alert("Sin permisos."); 
