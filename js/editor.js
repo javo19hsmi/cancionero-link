@@ -1862,22 +1862,28 @@ function addPrayerBlock(tipo, texto = "") {
     if (tipo === 'respuesta') label = 'R.';
     if (tipo === 'titulo_seccion') { label = 'TÍTULO DE SECCIÓN'; color = 'var(--warning)'; }
 
+    // Agregamos overflow:hidden al textarea para evitar la barra de scroll nativa mientras se redimensiona
     div.innerHTML = `
         <div style="display:flex; justify-content:space-between; margin-bottom:5px">
             <small style="color:${color}; font-weight:bold; font-size:9px">${label}</small>
             <span style="cursor:pointer; color:var(--danger); font-weight:bold; font-size:14px" onclick="document.getElementById('${id}').remove()">×</span>
         </div>
-        <textarea style="width:100%; background:none; border:none; color:white; font-size:13px; resize:none; outline:none" rows="2" placeholder="Escribí acá...">${texto}</textarea>
+        <textarea style="width:100%; background:none; border:none; color:white; font-size:13px; resize:none; outline:none; overflow:hidden;" rows="2" placeholder="Escribí acá...">${texto}</textarea>
     `;
     container.appendChild(div);
     
     const txt = div.querySelector('textarea');
-    txt.style.height = 'auto';
-    txt.style.height = txt.scrollHeight + 'px';
+    
+    // Le damos un respiro al navegador para que dibuje el textarea en pantalla antes de medir el alto
+    setTimeout(() => {
+        txt.style.height = 'auto';
+        txt.style.height = txt.scrollHeight + 'px';
+    }, 0);
+
     txt.oninput = function() { 
         this.style.height = 'auto'; 
         this.style.height = this.scrollHeight + 'px'; 
-        markUnsavedChanges();
+        if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
     };
 }
 
@@ -1932,10 +1938,13 @@ function loadSinglePrayer(key, p) {
         document.getElementById('prayer-simple-text').value = p.contenido[0].texto;
         switchPrayerMode('simple');
     } else {
+        // 🔥 CORRECCIÓN APLICADA: Primero activamos la vista estructurada (display: block)
+        switchPrayerMode('estructurada');
+        
+        // Y RECIÉN AHORA inyectamos los bloques, para que el navegador sepa que están visibles y pueda medir su alto correctamente
         if (p.contenido) {
             p.contenido.forEach(b => addPrayerBlock(b.tipo, b.texto));
         }
-        switchPrayerMode('estructurada');
     }
 
     document.getElementById('prayer-delete-btn').style.display = 'block';
