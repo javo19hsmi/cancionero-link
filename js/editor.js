@@ -2058,3 +2058,32 @@ function switchPrayerMode(mode) {
         }
     }
 }
+
+// Función para subir la imagen de la oración a Firebase Storage
+function uploadPrayerImg(input) {
+    if (!input.files || !input.files[0]) return;
+    const file = input.files[0];
+    
+    if (typeof setBusy === "function") setBusy(true, "Subiendo imagen...");
+
+    const storageRef = firebase.storage().ref(`oraciones_imgs/${Date.now()}_${file.name}`);
+    
+    storageRef.put(file).then(snapshot => {
+        return snapshot.ref.getDownloadURL();
+    }).then(downloadURL => {
+        // Rellenamos el input de texto con el link seguro de Firebase
+        document.getElementById('prayer-img-url').value = downloadURL;
+        
+        // Disparamos la vista previa visual si la tenemos armada
+        if (typeof updatePrayerImgPreview === 'function') {
+            updatePrayerImgPreview();
+        }
+        
+        if (typeof setBusy === "function") setBusy(false);
+        if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
+        alert("✅ Imagen subida con éxito.");
+    }).catch(error => {
+        if (typeof setBusy === "function") setBusy(false);
+        alert("❌ Error al subir la imagen: " + error.message);
+    });
+}
