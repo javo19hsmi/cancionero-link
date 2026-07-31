@@ -315,75 +315,85 @@ function applyPermissions(permissionsArray) {
     if (firstTab) document.getElementById(firstTab).click();
 }
 
-// Cambia de pestaña principal en la interfaz
+// Cambia de pestaña principal en la interfaz (Con protección de cambios sin guardar)
 function switchMod(mod) {
-  // 1. Ocultamos todos los modulares principales
-  document.querySelectorAll('main').forEach(m => m.style.display = 'none');
-  
-  // 2. Quitamos la clase active de los botones del menú superior
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  
-  // 3. Buscamos el módulo seleccionado y le aplicamos el display correcto
-  const targetMain = document.getElementById(`mod-${mod}`);
-  if (targetMain) {
-      // Si estamos en celular, aseguramos que use flex vertical, sino grid de PC
-      if (window.innerWidth <= 1100) {
-          targetMain.style.display = 'flex';
-          targetMain.style.flexDirection = 'column';
-      } else {
-          targetMain.style.display = 'grid'; 
-      }
-  }
-  
-  // 4. Activamos visualmente el botón superior correspondiente
-  const activeBtn = document.getElementById(`tab-${mod}`);
-  if (activeBtn) activeBtn.classList.add('active');
+    // 🛡️ ADVERTENCIA GLOBAL: Si hay cambios sin guardar en cualquier solapa activa, frenamos el cambio
+    if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar. ¿Querés salir y perder los cambios realizados?")) {
+        return; // Cancela el cambio de solapa
+    }
 
-  // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
-  const pubBtn = document.getElementById('global-pub-btn');
-  if (pubBtn) {
-      pubBtn.style.display = (mod === 'songs' && userRole === 'super_admin') ? 'block' : 'none';
-  }
-  
-  // 6. Control del teclado móvil de acordes (Solo visible en Cancionero)
-  const chordBar = document.getElementById('mobileChordBar');
-  if (chordBar) {
-      chordBar.style.display = (mod === 'songs') ? chordBar.style.display : 'none';
-  }
-  
-   if (mod === 'announcements' && typeof reloadAnnouncementsList === 'function') {
-      reloadAnnouncementsList();
-  }
-  // INICIALIZAR GUIONES
-  if (mod === 'scripts') {
-      if (!easyMDEInstance) {
-          easyMDEInstance = new EasyMDE({ 
-              element: document.getElementById('script-content'),
-              spellChecker: false,
-              status: false,
-              toolbar: ["bold", "italic", "heading", "|", "unordered-list", "ordered-list", "|", "preview", "guide"],
-              placeholder: "Escribí el guion acá..."
-          });
-         // Escuchar cambios en el editor Markdown para encender la advertencia
-         easyMDEInstance.codemirror.on("change", () => {
-              markUnsavedChanges();
-          });
-      }
-      setTimeout(() => easyMDEInstance.codemirror.refresh(), 100); // Evita bug visual de CodeMirror
-      if (document.getElementById('script-community-selector').options.length === 0) {
-          // Copia las opciones del selector de anuncios al de guiones
-          document.getElementById('script-community-selector').innerHTML = document.getElementById('community-selector').innerHTML;
-      }
-      reloadScriptsList();
-  }
-  // PARA "ENCHUFAR" LAS ORACIONES
-  if (mod === 'prayers') {
-      // Como auth.js ya cargó las comunidades al inicio, solo necesitamos 
-      // forzar un renderizado por si algo quedó colgado visualmente.
-      if (typeof renderPrayerList === 'function') {
-          renderPrayerList();
-      }
-  }
+    // 1. Ocultamos todos los modulares principales
+    document.querySelectorAll('main').forEach(m => m.style.display = 'none');
+    
+    // 2. Quitamos la clase active de los botones del menú superior
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    // 3. Buscamos el módulo seleccionado y le aplicamos el display correcto
+    const targetMain = document.getElementById(`mod-${mod}`);
+    if (targetMain) {
+        if (window.innerWidth <= 1100) {
+            targetMain.style.display = 'flex';
+            targetMain.style.flexDirection = 'column';
+        } else {
+            targetMain.style.display = 'grid'; 
+        }
+    }
+    
+    // 4. Activamos visualmente el botón superior correspondiente
+    const activeBtn = document.getElementById(`tab-${mod}`);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
+    const pubBtn = document.getElementById('global-pub-btn');
+    if (pubBtn) {
+        pubBtn.style.display = (mod === 'songs' && userRole === 'super_admin') ? 'block' : 'none';
+    }
+    
+    // 6. Control del teclado móvil de acordes (Solo visible en Cancionero)
+    const chordBar = document.getElementById('mobileChordBar');
+    if (chordBar) {
+        chordBar.style.display = (mod === 'songs') ? chordBar.style.display : 'none';
+    }
+    
+    // Al cambiar de solapa con éxito, reseteamos la bandera de cambios pendientes
+    hasUnsavedChanges = false;
+
+    if (mod === 'announcements' && typeof reloadAnnouncementsList === 'function') {
+        reloadAnnouncementsList();
+        if (typeof newAnnouncement === 'function') newAnnouncement(); // Abre limpio el panel
+    }
+    
+    // INICIALIZAR GUIONES
+    if (mod === 'scripts') {
+        if (!easyMDEInstance) {
+            easyMDEInstance = new EasyMDE({ 
+                element: document.getElementById('script-content'),
+                spellChecker: false,
+                status: false,
+                toolbar: ["bold", "italic", "heading", "|", "unordered-list", "ordered-list", "|", "preview", "guide"],
+                placeholder: "Escribí el guion acá..."
+            });
+            easyMDEInstance.codemirror.on("change", () => {
+                markUnsavedChanges();
+            });
+        }
+        setTimeout(() => easyMDEInstance.codemirror.refresh(), 100);
+        if (document.getElementById('script-community-selector').options.length === 0) {
+            document.getElementById('script-community-selector').innerHTML = document.getElementById('community-selector').innerHTML;
+        }
+        reloadScriptsList();
+        if (typeof newScript === 'function') newScript(); // Abre limpio el panel
+    }
+    
+    // PARA EL MÓDULO DE ORACIONES
+    if (mod === 'prayers') {
+        if (typeof renderPrayerList === 'function') {
+            renderPrayerList();
+        }
+        if (typeof newPrayer === 'function') {
+            newPrayer(); // Abre limpio el panel de oraciones
+        }
+    }
 }
 
 // Alterna entre el Modo Acordes visuales y el Modo Letra (Texto maestro con corchetes)
