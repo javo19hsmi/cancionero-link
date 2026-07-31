@@ -1844,7 +1844,26 @@ async function deletePrayer() {
     }
 }
 
-// 2. CONSTRUCTOR DE BLOQUES VISUALES
+// Funciones para mover bloques arriba y abajo
+function moveBlockUp(btn) {
+    const block = btn.closest('.glass');
+    const previousBlock = block.previousElementSibling;
+    if (previousBlock) {
+        block.parentNode.insertBefore(block, previousBlock);
+        if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
+    }
+}
+
+function moveBlockDown(btn) {
+    const block = btn.closest('.glass');
+    const nextBlock = block.nextElementSibling;
+    if (nextBlock) {
+        block.parentNode.insertBefore(nextBlock, block);
+        if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
+    }
+}
+
+// 2. CONSTRUCTOR DE BLOQUES VISUALES (ACTUALIZADO CON FLECHAS)
 function addPrayerBlock(tipo, texto = "") {
     const container = document.getElementById('prayer-blocks-container');
     const id = 'block-' + Date.now() + Math.random().toString(36).substr(2, 9);
@@ -1862,11 +1881,15 @@ function addPrayerBlock(tipo, texto = "") {
     if (tipo === 'respuesta') label = 'R.';
     if (tipo === 'titulo_seccion') { label = 'TÍTULO DE SECCIÓN'; color = 'var(--warning)'; }
 
-    // Agregamos overflow:hidden al textarea para evitar la barra de scroll nativa mientras se redimensiona
+    // Agregamos las flechitas de subir y bajar en la cabecera del bloque, junto a la cruz de eliminar
     div.innerHTML = `
-        <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+        <div style="display:flex; justify-content:space-between; margin-bottom:5px; align-items:center;">
             <small style="color:${color}; font-weight:bold; font-size:9px">${label}</small>
-            <span style="cursor:pointer; color:var(--danger); font-weight:bold; font-size:14px" onclick="document.getElementById('${id}').remove()">×</span>
+            <div style="display:flex; gap:12px; align-items:center;">
+                <span style="cursor:pointer; color:white; font-size:12px; opacity:0.8;" title="Subir bloque" onclick="moveBlockUp(this)">⬆️</span>
+                <span style="cursor:pointer; color:white; font-size:12px; opacity:0.8;" title="Bajar bloque" onclick="moveBlockDown(this)">⬇️</span>
+                <span style="cursor:pointer; color:var(--danger); font-weight:bold; font-size:14px; margin-left:5px;" title="Eliminar bloque" onclick="document.getElementById('${id}').remove(); if (typeof markUnsavedChanges === 'function') markUnsavedChanges();">×</span>
+            </div>
         </div>
         <textarea style="width:100%; background:none; border:none; color:white; font-size:13px; resize:none; outline:none; overflow:hidden;" rows="2" placeholder="Escribí acá...">${texto}</textarea>
     `;
@@ -1874,7 +1897,6 @@ function addPrayerBlock(tipo, texto = "") {
     
     const txt = div.querySelector('textarea');
     
-    // Le damos un respiro al navegador para que dibuje el textarea en pantalla antes de medir el alto
     setTimeout(() => {
         txt.style.height = 'auto';
         txt.style.height = txt.scrollHeight + 'px';
