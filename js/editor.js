@@ -1512,7 +1512,7 @@ async function restoreScript() {
 let allPrayers = {};
 let currentPrayerKey = null;
 
-// 1. CARGA DEL MÓDULO (Recibe authorizedCommunities y userRole igual que Anuncios)
+// 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
     allPrayers = {}; // Limpiamos el objeto maestro
     const localSelector = document.getElementById('prayer-local-destination');
@@ -1521,101 +1521,111 @@ function loadPrayersModule(communities, role) {
     if (!localSelector || !containerDestino) return;
     localSelector.innerHTML = '';
 
-    // Si es Super Admin, cargamos todo el sistema
-    if (role === 'super_admin') {
-        const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
-        if (optionOficial) optionOficial.style.display = 'block';
-        document.getElementById('prayer-level-container').style.display = 'flex';
+    // 🚀 1. HABILITAMOS SIEMPRE EL SELECTOR DE NIVEL (Para que todos puedan ver Local, Pública y Oficial si corresponde)
+    const levelContainer = document.getElementById('prayer-level-container');
+    if (levelContainer) levelContainer.style.display = 'flex';
 
-        // 1. Llenamos el selector local con todas las comunidades y capillas del sistema
+    const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
+    if (optionOficial) {
+        // Solo el super_admin puede ver y crear oraciones oficiales de sistema
+        optionOficial.style.display = (role === 'super_admin') ? 'block' : 'none';
+    }
+
+    // 2. LLENAR EL SELECTOR LOCAL CON LAS COMUNIDADES / CAPILLAS AUTORIZADAS
+    if (communities && communities.length > 0) {
+        communities.forEach(com => {
+            const opt = document.createElement('option');
+            opt.value = `${com.path}/oraciones`;
+            opt.text = `⛪ ${com.nombre.toUpperCase()}`;
+            opt.style.background = "#1e1e1e";
+            opt.style.color = "#ffffff";
+            localSelector.appendChild(opt);
+
+            // Escuchamos las oraciones locales de cada comunidad o capilla autorizada
+            db.ref(`${com.path}/oraciones`).on('value', snap => {
+                procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
+            });
+        });
+        containerDestino.style.display = 'block';
+    }
+
+    // Si es super_admin, traemos también todas las comunidades por las dudas
+    if (role === 'super_admin') {
         db.ref('comunidades').once('value', snap => {
             const comps = snap.val() || {};
             Object.keys(comps).forEach(cId => {
                 const com = comps[cId];
-                const comNombre = com.nombre || cId;
                 const comPath = `comunidades/${cId}`;
-
-                const optSede = document.createElement('option');
-                optSede.value = `${comPath}/oraciones`;
-                optSede.text = `⛪ ${comNombre.toUpperCase()} (Sede Principal)`;
-                optSede.style.background = "#1e1e1e";
-                optSede.style.color = "#ffffff";
-                localSelector.appendChild(optSede);
+                
+                // Verificamos si ya está cargada para no duplicar
+                const exists = Array.from(localSelector.options).some(o => o.value === `${comPath}/oraciones`);
+                if (!exists) {
+                    const optSede = document.createElement('option');
+                    optSede.value = `${comPath}/oraciones`;
+                    optSede.text = `⛪ ${(com.nombre || cId).toUpperCase()} (Sede Principal)`;
+                    optSede.style.background = "#1e1e1e";
+                    optSede.style.color = "#ffffff";
+                    localSelector.appendChild(optSede);
+                }
 
                 const subNodos = com.sub_nodes || com.capillas || {};
                 Object.keys(subNodos).forEach(subId => {
-                    const sub = subNodos[subId];
-                    const subNombre = sub.nombre || subId;
-                    const optSub = document.createElement('option');
-                    optSub.value = `${comPath}/sub_nodes/${subId}/oraciones`;
-                    optSub.text = `🏛️ ${subNombre.toUpperCase()}`;
-                    optSub.style.background = "#1e1e1e";
-                    optSub.style.color = "#ffffff";
-                    localSelector.appendChild(optSub);
+                    const subPath = `${comPath}/sub_nodes/${subId}`;
+                    const subExists = Array.from(localSelector.options).some(o => o.value === `${subPath}/oraciones`);
+                    if (!subExists) {
+                        const optSub = document.createElement('option');
+                        optSub.value = `${subPath}/oraciones`;
+                        optSub.text = `🏛️ ${(subNodos[subId].nombre || subId).toUpperCase()}`;
+                        optSub.style.background = "#1e1e1e";
+                        optSub.style.color = "#ffffff";
+                        localSelector.appendChild(optSub);
+                    }
                 });
             });
             toggleLocalDestinationVisibility();
         });
-
-        // 2. 🛡️ Carga obligatoria de oraciones Oficiales y Públicas para el Super Admin
-        db.ref('oraciones_oficiales').on('value', snap => procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales'));
-        db.ref('oraciones_publicas').on('value', snap => procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas'));
-        
-        // 3. Carga de todas las locales y capillas del sistema
-        db.ref('comunidades').on('value', snap => {
-            const comps = snap.val() || {};
-            Object.keys(comps).forEach(cId => {
-                const com = comps[cId];
-                if (com.oraciones) procesarNodos(com.oraciones, 'local', com.nombre || cId, `comunidades/${cId}/oraciones`);
-                const subs = com.sub_nodes || com.capillas || {};
-                Object.keys(subs).forEach(sId => {
-                    if (subs[sId].oraciones) procesarNodos(subs[sId].oraciones, 'local', subs[sId].nombre || sId, `comunidades/${cId}/sub_nodes/${sId}/oraciones`);
-                });
-            });
-        });
-
-    } else {
-        // ADMIN LOCAL / USUARIO: Usa authorizedCommunities filtrado correctamente
-        const optionOficial = document.querySelector('#prayer-level option[value="oficial"]');
-        if (optionOficial) optionOficial.style.display = 'none';
-        document.getElementById('prayer-level-container').style.display = 'flex';
-
-        if (communities && communities.length > 0) {
-            communities.forEach(com => {
-                const opt = document.createElement('option');
-                opt.value = `${com.path}/oraciones`;
-                opt.text = `⛪ ${com.nombre.toUpperCase()}`;
-                opt.style.background = "#1e1e1e";
-                opt.style.color = "#ffffff";
-                localSelector.appendChild(opt);
-
-                db.ref(`${com.path}/oraciones`).on('value', snap => {
-                    procesarNodos(snap.val(), 'local', com.nombre, `${com.path}/oraciones`);
-                });
-            });
-            containerDestino.style.display = 'block';
-        }
-
-        db.ref('oraciones_publicas').orderByChild('origen').on('value', snap => {
-            procesarNodos(snap.val(), 'publica', 'Pública (Mía)', 'oraciones_publicas');
-        });
     }
+
+    // 3. 🛡️ CARGAS GLOBALES OBLIGATORIAS (Oficiales y Públicas) para que NUNCA se vacíe la lista
+    db.ref('oraciones_oficiales').on('value', snap => {
+        procesarNodos(snap.val(), 'oficial', 'Sistema', 'oraciones_oficiales');
+    });
+    
+    db.ref('oraciones_publicas').on('value', snap => {
+        procesarNodos(snap.val(), 'publica', 'Galería', 'oraciones_publicas');
+    });
 
     toggleLocalDestinationVisibility();
 }
 
-// Función auxiliar para unificar datos e inyectar origen
-function procesarNodos(data, nivel, origenTag, rutaBase) {
-    if (!data) return;
-    Object.keys(data).forEach(key => {
-        allPrayers[key] = { 
-            ...data[key], 
-            _nivelGuardado: nivel,
-            _origenVisual: origenTag,
-            _rutaFirebase: `${rutaBase}/${key}`
-        };
-    });
-    renderPrayerList();
+// Modificamos loadSinglePrayer para que NO altere el selector de nivel de forma agresiva
+function loadSinglePrayer(key, p) {
+    if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar en esta oración. ¿Querés salir y perderlos?")) return;
+
+    currentPrayerKey = key;
+    document.getElementById('prayer-title').value = p.titulo || "";
+    document.getElementById('prayer-cat').value = (p.categorias || []).join(', ');
+    document.getElementById('prayer-img-url').value = p.imageUrl || "";
+    
+    // Asignamos el nivel de forma segura si existe
+    const levelSelect = document.getElementById('prayer-level');
+    if (p._nivelGuardado && levelSelect) {
+        levelSelect.value = p._nivelGuardado;
+    }
+
+    const container = document.getElementById('prayer-blocks-container');
+    container.innerHTML = "";
+    
+    if (p.contenido) {
+        p.contenido.forEach(b => addPrayerBlock(b.tipo, b.texto));
+    }
+
+    document.getElementById('prayer-delete-btn').style.display = 'block';
+    hasUnsavedChanges = false;
+    
+    // Actualizamos la visibilidad del selector local según corresponda al nivel de esta oración
+    toggleLocalDestinationVisibility();
+    renderPrayerList(); 
 }
 
 // ==========================================
