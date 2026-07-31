@@ -2013,33 +2013,49 @@ function loadSinglePrayer(key, p) {
     renderPrayerList(); 
 }
 
+// 🚀 FUNCIÓN NUEVA REVISADA Y COMPLETA PARA LIMPIAR TODO AL CREAR O CANCELAR
 function newPrayer() {
     if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar. ¿Seguro que querés crear una nueva y descartarlos?")) return;
 
     currentPrayerKey = null;
+    
+    // 1. Limpiamos los inputs de texto básicos
     document.getElementById('prayer-title').value = "";
-    document.getElementById('prayer-cat').value = "";
     document.getElementById('prayer-img-url').value = "";
     
-    // 🚀 Limpiamos ambos contenedores (Simple y Bloques)
-    document.getElementById('prayer-simple-text').value = "";
-    document.getElementById('prayer-blocks-container').innerHTML = "";
+    // 2. Limpiamos el contenido (Modo Simple y Modo Bloques)
+    const simpleText = document.getElementById('prayer-simple-text');
+    if (simpleText) simpleText.value = "";
     
-    // Volvemos a poner la vista por defecto en "Simple"
-    switchPrayerMode('simple');
+    const blocksContainer = document.getElementById('prayer-blocks-container');
+    if (blocksContainer) blocksContainer.innerHTML = "";
+    
+    // 3. Volvemos la interfaz por defecto al Modo Simple
+    if (typeof switchPrayerMode === 'function') {
+        switchPrayerMode('simple');
+    }
 
-    // Actualizamos la vista previa de la imagen para que se oculte
+    // 4. Limpiamos la vista previa de la imagen de cabecera
     if (typeof updatePrayerImgPreview === 'function') {
         updatePrayerImgPreview();
     }
 
+    // 5. Devolvemos las categorías a su valor inicial por defecto ('Otras Oraciones')
+    if (typeof renderPrayerCategoriesChips === 'function') {
+        renderPrayerCategoriesChips(['Otras Oraciones']);
+    }
+
+    // 6. Ocultamos los botones de eliminar y cancelar (porque estamos creando una nueva)
+    const deleteBtn = document.getElementById('prayer-delete-btn');
+    if (deleteBtn) deleteBtn.style.display = 'none';
+
+    const cancelBtn = document.getElementById('prayer-cancel-btn');
+    if (cancelBtn) cancelBtn.style.display = 'none';
+
     document.getElementById('prayer-level').value = "local";
-    document.getElementById('prayer-delete-btn').style.display = 'none';
-    document.getElementById('prayer-cancel-btn').style.display = 'none';
     
     hasUnsavedChanges = false;
     toggleLocalDestinationVisibility();
-    renderPrayerCategoriesChips(['Otras Oraciones']);
     renderPrayerList();
 }
 
