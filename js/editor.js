@@ -1731,23 +1731,29 @@ async function savePrayer() {
     const title = document.getElementById('prayer-title').value.trim();
     if (!title) return alert("El título es obligatorio.");
 
-    const blocks = [];
-    document.querySelectorAll('#prayer-blocks-container > div').forEach(div => {
-        blocks.push({
-            tipo: div.dataset.tipo,
-            texto: div.querySelector('textarea').value.trim()
-        });
-    });
+    let blocks = [];
+    let tipoUIFinal = currentPrayerMode; // Usamos la variable de la pestaña activa
 
-    if (blocks.length === 0) return alert("Agregá al menos un bloque de contenido.");
-    if (typeof setBusy === "function") setBusy(true, "Guardando oración...");
-    
-    // 🚀 NUEVO: Lógica inteligente para definir tipoUI automáticamente
-    let tipoUIFinal = "estructurada";
-    if (blocks.length === 1 && blocks[0].tipo === "parrafo") {
-        tipoUIFinal = "simple";
+    // Dependiendo de la pestaña activa, recolectamos los datos de un lado o del otro
+    if (currentPrayerMode === 'simple') {
+        const textoSimple = document.getElementById('prayer-simple-text').value.trim();
+        if (!textoSimple) return alert("El contenido de la oración no puede estar vacío.");
+        
+        // Flutter espera un array de contenido siempre, así que armamos el bloque de párrafo
+        blocks = [{ tipo: 'parrafo', texto: textoSimple }];
+    } else {
+        // Modo estructurado: leemos los bloques como siempre
+        document.querySelectorAll('#prayer-blocks-container > div').forEach(div => {
+            blocks.push({
+                tipo: div.dataset.tipo,
+                texto: div.querySelector('textarea').value.trim()
+            });
+        });
+        if (blocks.length === 0) return alert("Agregá al menos un bloque de contenido.");
     }
 
+    if (typeof setBusy === "function") setBusy(true, "Guardando oración...");
+    
     const nivel = document.getElementById('prayer-level').value;
     const key = currentPrayerKey || Date.now().toString();
     
@@ -1961,5 +1967,39 @@ function toggleLocalDestinationVisibility() {
         }
     } else {
         containerDestino.style.display = 'none';
+    }
+}
+
+// Variable global para saber en qué modo estamos
+let currentPrayerMode = 'simple';
+
+function switchPrayerMode(mode) {
+    currentPrayerMode = mode;
+    
+    const btnSimple = document.getElementById('btn-mode-simple');
+    const btnEstructurada = document.getElementById('btn-mode-estructurada');
+    const containerSimple = document.getElementById('prayer-simple-container');
+    const containerStructured = document.getElementById('prayer-structured-container');
+    const simpleTextarea = document.getElementById('prayer-simple-text');
+
+    if (mode === 'simple') {
+        // Visual
+        btnSimple.classList.add('active'); // O la clase de color sólido que uses
+        btnEstructurada.classList.remove('active');
+        containerSimple.style.display = 'block';
+        containerStructured.style.display = 'none';
+        
+    } else {
+        // Visual
+        btnEstructurada.classList.add('active');
+        btnSimple.classList.remove('active');
+        containerStructured.style.display = 'block';
+        containerSimple.style.display = 'none';
+
+        // CONVERSIÓN: Si pasamos a estructurado y no hay bloques, creamos uno con el texto simple
+        const currentBlocks = document.querySelectorAll('#prayer-blocks-container > div');
+        if (currentBlocks.length === 0 && simpleTextarea.value.trim() !== '') {
+            addBlock('parrafo', simpleTextarea.value.trim()); // Asumo que tenés una función addBlock(tipo, texto)
+        }
     }
 }
