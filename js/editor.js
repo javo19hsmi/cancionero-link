@@ -1869,6 +1869,12 @@ async function deletePrayer() {
     }
 }
 
+// Cancela la edición actual y limpia el panel para dejarlo vacío
+function cancelPrayerEdit() {
+    if (hasUnsavedChanges && !confirm("⚠️ Tenés cambios sin guardar. ¿Querés descartarlos?")) return;
+    newPrayer();
+}
+
 // Funciones para mover bloques arriba y abajo
 function moveBlockUp(btn) {
     const block = btn.closest('.glass');
@@ -2000,6 +2006,7 @@ function loadSinglePrayer(key, p) {
     }
 
     document.getElementById('prayer-delete-btn').style.display = 'block';
+    document.getElementById('prayer-cancel-btn').style.display = 'block';
     hasUnsavedChanges = false;
     
     toggleLocalDestinationVisibility();
@@ -2028,6 +2035,7 @@ function newPrayer() {
 
     document.getElementById('prayer-level').value = "local";
     document.getElementById('prayer-delete-btn').style.display = 'none';
+    document.getElementById('prayer-cancel-btn').style.display = 'none';
     
     hasUnsavedChanges = false;
     toggleLocalDestinationVisibility();
