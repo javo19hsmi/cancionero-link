@@ -1268,17 +1268,27 @@ async function saveAnnouncement() {
     
     const targetPath = isGlobal ? `anuncios_globales/${key}` : `${selectedPath}/anuncios/${key}`;
 
+    // 🚀 CONSTRUCCIÓN LIMPIA: Solo agregamos campos si tienen datos reales (Adiós strings vacíos y adiós 'id' interno)
     const data = {
-        id: key,
         titulo: title,
         texto: text,
-        fecha: document.getElementById('ann-date-label').value.trim(),
-        fechaVencimiento: document.getElementById('ann-expiry').value,
-        imagenUrl: document.getElementById('ann-image-url').value.trim(),
-        link: document.getElementById('ann-btn-url').value.trim(),
-        linkTexto: document.getElementById('ann-btn-text').value.trim(),
         esGlobal: isGlobal
     };
+
+    const fechaVal = document.getElementById('ann-date-label').value.trim();
+    if (fechaVal) data.fecha = fechaVal;
+
+    const fechaVencVal = document.getElementById('ann-expiry').value;
+    if (fechaVencVal) data.fechaVencimiento = fechaVencVal;
+
+    const imagenUrlVal = document.getElementById('ann-image-url').value.trim();
+    if (imagenUrlVal) data.imagenUrl = imagenUrlVal;
+
+    const linkVal = document.getElementById('ann-btn-url').value.trim();
+    if (linkVal) data.link = linkVal;
+
+    const linkTextoVal = document.getElementById('ann-btn-text').value.trim();
+    if (linkTextoVal) data.linkTexto = linkTextoVal;
 
     try {
         await db.ref(targetPath).set(data);
