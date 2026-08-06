@@ -850,7 +850,7 @@ async function uploadFile(input, folder, targetInputId) {
 
   try {
     const fileName = `${currentSong.id}_${Date.now()}_${file.name}`;
-    const ref = storage.ref(`canciones/${folder}/${fileName}`);
+    const ref = firebase.storage().ref(`canciones/${folder}/${fileName}`);
     await ref.put(file);
     const downloadUrl = await ref.getDownloadURL();
     
