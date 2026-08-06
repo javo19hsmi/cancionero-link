@@ -90,7 +90,15 @@ function initApp() {
       sel.appendChild(new Option(k, v));
     });
   }
-  
+
+   db.ref('canciones_borrador').on('value', s => {  
+    if (s.exists()) {  
+      allSongs = Object.values(s.val()).sort((a,b) => a.title.localeCompare(b.title));  
+      populateSongFilters(); // 🚀 Actualiza los desplegables con los datos nuevos
+      filterSongs();  
+    }  
+  });
+   
   // Escucha cambios de versión y borradores en tiempo real desde Firebase Realtime Database
   db.ref('version').on('value', s => { globalVer = String(s.val() || "0"); });
   db.ref('canciones_borrador').on('value', s => { 
@@ -134,12 +142,16 @@ window.addEventListener('resize', () => {
 /* ==========================================================
    5. FILTRADO Y CARGA DE CANCIONES
    ========================================================== */
-// Filtra la lista de canciones en el panel izquierdo según lo que escribas en el buscador
+// Filtra la lista de canciones en el panel izquierdo según texto, momento, artista y álbum
 function filterSongs() {
   const searchBox = document.getElementById('song-search-box');
   const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
+  const momentFilter = document.getElementById('filter-moment-sel').value;
+  const artistFilter = document.getElementById('filter-artist-sel').value;
+  const albumFilter = document.getElementById('filter-album-sel').value;
+
   const q = searchBox.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const res = document.getElementById('song-results-list'); 
+  const res = document.getElementById('song-results-list');  
   res.innerHTML = "";
   
   // Muestra u oculta la "X" dependiendo de si hay texto escrito
@@ -149,15 +161,28 @@ function filterSongs() {
   
   allSongs.filter(s => {
     const t = s.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    return t.includes(q);
+    
+    // 1. Filtro por texto de búsqueda
+    const matchesText = t.includes(q);
+
+    // 2. Filtro por momento litúrgico
+    const matchesMoment = !momentFilter || (s.moments && s.moments.includes(momentFilter));
+
+    // 3. Filtro por artista
+    const matchesArtist = !artistFilter || (s.artist && s.artist.trim() === artistFilter);
+
+    // 4. Filtro por álbum
+    const matchesAlbum = !albumFilter || (s.album && s.album.trim() === albumFilter);
+
+    return matchesText && matchesMoment && matchesArtist && matchesAlbum;
   }).slice(0, 40).forEach(s => {
-    const div = document.createElement('div'); 
+    const div = document.createElement('div');  
     div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
-    div.innerText = s.title; 
+    div.innerText = s.title;  
     div.onclick = () => {
         if (hasUnsavedChanges && !confirm("Tenés cambios sin guardar. ¿Querés salir perdiendo los cambios?")) return;
         loadSong(s);
-    }; 
+    };  
     res.appendChild(div);
   });
 }
@@ -166,6 +191,9 @@ function filterSongs() {
 function clearSearch() {
     const searchBox = document.getElementById('song-search-box');
     searchBox.value = '';
+    document.getElementById('filter-moment-sel').value = '';
+    document.getElementById('filter-artist-sel').value = '';
+    document.getElementById('filter-album-sel').value = '';
     filterSongs(); // Vuelve a ejecutar el filtro (que ahora mostrará todo y ocultará la X)
     searchBox.focus(); // Deja el cursor titilando en la caja por si querés escribir otra cosa
 }
@@ -200,6 +228,54 @@ function loadSong(s) {
   updateAudioPreview();
   filterSongs();
   setTimeout(autoExpandBio, 50); // Estira el cuadro al cargar la canción
+}
+
+// Llena los desplegables de filtros con los datos únicos extraídos de todas las canciones
+function populateSongFilters() {
+    const momentSel = document.getElementById('filter-moment-sel');
+    const artistSel = document.getElementById('filter-artist-sel');
+    const albumSel = document.getElementById('filter-album-sel');
+
+    if (!momentSel || !artistSel || !albumSel) return;
+
+    // Guardamos las selecciones actuales para no perderlas si se recarga
+    const currentMoment = momentSel.value;
+    const currentArtist = artistSel.value;
+    const currentAlbum = albumSel.value;
+
+    // Recolectamos valores únicos
+    const momentsSet = new Set();
+    const artistsSet = new Set();
+    const albumsSet = new Set();
+
+    allSongs.forEach(s => {
+        if (s.moments && Array.isArray(s.moments)) {
+            s.moments.forEach(m => { if (m) momentsSet.add(m); });
+        }
+        if (s.artist && s.artist.trim() !== '') artistsSet.add(s.artist.trim());
+        if (s.album && s.album.trim() !== '') albumsSet.add(s.album.trim());
+    });
+
+    // Llenar selector de Momentos
+    momentSel.innerHTML = '<option value="" style="background: #1a1a1a;">✨ Todos los momentos</option>';
+    Array.from(momentsSet).sort().forEach(m => {
+        momentSel.appendChild(new Option(m, m));
+    });
+    momentSel.value = currentMoment;
+
+    // Llenar selector de Artistas
+    artistSel.innerHTML = '<option value="" style="background: #1a1a1a;">Todos</option>';
+    Array.from(artistsSet).sort().forEach(a => {
+        artistSel.appendChild(new Option(a, a));
+    });
+    artistSel.value = currentArtist;
+
+    // Llenar selector de Álbumes
+    albumSel.innerHTML = '<option value="" style="background: #1a1a1a;">Todos</option>';
+    Array.from(albumsSet).sort().forEach(alb => {
+        albumSel.appendChild(new Option(alb, alb));
+    });
+    albumSel.value = currentAlbum;
 }
 
 /* ==========================================================
