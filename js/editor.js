@@ -1012,27 +1012,36 @@ function confirmPublish() {
 
 // Publica oficialmente todos los borradores (Se ejecuta al tocar "SÍ, PUBLICAR")
 async function executePublish() {
-  if (!pendingNewVersion || pendingNewVersion.trim() === "") {
-    alert("❌ Error: No se pudo calcular una versión válida. Intentá de nuevo.");
+  // 1. Guardamos el valor en una constante local por seguridad antes de tocar nada
+  const versionToPublish = pendingNewVersion;
+
+  if (!versionToPublish || versionToPublish.trim() === "") {
+    alert("❌ Error: No se pudo calcular una versión válida.");
+    closePublishDialog();
+    setBusy(false);
     return;
   }
-  
-  closePublishDialog(); 
+
   setBusy(true, "Publicando...");
   
   try {
     const snap = await db.ref('canciones_borrador').get();
     
-    // Solo publicamos si hay datos reales
     if (snap.exists()) {
       await db.ref('canciones_base').set(snap.val()); 
-      await db.ref('version').set(pendingNewVersion); 
-      alert("🎉 Publicación Exitosa. Nueva versión oficial: v" + pendingNewVersion);
+      await db.ref('version').set(versionToPublish); 
+      
+      // Cerramos el modal recién ahora que ya se guardó con éxito
+      closePublishDialog(); 
+      
+      alert("🎉 Publicación Exitosa. Nueva versión oficial: v" + versionToPublish);
     } else {
       alert("❌ No hay canciones en borrador para publicar.");
+      closePublishDialog();
     }
   } catch (e) { 
-    alert("Error en la publicación: " + e.message); 
+    alert("Error en la publicación: " + e.message);
+    closePublishDialog();
   } finally { 
     setBusy(false); 
   }
