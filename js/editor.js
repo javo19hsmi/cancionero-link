@@ -941,6 +941,7 @@ async function saveBorrador() {
   const editorArea = document.getElementById('lyrics-editor');
   const rawText = isEditMode ? editorArea.innerText : Render.toRaw(editorArea);
 
+  // Armamos el objeto base
   const upd = { 
     ...currentSong, 
     lyrics: esToUs(rawText), 
@@ -948,13 +949,26 @@ async function saveBorrador() {
     rhythm: document.getElementById('m-rhythm-in').value, 
     artist: document.getElementById('m-artist-in').value, 
     album: document.getElementById('m-album-in').value, 
-    year: parseInt(document.getElementById('m-year-in').value) || "", 
     copyright: document.getElementById('m-copyright-in').value, 
     biography: document.getElementById('m-biography-in').value, 
     sheetMusicLink: document.getElementById('m-sheet-in').value, 
     link: document.getElementById('m-audio-in').value,
     moments: getSelectedMoments()
   };
+
+  // 🚀 FILTRO DE SEGURIDAD: Eliminamos cualquier propiedad que esté vacía ("") 
+  // para no contaminar Firebase
+  Object.keys(upd).forEach(key => {
+    if (upd[key] === "" || upd[key] === null) {
+      delete upd[key];
+    }
+  });
+
+  // Manejo especial del año (si existe, que sea número, si no, que no exista)
+  const yearVal = parseInt(document.getElementById('m-year-in').value);
+  if (!isNaN(yearVal)) {
+    upd.year = yearVal;
+  }
   
   try { 
     await db.ref(`canciones_borrador/${currentSong.id}`).update(upd); 
@@ -970,27 +984,30 @@ let pendingNewVersion = ""; // Variable temporal para guardar la versión a publ
 
 // Abre el modal glaseado y calcula el número de versión
 function confirmPublish() {
-  // 1. Calculamos la nueva versión
-  let p = globalVer.split('.'); 
-  if (p.length < 2) p = [globalVer, "000"];
-  pendingNewVersion = p[0] + "." + String(parseInt(p[p.length-1]) + 1).padStart(3, '0');
+  // 1. Limpiamos y validamos la versión global actual de forma segura
+  let currentVerStr = globalVer && globalVer.trim() !== "" ? globalVer : "3.000";
+  let p = currentVerStr.split('.'); 
+  
+  // Si no tiene el formato de puntos, lo forzamos a una base válida
+  if (p.length < 2) {
+    p = ["3", "000"];
+  }
+
+  // Calculamos el siguiente número incrementando el último segmento
+  let lastSegment = parseInt(p[p.length - 1]);
+  if (isNaN(lastSegment)) lastSegment = 0;
+
+  pendingNewVersion = p[0] + "." + String(lastSegment + 1).padStart(3, '0');
 
   // 2. Cargamos los textos en tu diseño visual
   const oldVerEl = document.getElementById("pub-old-ver");
   const newVerEl = document.getElementById("pub-new-ver");
-  if (oldVerEl) oldVerEl.innerText = "v" + globalVer;
+  if (oldVerEl) oldVerEl.innerText = "v" + currentVerStr;
   if (newVerEl) newVerEl.innerText = "v" + pendingNewVersion;
 
   // 3. Mostramos la pantalla flotante
   const dlg = document.getElementById("publish-dialog");
   if (dlg) dlg.style.display = "flex";
-}
-
-// Cierra el modal glaseado si el usuario cancela
-function closePublishDialog() {
-  const dlg = document.getElementById("publish-dialog");
-  if (dlg) dlg.style.display = "none";
-  pendingNewVersion = ""; 
 }
 
 // Publica oficialmente todos los borradores (Se ejecuta al tocar "SÍ, PUBLICAR")
