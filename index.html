@@ -74,20 +74,25 @@
 
     const hash = decodeURIComponent(window.location.hash.substring(1));
     if (hash) {
-      // 🚀 FIX: Limpiamos el hash para quitar el posible "vivo" o basura antes del signo de pregunta
-      // Si tiene '?', tomamos lo que está a la derecha. Si no, lo dejamos igual.
-      const queryPart = hash.includes('?') ? hash.split('?')[1] : "";
-      const p = new URLSearchParams(queryPart);
-      const path = p.get('path') || (p.get('id') ? `comunidades/${p.get('id')}` : null);
-      
+      document.getElementById('loader').style.display='none';
+      document.getElementById('main-view').style.display='block';
+
+      // Extraemos el path sin importar si tiene #vivo? o qué hay antes
+      let path = "";
+      if (hash.includes('path=')) {
+        path = hash.split('path=')[1].split('&')[0];
+      } else if (hash.startsWith('comunidades/')) {
+        path = hash;
+      }
+
       if (path) {
         start(path);
       } else {
-        // Si no detectó path, intentamos ver si el hash mismo ES el path (por si acaso)
-        if (hash.startsWith("comunidades/")) start(hash);
-        else window.location.replace(FALLBACK);
+        window.location.replace(FALLBACK);
       }
-    } else window.location.replace(FALLBACK);
+    } else {
+      window.location.replace(FALLBACK);
+    }
 
     function start(path) {
       document.getElementById('loader').style.display='none';
