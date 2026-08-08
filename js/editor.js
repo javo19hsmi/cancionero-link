@@ -1948,24 +1948,17 @@ async function savePrayer() {
         origenFinal = pathParts[pathParts.length - 2]; 
     }
 
-    // 🚀 FIX: Aseguramos que la categoría sea siempre un Array para Flutter
-    let catString = document.getElementById('prayer-cat').value.trim();
-    let catArray = catString ? catString.split(',').map(s => s.trim()).filter(Boolean) : ['Otras Oraciones'];
-
-    const data = {
+const data = {
         titulo: title,
-        categorias: currentPrayerCategories,
+        categorias: currentPrayerCategories, // Usamos directamente el array limpio de los chips
         imageUrl: document.getElementById('prayer-img-url').value.trim() || null,
         contenido: blocks,
         esOficial: nivel === 'oficial',
         origen: origenFinal,
-        
-        // 🚀 NUEVO: Usamos la variable inteligente en lugar del texto fijo
-        tipoUI: tipoUIFinal, 
-        
+        tipoUI: tipoUIFinal,
         iconName: 'book'
     };
-
+   
     try {
         await db.ref(nuevaRuta).set(data);
 
