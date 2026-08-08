@@ -95,23 +95,12 @@
     }
 
     function start(path) {
-      console.log("🔍 [WEB VIVO] Conectando a la ruta de Firebase:", path);
-      
       document.getElementById('loader').style.display='none';
       document.getElementById('main-view').style.display='block';
       
       db.ref(path).on('value', s => {
-        const d = s.val(); 
-        console.log("📦 [WEB VIVO] Datos crudos recibidos:", d);
-
-        if (!d) {
-          console.warn("⚠️ [WEB VIVO] La ruta está vacía o no existe en Firebase:", path);
-          return;
-        }
-
-        // Asignamos el nombre de forma segura
-        document.getElementById('comm-name').innerText = d.nombre || "Comunidad Parroquial";
-
+        const d = s.val(); if (!d) return;
+        document.getElementById('comm-name').innerText = d.nombre || "Comunidad";
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
         const liveInd = document.getElementById('live-indicator');
@@ -119,30 +108,19 @@
         const statusText = document.getElementById('status-text');
         const blockIdx = parseInt(d.bloque_actual) || -1;
         
-        console.log("🟢 [WEB VIVO] Estado vivo en Firebase:", d.estado_vivo);
-
         if (!d.estado_vivo) { 
-          liveInd.classList.remove('active'); 
-          liveInd.innerText = "● TRANSMISIÓN INACTIVA";
-          waitingDiv.style.display='block'; 
-          lyricsDiv.style.display='none'; 
-          waitTitle.innerText = "Te esperamos en la próxima celebración ⛪";
+          liveInd.classList.remove('active'); liveInd.innerText = "● TRANSMISIÓN INACTIVA";
+          waitingDiv.style.display='block'; lyricsDiv.style.display='none'; 
+          waitTitle.innerText = "Te esperamos en la proxima celebración ⛪";
           statusText.innerText = "Próximamente en vivo o transmisión finalizada ⏳";
           return; 
         }
 
-        liveInd.classList.add('active'); 
-        liveInd.innerText = "● TRANSMISIÓN EN VIVO";
+        liveInd.classList.add('active'); liveInd.innerText = "● TRANSMISIÓN EN VIVO";
         
         if (d.cancion_actual) {
-          console.log("🎵 [WEB VIVO] Buscando canción actual ID:", d.cancion_actual);
           db.ref(`canciones_base/${d.cancion_actual}`).once('value', cs => {
-            if (cs.exists()) {
-              console.log("✅ [WEB VIVO] Canción encontrada, mostrando letra...");
-              mostrarContenido(cs.val().lyrics, -1, waitingDiv, lyricsDiv);
-            } else {
-              console.error("❌ [WEB VIVO] La canción con ID", d.cancion_actual, "NO existe en 'canciones_base'");
-            }
+            if (cs.exists()) mostrarContenido(cs.val().lyrics, -1, waitingDiv, lyricsDiv);
           });
         } else if (d.oracion_actual) {
           db.ref(`oraciones_oficiales/${d.oracion_actual}`).once('value', so => {
@@ -152,8 +130,7 @@
             });
           });
         } else {
-          waitingDiv.style.display='block'; 
-          lyricsDiv.style.display='none';
+          waitingDiv.style.display='block'; lyricsDiv.style.display='none';
           waitTitle.innerText = "Cantemos Juntos 🎶";
           statusText.innerText = "🗣️ En breve iniciará el siguiente canto.";
         }
