@@ -160,10 +160,20 @@ function filterSongs() {
   }
   
   allSongs.filter(s => {
-    const t = s.title.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    
+    // 1. Normalizamos el título
+    const titleClean = (s.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    // 2. 🚀 MAGIA AQUÍ: Tomamos la letra, le borramos todos los acordes entre corchetes [...] 
+    // y los formatos Markdown para buscar pura y exclusivamente en el texto de la letra
+    const lyricsClean = (s.lyrics || "")
+      .replace(/\[.*?\]/g, "") // Borra los acordes (ej: [Do], [Sol7])
+      .replace(/[*_#]/g, "")   // Borra asteriscos o guiones de formato
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "");
+     
     // 1. Filtro por texto de búsqueda
-    const matchesText = t.includes(q);
+    const matchesText = titleClean.includes(q) || lyricsClean.includes(q);
 
     // 2. Filtro por momento litúrgico
     const matchesMoment = !momentFilter || (s.moments && s.moments.includes(momentFilter));
