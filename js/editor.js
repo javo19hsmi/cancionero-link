@@ -256,24 +256,35 @@ function populateSongFilters() {
         if (s.album && s.album.trim() !== '') albumsSet.add(s.album.trim());
     });
 
-    // Llenar selector de Momentos
-    momentSel.innerHTML = '<option value="" style="background: #1a1a1a;">✨ Todos los momentos</option>';
-    Array.from(momentsSet).sort().forEach(m => {
-        momentSel.appendChild(new Option(m, m));
+    // 1. Llenar selector de Momentos (Respetando tu MOMENTS_LIST y con fondo oscuro)
+    momentSel.innerHTML = '<option value="" style="background: #1a1a1a; color: #ffffff;">✨ Todos los momentos</option>';
+    MOMENTS_LIST.forEach(m => {
+        if (momentsSet.has(m)) {
+            let opt = new Option(m, m);
+            opt.style.background = "#1a1a1a";
+            opt.style.color = "#ffffff";
+            momentSel.appendChild(opt);
+        }
     });
     momentSel.value = currentMoment;
 
-    // Llenar selector de Artistas
-    artistSel.innerHTML = '<option value="" style="background: #1a1a1a;">Todos</option>';
+    // 2. Llenar selector de Artistas (Con orden alfabético y fondo oscuro)
+    artistSel.innerHTML = '<option value="" style="background: #1a1a1a; color: #ffffff;">Todos</option>';
     Array.from(artistsSet).sort().forEach(a => {
-        artistSel.appendChild(new Option(a, a));
+        let opt = new Option(a, a);
+        opt.style.background = "#1a1a1a";
+        opt.style.color = "#ffffff";
+        artistSel.appendChild(opt);
     });
     artistSel.value = currentArtist;
 
-    // Llenar selector de Álbumes
-    albumSel.innerHTML = '<option value="" style="background: #1a1a1a;">Todos</option>';
+    // 3. Llenar selector de Álbumes (Con orden alfabético y fondo oscuro)
+    albumSel.innerHTML = '<option value="" style="background: #1a1a1a; color: #ffffff;">Todos</option>';
     Array.from(albumsSet).sort().forEach(alb => {
-        albumSel.appendChild(new Option(alb, alb));
+        let opt = new Option(alb, alb);
+        opt.style.background = "#1a1a1a";
+        opt.style.color = "#ffffff";
+        albumSel.appendChild(opt);
     });
     albumSel.value = currentAlbum;
 }
