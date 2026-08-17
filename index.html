@@ -74,21 +74,49 @@
 
     const hash = decodeURIComponent(window.location.hash.substring(1));
     if (hash) {
-      document.getElementById('loader').style.display='none';
-      document.getElementById('main-view').style.display='block';
+      // 1. SI ES UN LINK PARA ABRIR LA APP CON UNA MISA (cancionero-pst://)
+      if (hash.startsWith('cancionero-pst://')) {
+        // Intentamos disparar el esquema para que abra la app en el celular
+        window.location.href = hash;
 
-      // Extraemos el path sin importar si tiene #vivo? o qué hay antes
-      let path = "";
-      if (hash.includes('path=')) {
-        path = hash.split('path=')[1].split('&')[0];
-      } else if (hash.startsWith('comunidades/')) {
-        path = hash;
-      }
+        // Opcional: Si querés que la web también extraiga la información 
+        // de la URL (como los nombres y las canciones) para mostrarlas en pantalla:
+        try {
+          document.getElementById('loader').style.display = 'none';
+          document.getElementById('main-view').style.display = 'block';
+          
+          // Extraemos los parámetros de la URL interna (ej: nombre y lista de canciones)
+          const urlObj = new URL(hash.replace('cancionero-pst://', 'http://dummy/'));
+          const nombreMisa = urlObj.searchParams.get('nombre') || "Misa Compartida";
+          const idsCanciones = urlObj.searchParams.get('canciones');
 
-      if (path) {
-        start(path);
-      } else {
-        window.location.replace(FALLBACK);
+          document.getElementById('comm-name').innerText = nombreMisa;
+          document.getElementById('waiting-title').innerText = "Lista de Canciones de la Misa 🎶";
+          
+          if (idsCanciones) {
+            const listaIds = idsCanciones.split(',');
+            document.getElementById('status-text').innerText = `Contiene ${listaIds.length} elementos asignados.`;
+            // Acá podrías cargar y listar las canciones en la web si lo deseas
+          }
+        } catch (e) {
+          console.error("Error al procesar el deep link en la web", e);
+        }
+
+      } 
+      // 2. SI ES UN LINK DE MODO VIVO (path=...)
+      else {
+        let path = "";
+        if (hash.includes('path=')) {
+          path = hash.split('path=')[1].split('&')[0];
+        } else if (hash.startsWith('comunidades/')) {
+          path = hash;
+        }
+
+        if (path) {
+          start(path);
+        } else {
+          window.location.replace(FALLBACK);
+        }
       }
     } else {
       window.location.replace(FALLBACK);
