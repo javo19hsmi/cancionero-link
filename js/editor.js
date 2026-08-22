@@ -188,7 +188,11 @@ function filterSongs() {
   }).slice(0, 40).forEach(s => {
     const div = document.createElement('div');  
     div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
-    div.innerText = s.title;  
+    //Mostramos el título y el ID abajo en gris
+    div.innerHTML = `
+      <div style="font-weight: 500;">${s.title}</div>
+      <div style="font-size: 0.75rem; color: #888; font-family: monospace; margin-top: 2px; user-select: text;">ID: ${s.id}</div>
+    `;  
     div.onclick = () => {
         if (hasUnsavedChanges && !confirm("Tenés cambios sin guardar. ¿Querés salir perdiendo los cambios?")) return;
         loadSong(s);
