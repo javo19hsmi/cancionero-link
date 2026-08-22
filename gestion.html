@@ -135,7 +135,10 @@
 
       <!-- COLUMNA 3: METADATOS COMPLETOS (RESTAURADA) -->
       <section class="glass-panel" style="overflow-y: auto;">
-        <label>TÍTULO</label>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+          <label style="margin: 0;">TÍTULO</label>
+          <span id="song-id-badge" style="font-size: 0.75rem; color: #888; font-family: monospace; user-select: text;">ID: -</span>
+        </div>
         <input type="text" id="m-title-in" readonly oninput="markUnsavedChanges()">
         
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
