@@ -28,7 +28,7 @@ const Render = {
         html = html.replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>");
         html = html.replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>");
         html = html.replace(/_([\s\S]*?)_/g, "<i>$1</i>");
-        html = html.replace(/\{([\s\S]*?)\}/g, "<span style='color:#888; font-style:italic'>$1</span>");
+        html = html.replace(/\{([\s\S]*?)\}/g, "<b style='color: var(--primary-light); background: rgba(77,182,172,0.1); padding: 2px 6px; border-radius: 4px;'>{$1}</b>");
         
         return html.replace(/\n/g, "<br>");
     },
@@ -189,10 +189,8 @@ function filterSongs() {
     const div = document.createElement('div');  
     div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
     //Mostramos el título y el ID abajo en gris
-    div.innerHTML = `
-      <div style="font-weight: 500;">${s.title}</div>
-      <div style="font-size: 0.75rem; color: #888; font-family: monospace; margin-top: 2px; user-select: text;">ID: ${s.id}</div>
-    `;  
+   div.innerText = s.title;
+     
     div.onclick = () => {
         if (hasUnsavedChanges && !confirm("Tenés cambios sin guardar. ¿Querés salir perdiendo los cambios?")) return;
         loadSong(s);
@@ -217,6 +215,8 @@ function loadSong(s) {
   currentSong = JSON.parse(JSON.stringify(s));
   
   document.getElementById('m-title-in').value = s.title || "";
+   const idBadge = document.getElementById('song-id-badge');
+   if (idBadge) idBadge.innerText = `ID: ${s.id}`;
   document.getElementById('m-key-sel').value = s.key || "";
   document.getElementById('m-rhythm-in').value = s.rhythm || "";
   document.getElementById('m-artist-in').value = s.artist || "";
