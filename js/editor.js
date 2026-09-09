@@ -2434,16 +2434,28 @@ function handleBatchFileSelect(input) {
     document.getElementById("batch-file-name").innerText = `📄 Archivo: ${file.name}`;
     setBusy(true, "Leyendo archivo...");
 
-    // A) SI ES PDF
+        // A) SI ES PDF
     if (file.name.toLowerCase().endsWith('.pdf')) {
-        const pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+        let pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
         
+        // Si no está cargada aún, la inyectamos dinámicamente de respaldo
         if (!pdfLib) {
-            setBusy(false);
-            return alert("⚠️ La librería PDF no se cargó correctamente. Refrescá la página con Ctrl+F5.");
+            setBusy(true, "Cargando motor de lectura PDF...");
+            await new Promise((resolve) => {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+                script.onload = resolve;
+                document.head.appendChild(script);
+            });
+            pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
         }
 
-        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist/2.16.105/pdf.worker.min.js';
+        if (!pdfLib) {
+            setBusy(false);
+            return alert("⚠️ No se pudo cargar la librería de lectura PDF.");
+        }
+
+        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
         const fileReader = new FileReader();
         fileReader.onload = function() {
@@ -2464,7 +2476,7 @@ function handleBatchFileSelect(input) {
             });
         };
         fileReader.readAsArrayBuffer(file);
-    } 
+    }
     // B) SI ES WORD (.docx)
     else if (file.name.toLowerCase().endsWith('.docx')) {
         const reader = new FileReader();
