@@ -2491,7 +2491,34 @@ function handleBatchFileSelect(input) {
         reader.readAsText(file);
     }
 }
+// 🚀 3. PROCESAR TEXTO (LA FUNCIÓN QUE FALTABA)
+function processBatchInputText() {
+    const rawText = document.getElementById("batch-raw-text").value;
+    if (!rawText || rawText.trim().length === 0) {
+        return alert("❌ Por favor subí un archivo o pegá texto en el cuadro.");
+    }
 
+    setBusy(true, "Analizando canciones y comparando duplicados...");
+
+    setTimeout(() => {
+        batchParsedSongs = parseBatchSongsText(rawText);
+
+        if (batchParsedSongs.length === 0) {
+            setBusy(false);
+            return alert("⚠️ No se pudieron detectar canciones en el texto ingresado.");
+        }
+
+        // Comparar con la base de datos existente (allSongs)
+        detectBatchDuplicates();
+
+        // Mostrar paso 2
+        document.getElementById("batch-step-1").style.display = "none";
+        document.getElementById("batch-step-2").style.display = "flex";
+
+        renderBatchPreviewTable();
+        setBusy(false);
+    }, 100);
+}
 // Corta el texto por títulos de forma inteligente y convierte acordes de 2 líneas a corchetes [Do]
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
