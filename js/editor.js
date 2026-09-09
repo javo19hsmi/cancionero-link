@@ -2426,9 +2426,6 @@ function resetBatchImporterStep1() {
     batchCurrentEditIndex = null;
 }
 
-// Configuración inicial de PDF.js
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist/2.16.105/pdf.worker.min.js';
-
 // 2. Lectura de Archivos (.pdf, .docx o .txt)
 function handleBatchFileSelect(input) {
     const file = input.files[0];
@@ -2439,10 +2436,20 @@ function handleBatchFileSelect(input) {
 
     // A) SI ES PDF
     if (file.name.toLowerCase().endsWith('.pdf')) {
+        // Configuración segura dentro de la función (evita el ReferenceError al cargar la página)
+        const pdfLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        
+        if (!pdfLib) {
+            setBusy(false);
+            return alert("⚠️ La librería PDF aún se está cargando. Reintentá en unos segundos.");
+        }
+
+        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
         const fileReader = new FileReader();
         fileReader.onload = function() {
             const typedarray = new Uint8Array(this.result);
-            pdfjsLib.getDocument(typedarray).promise.then(async function(pdf) {
+            pdfLib.getDocument(typedarray).promise.then(async function(pdf) {
                 let fullText = "";
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
