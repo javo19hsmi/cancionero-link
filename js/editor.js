@@ -2427,7 +2427,7 @@ function resetBatchImporterStep1() {
 }
 
 // 2. Lectura de Archivos (.pdf, .docx o .txt)
-function handleBatchFileSelect(input) {
+async function handleBatchFileSelect(input) {
     const file = input.files[0];
     if (!file) return;
 
