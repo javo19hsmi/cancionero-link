@@ -2426,15 +2426,41 @@ function resetBatchImporterStep1() {
     batchCurrentEditIndex = null;
 }
 
-// 2. Lectura de Archivos (.docx con mammoth.js o .txt)
+// Configuración inicial de PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist/2.16.105/pdf.worker.min.js';
+
+// 2. Lectura de Archivos (.pdf, .docx o .txt)
 function handleBatchFileSelect(input) {
     const file = input.files[0];
     if (!file) return;
 
-    document.getElementById("batch-file-name").innerText = `📄 Archivo seleccionado: ${file.name}`;
+    document.getElementById("batch-file-name").innerText = `📄 Archivo: ${file.name}`;
     setBusy(true, "Leyendo archivo...");
 
-    if (file.name.endsWith('.docx')) {
+    // A) SI ES PDF
+    if (file.name.toLowerCase().endsWith('.pdf')) {
+        const fileReader = new FileReader();
+        fileReader.onload = function() {
+            const typedarray = new Uint8Array(this.result);
+            pdfjsLib.getDocument(typedarray).promise.then(async function(pdf) {
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    fullText += pageText + '\n\n';
+                }
+                document.getElementById("batch-raw-text").value = fullText;
+                setBusy(false);
+            }).catch(function(err) {
+                alert("Error al leer PDF: " + err.message);
+                setBusy(false);
+            });
+        };
+        fileReader.readAsArrayBuffer(file);
+    } 
+    // B) SI ES WORD (.docx)
+    else if (file.name.toLowerCase().endsWith('.docx')) {
         const reader = new FileReader();
         reader.onload = function(event) {
             mammoth.extractRawText({ arrayBuffer: event.target.result })
@@ -2448,7 +2474,9 @@ function handleBatchFileSelect(input) {
                 });
         };
         reader.readAsArrayBuffer(file);
-    } else {
+    } 
+    // C) SI ES TXT
+    else {
         const reader = new FileReader();
         reader.onload = function(e) {
             document.getElementById("batch-raw-text").value = e.target.result;
@@ -2458,35 +2486,6 @@ function handleBatchFileSelect(input) {
     }
 }
 
-// 3. Parser Inteligente: Corta Canciones y Convierte Acordes
-function processBatchInputText() {
-    const rawText = document.getElementById("batch-raw-text").value;
-    if (!rawText || rawText.trim().length === 0) {
-        return alert("❌ Por favor subí un archivo o pegá texto en el cuadro.");
-    }
-
-    setBusy(true, "Analizando canciones y comparando duplicados...");
-
-    setTimeout(() => {
-        batchParsedSongs = parseBatchSongsText(rawText);
-
-        if (batchParsedSongs.length === 0) {
-            setBusy(false);
-            return alert("⚠️ No se pudieron detectar canciones en el texto ingresado.");
-        }
-
-        // Comparar con la base de datos existente (allSongs)
-        detectBatchDuplicates();
-
-        // Mostrar paso 2
-        document.getElementById("batch-step-1").style.display = "none";
-        document.getElementById("batch-step-2").style.display = "flex";
-
-        renderBatchPreviewTable();
-        setBusy(false);
-    }, 100);
-}
-
 // Corta el texto por títulos de forma inteligente y convierte acordes de 2 líneas a corchetes [Do]
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
@@ -2494,20 +2493,18 @@ function parseBatchSongsText(text) {
     const lines = text.split('\n');
     
     // 🛡️ REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
-    // Buscamos si existen patrones de numeración de cancionero (ej: "1 - ", "2. ", "3)")
     const hasMultipleSongsPattern = RegExp(/(?:^\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(text);
 
     if (!hasMultipleSongsPattern) {
-        // MODO CANCIÓN ÚNICA: La primera línea es el título, el resto es la letra
         let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
         if (cleanLines.length === 0) return [];
 
-        let singleTitle = cleanLines[0];
+        let singleTitle = cleanLines[0].replace(/^(?:(?:\d+[\.\-\:\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)/i, '').trim().toUpperCase();
         let singleLyrics = lines.slice(lines.indexOf(cleanLines[0]) + 1).join('\n');
 
         return [{
-            title: singleTitle.replace(/^(?:(?:\d+[\.\-\:\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)/i, '').trim(),
-            lyrics: convertTwoLineChordsToChordPro(singleLyrics).trim(),
+            title: singleTitle, // 🚀 TÍTULO EN MAYÚSCULAS
+            lyrics: processLyricsFormatAndChords(singleLyrics).trim(),
             moment: "Varios",
             selected: true,
             status: "nueva",
@@ -2515,26 +2512,25 @@ function parseBatchSongsText(text) {
         }];
     }
 
-    // 🛡️ REGLA 2: MODO CANCIONERO MASIVO (MÚLTIPLES CANCIONES)
+    // 🛡️ REGLA 2: MODO CANCIONERO MASIVO
     const songs = [];
     let currentTitle = "";
     let currentLines = [];
     let isInsideIndex = false;
 
-    // Patrón flexible para detectar títulos
     const titleRegex = /^\s*(?:(?:\d+[\s\.\-\:\)]+\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)(.+)/i;
 
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
             let lyricsText = currentLines.join('\n').trim();
             if (lyricsText.length > 0) {
-                let processedLyrics = convertTwoLineChordsToChordPro(lyricsText);
+                let processedLyrics = processLyricsFormatAndChords(lyricsText);
                 
-                // Limpiamos el título de números al inicio (ej: "1 - Vendrá tu Cruz" -> "Vendrá tu Cruz")
-                let cleanTitle = currentTitle.replace(/^(?:\d+[\s\.\-\:\)]+\s*)/i, '').trim();
+                // 🚀 NORMA ISO JAVIER: Título limpio siempre en MAYÚSCULAS
+                let cleanTitle = currentTitle.replace(/^(?:\d+[\s\.\-\:\)]+\s*)/i, '').trim().toUpperCase();
 
                 songs.push({
-                    title: cleanTitle || currentTitle.trim(),
+                    title: cleanTitle,
                     lyrics: processedLyrics.trim(),
                     moment: "Varios",
                     selected: true,
@@ -2551,25 +2547,22 @@ function parseBatchSongsText(text) {
         let rawLine = lines[i];
         let line = rawLine.trim();
 
-        // 🛡️ REGLA 3: DETECTAR Y CORTAR EN EL ÍNDICE FINAL
+        // Detectar e ignorar índices
         const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (normLine.startsWith("indice numerico") || normLine.startsWith("indice alfabetico") || normLine === "indice" || normLine === "tabla de contenido") {
             isInsideIndex = true;
-            saveCurrentSong(); // Guarda la última canción pendiente antes del índice
-            break; // Detiene la lectura del archivo
+            saveCurrentSong();
+            break;
         }
 
         if (isInsideIndex) break;
 
-        // 🛡️ REGLA 4: IGNORAR ENCABEZADOS DEL DOCUMENTO AL INICIO
+        // Ignorar encabezados del documento
         if (i < 3 && (normLine.includes("cancionero") || normLine.includes("canciones)"))) {
-            continue; // Salta la primera línea informativa tipo "Cancionero Católico - (16 canciones)"
+            continue;
         }
 
-        // 🛡️ REGLA 5: DETECTAR SI ES TÍTULO DE NUEVA CANCIÓN
         let match = line.match(titleRegex);
-        
-        // Verificamos que el renglón anterior haya estado en blanco para confirmar que es un nuevo título
         let prevLineWasEmpty = (i === 0) || (lines[i - 1].trim().length === 0);
 
         if (match && prevLineWasEmpty) {
@@ -2582,9 +2575,54 @@ function parseBatchSongsText(text) {
         }
     }
 
-    saveCurrentSong(); // Guarda la última canción al terminar el ciclo
-
+    saveCurrentSong();
     return songs;
+}
+
+// Procesa los acordes de dos líneas Y detecta estribillos en mayúsculas
+function processLyricsFormatAndChords(text) {
+    let withChords = convertTwoLineChordsToChordPro(text);
+    
+    // Auto-formatear párrafos que vengan en MAYÚSCULAS como estribillo (**)
+    const paragraphs = withChords.split(/\n\s*\n/);
+    const formattedParagraphs = paragraphs.map(p => {
+        const lines = p.trim().split('\n');
+        // Si el párrafo tiene más de 1 línea y todas son mayúsculas (ignorando corchetes de acordes)
+        const isAllUpper = lines.length > 1 && lines.every(l => {
+            const textOnly = l.replace(/\[.*?\]/g, "").trim();
+            return textOnly.length > 0 && textOnly === textOnly.toUpperCase();
+        });
+
+        if (isAllUpper && !p.startsWith('**')) {
+            return `**${p.trim()}**`; // Lo convierte en estribillo en negrita
+        }
+        return p;
+    });
+
+    return formattedParagraphs.join('\n\n');
+}
+
+// APLICA FORMATO (NEGRITA / CURSIVA / ESTRIBILLO) EN EL TEXTAREA PREVIO
+function applyBatchFormat(type) {
+    const textarea = document.getElementById("batch-edit-lyrics");
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const text = textarea.value;
+
+    if (start === end) return alert("Seleccioná el texto al que quieras aplicarle el formato.");
+
+    const selectedText = text.substring(start, end);
+    let replacement = "";
+
+    if (type === 'bold') replacement = `**${selectedText}**`;
+    else if (type === 'italic') replacement = `_${selectedText}_`;
+    else if (type === 'chorus') replacement = `{${selectedText}}`;
+
+    textarea.value = text.substring(0, start) + replacement + text.substring(end);
+    textarea.focus();
+    textarea.setSelectionRange(start + replacement.length, start + replacement.length);
 }
 
 // Convierte acordes arriba de la letra a corchetes [Do]Pescador
