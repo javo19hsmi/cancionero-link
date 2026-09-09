@@ -2436,15 +2436,14 @@ function handleBatchFileSelect(input) {
 
     // A) SI ES PDF
     if (file.name.toLowerCase().endsWith('.pdf')) {
-        // Configuración segura dentro de la función (evita el ReferenceError al cargar la página)
-        const pdfLib = window['pdfjs-dist/build/pdf'] || window.pdfjsLib;
+        const pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
         
         if (!pdfLib) {
             setBusy(false);
-            return alert("⚠️ La librería PDF aún se está cargando. Reintentá en unos segundos.");
+            return alert("⚠️ La librería PDF no se cargó correctamente. Refrescá la página con Ctrl+F5.");
         }
 
-        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdfjs-dist/2.16.105/pdf.worker.min.js';
 
         const fileReader = new FileReader();
         fileReader.onload = function() {
