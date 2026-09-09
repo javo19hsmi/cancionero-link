@@ -2758,13 +2758,16 @@ function convertTwoLineChordsToChordPro(text) {
     return result.join('\n');
 }
 
-// 4. Comparador de Duplicados (Normalización de Texto y Porcentaje)
+// 4. Comparador de Duplicados (Normalización de Texto sin Acordes y Porcentaje)
 function detectBatchDuplicates() {
     let countNew = 0, countVar = 0, countDup = 0;
 
     batchParsedSongs.forEach(pSong => {
         const normTitle = normalizeTextForComparison(pSong.title);
-        const normLyrics = normalizeTextForComparison(pSong.lyrics.substring(0, 150)); // Primeros 150 caracteres
+        
+        // 🚀 FIX CLAVE: Quitamos los acordes entre corchetes [Do] antes de comparar la letra
+        const lyricsWithoutChords = (pSong.lyrics || "").replace(/\[.*?\]/g, "");
+        const normLyrics = normalizeTextForComparison(lyricsWithoutChords.substring(0, 150));
 
         let bestMatch = null;
         let highestScore = 0;
@@ -2772,13 +2775,13 @@ function detectBatchDuplicates() {
 
         allSongs.forEach(existSong => {
             const existTitle = normalizeTextForComparison(existSong.title);
-            const existLyrics = normalizeTextForComparison((existSong.lyrics || "").replace(/\[.*?\]/g, "").substring(0, 150));
+            const existLyricsWithoutChords = (existSong.lyrics || "").replace(/\[.*?\]/g, "");
+            const existLyrics = normalizeTextForComparison(existLyricsWithoutChords.substring(0, 150));
 
-            // Comparar títulos
+            // A) Comparar títulos exactos
             if (normTitle === existTitle) {
-                // Mismo título exacto
                 const lyricsScore = calculateTextSimilarity(normLyrics, existLyrics);
-                if (lyricsScore > 0.7) {
+                if (lyricsScore > 0.6) { // Umbral adaptado
                     highestScore = 0.95; // Duplicado exacto
                     bestMatch = existSong;
                 } else {
@@ -2786,7 +2789,7 @@ function detectBatchDuplicates() {
                     bestMatch = existSong;
                 }
             } else {
-                // Comparar si la letra coincide mucho aunque cambie el título
+                // B) Comparar si la letra coincide mucho aunque cambie ligeramente el título
                 const lyricsScore = calculateTextSimilarity(normLyrics, existLyrics);
                 if (lyricsScore > highestScore) {
                     highestScore = lyricsScore;
@@ -2795,7 +2798,7 @@ function detectBatchDuplicates() {
             }
         });
 
-        if (highestScore > 0.85) {
+        if (highestScore > 0.75) {
             pSong.status = "duplicada";
             pSong.selected = false; // Desmarcar por defecto los duplicados
             pSong.matchDetails = `🔴 Coincide con "${bestMatch.title}"`;
