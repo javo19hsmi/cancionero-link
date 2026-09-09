@@ -11,6 +11,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
   <script src="js/firebase-config.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
@@ -51,7 +52,8 @@
            <button id="tab-scripts" class="tab-btn" onclick="switchMod('scripts')">📜 GUIONES</button>
         </div>
         <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
-      </div>
+        <!-- 🚀 BOTÓN NUEVO DEL IMPORTADOR MASIVO -->
+        <button id="batch-import-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: #00897B; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>      </div>
     </header>
 
     <main id="mod-songs" class="main-grid">
@@ -506,5 +508,109 @@
 
   <script src="js/auth.js"></script>
   <script src="js/editor.js"></script>
+
+    <!-- ========================================================== -->
+<!-- MODAL DE IMPORTACIÓN MASIVA DE CANCIONES (SÚPER ADMIN)     -->
+<!-- ========================================================== -->
+<div id="batch-importer-modal" class="modal-overlay" style="display:none;">
+  <div class="glass-panel modal-content" style="max-width: 1050px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; padding: 25px;">
+    
+    <!-- CABECERA -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); padding-bottom: 15px; margin-bottom: 15px;">
+      <div>
+        <h3 style="margin: 0; color: var(--primary); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+          <span class="material-symbols-outlined">download_for_offline</span> IMPORTADOR MASIVO DE CANCIONES (SÚPER ADMIN)
+        </h3>
+        <small style="color: #aaa; font-size: 11px;">Analiza archivos Word (.docx), TXT o texto pegado, detecta duplicados y sube a Borradores.</small>
+      </div>
+      <button class="btn" style="background: rgba(255,255,255,0.1); color: white; padding: 6px 12px; font-size: 12px;" onclick="closeBatchImporterModal()">✕ CERRAR</button>
+    </div>
+
+    <!-- PASO 1: ÁREA DE ENTRADA -->
+    <div id="batch-step-1" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 15px;">
+      <div style="display: flex; gap: 15px; align-items: center;">
+        <label class="btn" style="background: rgba(77, 182, 172, 0.2); color: var(--primary); border: 1px dashed var(--primary); cursor: pointer; padding: 8px 16px; margin: 0; font-size: 12px;">
+          📁 Cargar Archivo Word (.docx) o TXT
+          <input type="file" id="batch-file-input" accept=".docx,.txt" style="display:none" onchange="handleBatchFileSelect(this)">
+        </label>
+        <span id="batch-file-name" style="font-size: 11px; color: #888;">O pegá el texto completo del cancionero en el cuadro de abajo:</span>
+      </div>
+
+      <textarea id="batch-raw-text" rows="5" style="width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); color: white; padding: 12px; border-radius: 10px; font-family: monospace; font-size: 12px; resize: vertical;" placeholder="Pegá aquí el texto de las canciones si no subiste un archivo..."></textarea>
+
+      <button class="btn btn-save" style="width: 100%; padding: 10px; font-size: 13px; font-weight: bold;" onclick="processBatchInputText()">🔍 ANALIZAR Y DETECTAR CANCIONES</button>
+    </div>
+
+    <!-- PASO 2: RESULTADOS Y SELECCIÓN (PREVISIÓN) -->
+    <div id="batch-step-2" style="display: none; flex: 1; flex-direction: column; overflow: hidden; min-height: 0;">
+      
+      <!-- BARRA DE ESTADÍSTICAS Y FILTROS RÁPIDOS -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); padding: 10px 15px; border-radius: 12px; margin-bottom: 12px; border: 1px solid var(--glass-border);">
+        <div id="batch-stats-summary" style="font-size: 12px; font-weight: bold; display: flex; gap: 15px;">
+          <!-- Se llena dinámicamente: 🟢 Nuevas: 5 | 🟡 Variantes: 2 | 🔴 Duplicados: 3 -->
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" style="padding: 4px 8px; font-size: 10px; background: rgba(77,182,172,0.2); color: var(--primary);" onclick="batchSelectOnlyNew()">Tildar solo Nuevas</button>
+          <button class="btn" style="padding: 4px 8px; font-size: 10px; background: rgba(255,255,255,0.1); color: white;" onclick="batchSelectAll(true)">Tildar Todas</button>
+          <button class="btn" style="padding: 4px 8px; font-size: 10px; background: rgba(255,255,255,0.1); color: white;" onclick="batchSelectAll(false)">Desmarcar Todas</button>
+        </div>
+      </div>
+
+      <!-- TABLA Y PREVISIÓN -->
+      <div style="display: grid; grid-template-columns: 1fr 340px; gap: 15px; flex: 1; overflow: hidden; min-height: 0;">
+        
+        <!-- COLUMNA LISTA DE CANCIONES PARSEADAS -->
+        <div style="overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 12px; padding: 10px; border: 1px solid var(--glass-border);">
+          <table style="width: 100%; border-collapse: collapse; font-size: 12px; color: white;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--glass-border); text-align: left; opacity: 0.7;">
+                <th style="padding: 8px; width: 30px;"></th>
+                <th style="padding: 8px;">TÍTULO Y DIAGNÓSTICO</th>
+                <th style="padding: 8px; width: 80px; text-align: center;">ACCIÓN</th>
+              </tr>
+            </thead>
+            <tbody id="batch-preview-tbody">
+              <!-- Filas inyectadas dinámicamente -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- COLUMNA EDITOR LATERAL PREVIO -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; border: 1px solid var(--glass-border); display: flex; flex-direction: column; overflow-y: auto;">
+          <h4 style="margin: 0 0 10px 0; font-size: 12px; color: var(--primary); letter-spacing: 1px;">EDITAR PREVIA DE SELECCIONADA</h4>
+          
+          <div id="batch-editor-empty" style="text-align: center; color: #666; font-size: 11px; margin: auto;">
+            Toca "Editar" en cualquier canción de la lista para modificar su título, momento o letra antes de importar.
+          </div>
+
+          <div id="batch-editor-panel" style="display: none; flex-direction: column; gap: 10px;">
+            <label style="font-size: 9px;">TÍTULO DE LA CANCIÓN</label>
+            <input type="text" id="batch-edit-title" style="padding: 6px; font-size: 12px; margin-bottom: 0;">
+
+            <label style="font-size: 9px;">MOMENTO LITÚRGICO</label>
+            <select id="batch-edit-moment" style="padding: 6px; font-size: 11px; margin-bottom: 0; background: #1a1a1a; color: white; border-radius: 6px;">
+              <!-- Llenado dinámico -->
+            </select>
+
+            <label style="font-size: 9px;">LETRA Y ACORDES (CHORDPRO)</label>
+            <textarea id="batch-edit-lyrics" rows="10" style="padding: 8px; font-size: 11px; font-family: monospace; resize: vertical; margin-bottom: 0;"></textarea>
+
+            <button class="btn btn-save" style="font-size: 11px; padding: 6px;" onclick="saveBatchSongEdit()">APLICAR CAMBIOS A LA PREVIA 💾</button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- BOTÓN FINAL DE SUBIDA MASIVA -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-top: 1px solid var(--glass-border); padding-top: 12px;">
+        <button class="btn" style="background: rgba(255,255,255,0.1); color: white; font-size: 11px;" onclick="resetBatchImporterStep1()">↩ Cargar otro texto</button>
+        <button class="btn btn-save" style="padding: 10px 25px; font-size: 13px; font-weight: bold; background: #00897B;" onclick="saveBatchSelectedToBorrador()">🚀 IMPORTAR SELECCIONADAS A BORRADORES</button>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+    
 </body>
 </html>
