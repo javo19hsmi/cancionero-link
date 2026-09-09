@@ -2487,52 +2487,102 @@ function processBatchInputText() {
     }, 100);
 }
 
-// Corta el texto por títulos y convierte acordes de 2 líneas a corchetes [Do]
+// Corta el texto por títulos de forma inteligente y convierte acordes de 2 líneas a corchetes [Do]
 function parseBatchSongsText(text) {
+    if (!text || text.trim().length === 0) return [];
+
     const lines = text.split('\n');
+    
+    // 🛡️ REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
+    // Buscamos si existen patrones de numeración de cancionero (ej: "1 - ", "2. ", "3)")
+    const hasMultipleSongsPattern = RegExp(/(?:^\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(text);
+
+    if (!hasMultipleSongsPattern) {
+        // MODO CANCIÓN ÚNICA: La primera línea es el título, el resto es la letra
+        let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
+        if (cleanLines.length === 0) return [];
+
+        let singleTitle = cleanLines[0];
+        let singleLyrics = lines.slice(lines.indexOf(cleanLines[0]) + 1).join('\n');
+
+        return [{
+            title: singleTitle.replace(/^(?:(?:\d+[\.\-\:\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)/i, '').trim(),
+            lyrics: convertTwoLineChordsToChordPro(singleLyrics).trim(),
+            moment: "Varios",
+            selected: true,
+            status: "nueva",
+            matchDetails: "🟢 Canción Única"
+        }];
+    }
+
+    // 🛡️ REGLA 2: MODO CANCIONERO MASIVO (MÚLTIPLES CANCIONES)
     const songs = [];
     let currentTitle = "";
     let currentLines = [];
+    let isInsideIndex = false;
 
-    // Expresión regular para detectar títulos (Ej: "1. Pescador de Hombres", "CANCION 10", o líneas en MAYÚSCULAS)
-    const titleRegex = /^(?:(?:\d+[\.\-\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)(.+)/i;
+    // Patrón flexible para detectar títulos
+    const titleRegex = /^\s*(?:(?:\d+[\s\.\-\:\)]+\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)(.+)/i;
 
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
-            let processedLyrics = convertTwoLineChordsToChordPro(currentLines.join('\n'));
-            songs.push({
-                title: currentTitle.trim(),
-                lyrics: processedLyrics.trim(),
-                moment: "Varios",
-                selected: true, // Por defecto
-                status: "nueva", // "nueva", "duplicada", "variante"
-                matchDetails: ""
-            });
+            let lyricsText = currentLines.join('\n').trim();
+            if (lyricsText.length > 0) {
+                let processedLyrics = convertTwoLineChordsToChordPro(lyricsText);
+                
+                // Limpiamos el título de números al inicio (ej: "1 - Vendrá tu Cruz" -> "Vendrá tu Cruz")
+                let cleanTitle = currentTitle.replace(/^(?:\d+[\s\.\-\:\)]+\s*)/i, '').trim();
+
+                songs.push({
+                    title: cleanTitle || currentTitle.trim(),
+                    lyrics: processedLyrics.trim(),
+                    moment: "Varios",
+                    selected: true,
+                    status: "nueva",
+                    matchDetails: ""
+                });
+            }
         }
         currentLines = [];
         currentTitle = "";
     }
 
     for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].trim();
+        let rawLine = lines[i];
+        let line = rawLine.trim();
 
-        // Si la línea parece un título claro
+        // 🛡️ REGLA 3: DETECTAR Y CORTAR EN EL ÍNDICE FINAL
+        const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        if (normLine.startsWith("indice numerico") || normLine.startsWith("indice alfabetico") || normLine === "indice" || normLine === "tabla de contenido") {
+            isInsideIndex = true;
+            saveCurrentSong(); // Guarda la última canción pendiente antes del índice
+            break; // Detiene la lectura del archivo
+        }
+
+        if (isInsideIndex) break;
+
+        // 🛡️ REGLA 4: IGNORAR ENCABEZADOS DEL DOCUMENTO AL INICIO
+        if (i < 3 && (normLine.includes("cancionero") || normLine.includes("canciones)"))) {
+            continue; // Salta la primera línea informativa tipo "Cancionero Católico - (16 canciones)"
+        }
+
+        // 🛡️ REGLA 5: DETECTAR SI ES TÍTULO DE NUEVA CANCIÓN
         let match = line.match(titleRegex);
-        let isAllUpper = (line.length > 3 && line === line.toUpperCase() && !line.includes('[') && !line.includes('('));
+        
+        // Verificamos que el renglón anterior haya estado en blanco para confirmar que es un nuevo título
+        let prevLineWasEmpty = (i === 0) || (lines[i - 1].trim().length === 0);
 
-        if (match || isAllUpper) {
+        if (match && prevLineWasEmpty) {
             saveCurrentSong();
-            currentTitle = match ? match[1] : line;
+            currentTitle = line;
         } else {
-            if (!currentTitle && line.length > 0) {
-                // Si aún no tenemos título y arrancó el texto, usamos la primera línea como título
-                currentTitle = line;
-            } else {
-                currentLines.push(lines[i]);
+            if (currentTitle) {
+                currentLines.push(rawLine);
             }
         }
     }
-    saveCurrentSong(); // Guarda la última
+
+    saveCurrentSong(); // Guarda la última canción al terminar el ciclo
 
     return songs;
 }
