@@ -2434,25 +2434,13 @@ async function handleBatchFileSelect(input) {
     document.getElementById("batch-file-name").innerText = `📄 Archivo: ${file.name}`;
     setBusy(true, "Leyendo archivo...");
 
-        // A) SI ES PDF
+        // A) SI ES PDF (Extracción inteligente respetando coordenadas Y)
     if (file.name.toLowerCase().endsWith('.pdf')) {
-        let pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+        const pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
         
-        // Si no está cargada aún, la inyectamos dinámicamente de respaldo
-        if (!pdfLib) {
-            setBusy(true, "Cargando motor de lectura PDF...");
-            await new Promise((resolve) => {
-                const script = document.createElement('script');
-                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
-                script.onload = resolve;
-                document.head.appendChild(script);
-            });
-            pdfLib = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
-        }
-
         if (!pdfLib) {
             setBusy(false);
-            return alert("⚠️ No se pudo cargar la librería de lectura PDF.");
+            return alert("⚠️ La librería PDF no está lista. Por favor refrescá la página con Ctrl+F5.");
         }
 
         pdfLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -2462,13 +2450,35 @@ async function handleBatchFileSelect(input) {
             const typedarray = new Uint8Array(this.result);
             pdfLib.getDocument(typedarray).promise.then(async function(pdf) {
                 let fullText = "";
+                
                 for (let i = 1; i <= pdf.numPages; i++) {
                     const page = await pdf.getPage(i);
                     const textContent = await page.getTextContent();
-                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    
+                    let pageText = "";
+                    let lastY = null;
+
+                    // 🚀 MAGIA AQUÍ: Ordenamos y agrupamos el texto por su posición vertical (Y) en la hoja
+                    for (let item of textContent.items) {
+                        if (!item.str || item.str.trim().length === 0) continue;
+
+                        let currentY = Math.round(item.transform[5]); // Coordenada Y en la página PDF
+
+                        // Si la coordenada Y cambió significativamente, es un NUEVO RENGLÓN
+                        if (lastY !== null && Math.abs(currentY - lastY) > 4) {
+                            pageText += '\n';
+                        } else if (pageText.length > 0 && !pageText.endsWith('\n')) {
+                            pageText += ' ';
+                        }
+
+                        pageText += item.str;
+                        lastY = currentY;
+                    }
+
                     fullText += pageText + '\n\n';
                 }
-                document.getElementById("batch-raw-text").value = fullText;
+
+                document.getElementById("batch-raw-text").value = fullText.trim();
                 setBusy(false);
             }).catch(function(err) {
                 alert("Error al leer PDF: " + err.message);
