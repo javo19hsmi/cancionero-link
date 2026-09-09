@@ -1,4 +1,10 @@
-document.getElementById('login-trigger').onclick = () => auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());
+document.getElementById('login-trigger').onclick = () => {
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(error => {
+    console.warn("⚠️ Popup bloqueado por el navegador. Redirigiendo...", error);
+    auth.signInWithRedirect(provider);
+  });
+};
 const logout = () => auth.signOut();
 
 auth.onAuthStateChanged(async user => {
