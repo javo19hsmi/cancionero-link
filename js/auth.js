@@ -59,6 +59,10 @@ auth.onAuthStateChanged(async user => {
         if (userRole === 'super_admin') { 
             document.getElementById('pencil-btn').style.display = 'block'; 
             document.getElementById('global-pub-btn').style.display = 'block'; 
+                      //Mostrar botón de importador masivo
+            if (document.getElementById('batch-import-btn')) {
+                document.getElementById('batch-import-btn').style.display = 'block';
+            }
         }
         
         initApp(); 
