@@ -2531,24 +2531,32 @@ function processBatchInputText() {
         setBusy(false);
     }, 100);
 }
-// Corta el texto por títulos de forma inteligente y convierte acordes de 2 líneas a corchetes [Do]
+// Corta el texto por títulos de forma inteligente, asigna momentos y convierte acordes
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
 
-    const lines = text.split('\n');
+    // 1. Limpieza de basura común de pie de página de PDFs
+    let cleanedText = text
+        .replace(/Parroquia Catedral de San Isidro/gi, '')
+        .replace(/POR FAVOR DEJE ESTE CANCIONERO/gi, '')
+        .replace(/SOBRE EL BANCO.*GRACIAS\./gi, '')
+        .replace(/www\.catedraldesanisidro\.org/gi, '')
+        .replace(/sigue >/gi, '');
+
+    const lines = cleanedText.split('\n');
     
-    // 🛡️ REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
-    const hasMultipleSongsPattern = RegExp(/(?:^\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(text);
+    // REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
+    const hasMultipleSongsPattern = RegExp(/(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNIÓ N|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(cleanedText);
 
     if (!hasMultipleSongsPattern) {
         let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
         if (cleanLines.length === 0) return [];
 
-        let singleTitle = cleanLines[0].replace(/^(?:(?:\d+[\.\-\:\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)/i, '').trim().toUpperCase();
+        let singleTitle = cleanLines[0].replace(/^(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]\s*)/i, '').trim().toUpperCase();
         let singleLyrics = lines.slice(lines.indexOf(cleanLines[0]) + 1).join('\n');
 
         return [{
-            title: singleTitle, // 🚀 TÍTULO EN MAYÚSCULAS
+            title: singleTitle.replace(/\s+/g, ' '),
             lyrics: processLyricsFormatAndChords(singleLyrics).trim(),
             moment: "Varios",
             selected: true,
@@ -2557,13 +2565,16 @@ function parseBatchSongsText(text) {
         }];
     }
 
-    // 🛡️ REGLA 2: MODO CANCIONERO MASIVO
+    // REGLA 2: MODO CANCIONERO MASIVO
     const songs = [];
     let currentTitle = "";
     let currentLines = [];
+    let currentDetectedMoment = "Varios"; // Por defecto
     let isInsideIndex = false;
 
-    const titleRegex = /^\s*(?:(?:\d+[\s\.\-\:\)]+\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)(.+)/i;
+    // Expresión regular para detectar títulos e identificar el momento litúrgico
+    // Ej: "ENTRADA 1. Abre los ojos", "OFERTORIO 16. Alimento que da vida", "1 - Vendrá tu Cruz"
+    const songHeaderRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL)\s*)?(?:(\d+)[\s\.\-\:\)]+\s*)(.+)/i;
 
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
@@ -2571,17 +2582,24 @@ function parseBatchSongsText(text) {
             if (lyricsText.length > 0) {
                 let processedLyrics = processLyricsFormatAndChords(lyricsText);
                 
-                // 🚀 NORMA ISO JAVIER: Título limpio siempre en MAYÚSCULAS
-                let cleanTitle = currentTitle.replace(/^(?:\d+[\s\.\-\:\)]+\s*)/i, '').trim().toUpperCase();
+                // Título limpio en MAYÚSCULAS y sin espacios dobles
+                let cleanTitle = currentTitle
+                    .replace(/^(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS)\s*)?/i, '')
+                    .replace(/^(?:\d+[\s\.\-\:\)]+\s*)/i, '')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toUpperCase();
 
-                songs.push({
-                    title: cleanTitle,
-                    lyrics: processedLyrics.trim(),
-                    moment: "Varios",
-                    selected: true,
-                    status: "nueva",
-                    matchDetails: ""
-                });
+                if (cleanTitle.length > 2) {
+                    songs.push({
+                        title: cleanTitle,
+                        lyrics: processedLyrics.trim(),
+                        moment: currentDetectedMoment, // 🚀 MOMENTO AUTOMÁTICO DETECTADO
+                        selected: true,
+                        status: "nueva",
+                        matchDetails: ""
+                    });
+                }
             }
         }
         currentLines = [];
@@ -2592,7 +2610,9 @@ function parseBatchSongsText(text) {
         let rawLine = lines[i];
         let line = rawLine.trim();
 
-        // Detectar e ignorar índices
+        if (line.length === 0) continue;
+
+        // Detectar e ignorar índices al final del documento
         const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         if (normLine.startsWith("indice numerico") || normLine.startsWith("indice alfabetico") || normLine === "indice" || normLine === "tabla de contenido") {
             isInsideIndex = true;
@@ -2602,19 +2622,31 @@ function parseBatchSongsText(text) {
 
         if (isInsideIndex) break;
 
-        // Ignorar encabezados del documento
-        if (i < 3 && (normLine.includes("cancionero") || normLine.includes("canciones)"))) {
+        // Detección de momentos independientes en el texto (ej: un renglón que dice solo "COMUNIÓN")
+        if (["ENTRADA", "GLORIA", "OFERTORIO", "COMUNIÓN", "COMUNION", "SALIDA", "VARIOS"].includes(line.toUpperCase())) {
+            let m = line.toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
+            currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase(); // Ej: "Comunión"
             continue;
         }
 
-        let match = line.match(titleRegex);
-        let prevLineWasEmpty = (i === 0) || (lines[i - 1].trim().length === 0);
+        // Buscar coincidencia de título con número
+        let match = line.match(songHeaderRegex);
 
-        if (match && prevLineWasEmpty) {
+        if (match) {
             saveCurrentSong();
-            currentTitle = line;
+
+            // Si la línea traía la sección integrada (ej: "OFERTORIO 16. Alimento...")
+            if (match[1]) {
+                let m = match[1].toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
+                currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase();
+            }
+
+            currentTitle = match[3] ? match[3] : line;
         } else {
             if (currentTitle) {
+                // Filtramos números de página sueltos (ej: "2", "3", "4")
+                if (/^\d{1,2}$/.test(line)) continue;
+                
                 currentLines.push(rawLine);
             }
         }
