@@ -2394,3 +2394,373 @@ function closePrayerCategoriesDialog() {
     const dlg = document.getElementById("prayer-categories-dialog");
     if (dlg) dlg.style.display = "none";
 }
+
+/* ==========================================================
+   15. MÓDULO DE IMPORTACIÓN MASIVA DE CANCIONES (SÚPER ADMIN)
+   ========================================================== */
+let batchParsedSongs = []; // Lista de canciones extraídas en el análisis
+let batchCurrentEditIndex = null; // Índice de la canción que se está editando en el panel lateral
+
+// 1. Abrir y Cerrar Modal
+function openBatchImporterModal() {
+    if (userRole !== 'super_admin') return alert("❌ Acceso denegado: Función exclusiva para Súper Administrador.");
+    const dlg = document.getElementById("batch-importer-modal");
+    if (dlg) {
+        dlg.style.display = "flex";
+        resetBatchImporterStep1();
+    }
+}
+
+function closeBatchImporterModal() {
+    const dlg = document.getElementById("batch-importer-modal");
+    if (dlg) dlg.style.display = "none";
+}
+
+function resetBatchImporterStep1() {
+    document.getElementById("batch-step-1").style.display = "flex";
+    document.getElementById("batch-step-2").style.display = "none";
+    document.getElementById("batch-raw-text").value = "";
+    document.getElementById("batch-file-name").innerText = "O pegá el texto completo del cancionero en el cuadro de abajo:";
+    document.getElementById("batch-file-input").value = "";
+    batchParsedSongs = [];
+    batchCurrentEditIndex = null;
+}
+
+// 2. Lectura de Archivos (.docx con mammoth.js o .txt)
+function handleBatchFileSelect(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    document.getElementById("batch-file-name").innerText = `📄 Archivo seleccionado: ${file.name}`;
+    setBusy(true, "Leyendo archivo...");
+
+    if (file.name.endsWith('.docx')) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            mammoth.extractRawText({ arrayBuffer: event.target.result })
+                .then(function(result) {
+                    document.getElementById("batch-raw-text").value = result.value;
+                    setBusy(false);
+                })
+                .catch(function(err) {
+                    alert("Error al leer archivo Word: " + err.message);
+                    setBusy(false);
+                });
+        };
+        reader.readAsArrayBuffer(file);
+    } else {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById("batch-raw-text").value = e.target.result;
+            setBusy(false);
+        };
+        reader.readAsText(file);
+    }
+}
+
+// 3. Parser Inteligente: Corta Canciones y Convierte Acordes
+function processBatchInputText() {
+    const rawText = document.getElementById("batch-raw-text").value;
+    if (!rawText || rawText.trim().length === 0) {
+        return alert("❌ Por favor subí un archivo o pegá texto en el cuadro.");
+    }
+
+    setBusy(true, "Analizando canciones y comparando duplicados...");
+
+    setTimeout(() => {
+        batchParsedSongs = parseBatchSongsText(rawText);
+
+        if (batchParsedSongs.length === 0) {
+            setBusy(false);
+            return alert("⚠️ No se pudieron detectar canciones en el texto ingresado.");
+        }
+
+        // Comparar con la base de datos existente (allSongs)
+        detectBatchDuplicates();
+
+        // Mostrar paso 2
+        document.getElementById("batch-step-1").style.display = "none";
+        document.getElementById("batch-step-2").style.display = "flex";
+
+        renderBatchPreviewTable();
+        setBusy(false);
+    }, 100);
+}
+
+// Corta el texto por títulos y convierte acordes de 2 líneas a corchetes [Do]
+function parseBatchSongsText(text) {
+    const lines = text.split('\n');
+    const songs = [];
+    let currentTitle = "";
+    let currentLines = [];
+
+    // Expresión regular para detectar títulos (Ej: "1. Pescador de Hombres", "CANCION 10", o líneas en MAYÚSCULAS)
+    const titleRegex = /^(?:(?:\d+[\.\-\)]\s*)|(?:CANCION|CANTICO|SALMO)\s*\d*[\:\.\-]?\s*)(.+)/i;
+
+    function saveCurrentSong() {
+        if (currentTitle && currentLines.length > 0) {
+            let processedLyrics = convertTwoLineChordsToChordPro(currentLines.join('\n'));
+            songs.push({
+                title: currentTitle.trim(),
+                lyrics: processedLyrics.trim(),
+                moment: "Varios",
+                selected: true, // Por defecto
+                status: "nueva", // "nueva", "duplicada", "variante"
+                matchDetails: ""
+            });
+        }
+        currentLines = [];
+        currentTitle = "";
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trim();
+
+        // Si la línea parece un título claro
+        let match = line.match(titleRegex);
+        let isAllUpper = (line.length > 3 && line === line.toUpperCase() && !line.includes('[') && !line.includes('('));
+
+        if (match || isAllUpper) {
+            saveCurrentSong();
+            currentTitle = match ? match[1] : line;
+        } else {
+            if (!currentTitle && line.length > 0) {
+                // Si aún no tenemos título y arrancó el texto, usamos la primera línea como título
+                currentTitle = line;
+            } else {
+                currentLines.push(lines[i]);
+            }
+        }
+    }
+    saveCurrentSong(); // Guarda la última
+
+    return songs;
+}
+
+// Convierte acordes arriba de la letra a corchetes [Do]Pescador
+function convertTwoLineChordsToChordPro(text) {
+    const lines = text.split('\n');
+    const result = [];
+    const chordLineRegex = /^\s*(?:[A-G][#b]?(?:m|maj7|7|sus4|sus2|dim)?\s*|(?:Do|Re|Mi|Fa|Sol|La|Si)[#b]?(?:m|7)?\s*)+$/i;
+
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i];
+        let nextLine = lines[i + 1];
+
+        if (chordLineRegex.test(line) && nextLine !== undefined && !chordLineRegex.test(nextLine) && nextLine.trim().length > 0) {
+            // Combinar la línea de acordes con la línea de texto
+            let merged = "";
+            let chordPos = 0;
+            // Para simplificar, insertamos los acordes detectados al inicio o posiciones aproximadas
+            let chords = line.trim().split(/\s+/);
+            let words = nextLine.trim().split(/\s+/);
+            
+            let combined = "";
+            for (let c = 0; c < chords.length; c++) {
+                combined += `[${chords[c]}]` + (words[c] ? words[c] + " " : " ");
+            }
+            if (words.length > chords.length) {
+                combined += words.slice(chords.length).join(" ");
+            }
+            result.push(combined.trim());
+            i++; // Salta la línea de texto ya procesada
+        } else {
+            result.push(line);
+        }
+    }
+    return result.join('\n');
+}
+
+// 4. Comparador de Duplicados (Normalización de Texto y Porcentaje)
+function detectBatchDuplicates() {
+    let countNew = 0, countVar = 0, countDup = 0;
+
+    batchParsedSongs.forEach(pSong => {
+        const normTitle = normalizeTextForComparison(pSong.title);
+        const normLyrics = normalizeTextForComparison(pSong.lyrics.substring(0, 150)); // Primeros 150 caracteres
+
+        let bestMatch = null;
+        let highestScore = 0;
+        let sameTitleDifferentLyrics = false;
+
+        allSongs.forEach(existSong => {
+            const existTitle = normalizeTextForComparison(existSong.title);
+            const existLyrics = normalizeTextForComparison((existSong.lyrics || "").replace(/\[.*?\]/g, "").substring(0, 150));
+
+            // Comparar títulos
+            if (normTitle === existTitle) {
+                // Mismo título exacto
+                const lyricsScore = calculateTextSimilarity(normLyrics, existLyrics);
+                if (lyricsScore > 0.7) {
+                    highestScore = 0.95; // Duplicado exacto
+                    bestMatch = existSong;
+                } else {
+                    sameTitleDifferentLyrics = true;
+                    bestMatch = existSong;
+                }
+            } else {
+                // Comparar si la letra coincide mucho aunque cambie el título
+                const lyricsScore = calculateTextSimilarity(normLyrics, existLyrics);
+                if (lyricsScore > highestScore) {
+                    highestScore = lyricsScore;
+                    bestMatch = existSong;
+                }
+            }
+        });
+
+        if (highestScore > 0.85) {
+            pSong.status = "duplicada";
+            pSong.selected = false; // Desmarcar por defecto los duplicados
+            pSong.matchDetails = `🔴 Coincide con "${bestMatch.title}"`;
+            countDup++;
+        } else if (sameTitleDifferentLyrics) {
+            pSong.status = "variante";
+            pSong.selected = true;
+            pSong.matchDetails = `🟡 Mismo título que "${bestMatch.title}", pero letra variante.`;
+            countVar++;
+        } else {
+            pSong.status = "nueva";
+            pSong.selected = true;
+            pSong.matchDetails = `🟢 Canción Nueva`;
+            countNew++;
+        }
+    });
+
+    const summaryEl = document.getElementById("batch-stats-summary");
+    if (summaryEl) {
+        summaryEl.innerHTML = `
+            <span style="color:var(--primary);">🟢 ${countNew} Nuevas</span> | 
+            <span style="color:var(--warning);">🟡 ${countVar} Variantes</span> | 
+            <span style="color:var(--danger);">🔴 ${countDup} Duplicados</span>
+        `;
+    }
+}
+
+function normalizeTextForComparison(str) {
+    return (str || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "") // Saca tildes
+        .replace(/[^a-z0-9]/g, ""); // Deja solo letras y números
+}
+
+function calculateTextSimilarity(s1, s2) {
+    if (!s1 || !s2) return 0;
+    if (s1 === s2) return 1;
+    let matchCount = 0;
+    const words1 = s1.match(/.{1,3}/g) || [];
+    words1.forEach(w => { if (s2.includes(w)) matchCount++; });
+    return matchCount / words1.length;
+}
+
+// 5. Renderizado de la Tabla e Interacción
+function renderBatchPreviewTable() {
+    const tbody = document.getElementById("batch-preview-tbody");
+    if (!tbody) return;
+    tbody.innerHTML = "";
+
+    batchParsedSongs.forEach((song, index) => {
+        const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+        if (batchCurrentEditIndex === index) tr.style.background = "rgba(77,182,172,0.15)";
+
+        tr.innerHTML = `
+            <td style="padding: 8px; text-align: center;">
+                <input type="checkbox" ${song.selected ? 'checked' : ''} onchange="batchParsedSongs[${index}].selected = this.checked">
+            </td>
+            <td style="padding: 8px;">
+                <div style="font-weight: bold; color: white;">${song.title}</div>
+                <div style="font-size: 10px; margin-top: 2px;">${song.matchDetails}</div>
+            </td>
+            <td style="padding: 8px; text-align: center;">
+                <button class="btn" style="padding: 3px 8px; font-size: 10px; background: rgba(255,255,255,0.1); color: white;" onclick="editBatchSongPrevia(${index})">✏️ Editar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function batchSelectOnlyNew() {
+    batchParsedSongs.forEach(s => s.selected = (s.status === 'nueva' || s.status === 'variante'));
+    renderBatchPreviewTable();
+}
+
+function batchSelectAll(val) {
+    batchParsedSongs.forEach(s => s.selected = val);
+    renderBatchPreviewTable();
+}
+
+// 6. Edición Previa en el Panel Lateral
+function editBatchSongPrevia(index) {
+    batchCurrentEditIndex = index;
+    const song = batchParsedSongs[index];
+
+    document.getElementById("batch-editor-empty").style.display = "none";
+    const panel = document.getElementById("batch-editor-panel");
+    panel.style.display = "flex";
+
+    document.getElementById("batch-edit-title").value = song.title;
+    document.getElementById("batch-edit-lyrics").value = song.lyrics;
+
+    // Llenar selector de momentos
+    const momSel = document.getElementById("batch-edit-moment");
+    momSel.innerHTML = "";
+    MOMENTS_LIST.forEach(m => {
+        let opt = new Option(m, m);
+        opt.style.background = "#1a1a1a";
+        opt.style.color = "#ffffff";
+        if (m === song.moment) opt.selected = true;
+        momSel.appendChild(opt);
+    });
+
+    renderBatchPreviewTable();
+}
+
+function saveBatchSongEdit() {
+    if (batchCurrentEditIndex === null) return;
+    const song = batchParsedSongs[batchCurrentEditIndex];
+
+    song.title = document.getElementById("batch-edit-title").value.trim();
+    song.moment = document.getElementById("batch-edit-moment").value;
+    song.lyrics = document.getElementById("batch-edit-lyrics").value.trim();
+
+    alert("✅ Cambios aplicados a la previa.");
+    renderBatchPreviewTable();
+}
+
+// 7. Subida Masiva a Firebase (canciones_borrador)
+async function saveBatchSelectedToBorrador() {
+    const selectedSongs = batchParsedSongs.filter(s => s.selected);
+    if (selectedSongs.length === 0) {
+        return alert("❌ No hay ninguna canción tildada para importar.");
+    }
+
+    if (!confirm(`🚀 ¿Vas a importar ${selectedSongs.length} canciones seleccionadas a Borradores?`)) return;
+
+    setBusy(true, "Importando canciones a Borradores...");
+
+    try {
+        const batchData = {};
+        selectedSongs.forEach(s => {
+            const key = Date.now().toString() + Math.random().toString(36).substr(2, 4);
+            batchData[`canciones_borrador/${key}`] = {
+                id: key,
+                title: s.title,
+                lyrics: esToUs(s.lyrics),
+                moments: [s.moment],
+                artist: "Desconocido",
+                key: ""
+            };
+        });
+
+        // Subida en un solo lote atómico a Firebase
+        await db.ref().update(batchData);
+
+        alert(`🎉 ¡Éxito! Se importaron ${selectedSongs.length} canciones a Borradores.`);
+        closeBatchImporterModal();
+    } catch (e) {
+        alert("❌ Error en la importación masiva: " + e.message);
+    } finally {
+        setBusy(false);
+    }
+}
