@@ -2545,7 +2545,7 @@ function processBatchInputText() {
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
 
-    // 1. Limpieza de basura común de pie de página de PDFs y cancioneros
+    // 1. Limpieza de basura común de pie de página de PDFs
     let cleanedText = text
         .replace(/Parroquia Catedral de San Isidro/gi, '')
         .replace(/POR FAVOR DEJE ESTE CANCIONERO/gi, '')
@@ -2561,7 +2561,7 @@ function parseBatchSongsText(text) {
     const lines = cleanedText.split('\n');
     
     // REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
-    const hasMultipleSongsPattern = RegExp(/(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]+[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(cleanedText);
+    const hasMultipleSongsPattern = RegExp(/(?:^\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(cleanedText);
 
     if (!hasMultipleSongsPattern) {
         let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
@@ -2580,12 +2580,11 @@ function parseBatchSongsText(text) {
         }];
     }
 
-    // REGLA 2: MODO CANCIONERO MASIVO
+    // REGLA 2: MODO CANCIONERO MASIVO (SOPORTA TÍTULOS SIN RENGLÓN EN BLANCO PREVIO)
     const songs = [];
     let currentTitle = "";
     let currentLines = [];
     let currentDetectedMoment = "Varios";
-    let isInsideEndIndex = false;
 
     // Patrón universal para detectar títulos (ej: "1- A LA LUZ...", "1. Abre los ojos", "OFERTORIO 16. Alimento...")
     const songHeaderRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL|SALMOS)\s*)?(?:(\d+)[\s\.\-\:\)]*\s*)([A-ZÁÉÍÓÚÑ0-9\s\,\'\¿\?\¡\!\(\)\/\#]+)/i;
@@ -2593,10 +2592,14 @@ function parseBatchSongsText(text) {
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
             let lyricsText = currentLines.join('\n').trim();
-            if (lyricsText.length > 0) {
+            
+            // 🛡️ FILTRO CLAVE: Una canción real debe tener al menos 2 renglones de letra (descarta el Índice)
+            const validLyricsLines = currentLines.filter(l => l.trim().length > 0);
+            
+            if (validLyricsLines.length >= 2) {
                 let processedLyrics = processLyricsFormatAndChords(lyricsText);
                 
-                // Título limpio en MAYÚSCULAS y sin espacios dobles
+                // Título limpio siempre en MAYÚSCULAS
                 let cleanTitle = currentTitle
                     .replace(/^(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS)\s*)?/i, '')
                     .replace(/^(?:\d+[\s\.\-\:\)]*\s*)/i, '')
@@ -2604,7 +2607,7 @@ function parseBatchSongsText(text) {
                     .trim()
                     .toUpperCase();
 
-                // Quitar acordes o tonos agregados al final del título (ej: "A TANTO AMOR (SOL / MI)" -> "A TANTO AMOR")
+                // Quitar anotaciones de tono en el título (ej: "A TANTO AMOR (SOL / MI)" -> "A TANTO AMOR")
                 cleanTitle = cleanTitle.replace(/\s*\([A-GDoReMiFaSolLaSi\s\/\#mb]+\)$/i, '').trim();
 
                 if (cleanTitle.length > 2) {
@@ -2629,18 +2632,8 @@ function parseBatchSongsText(text) {
 
         if (line.length === 0) continue;
 
-        // 🛡️ REGLA: Solo cortar por Índice si YA leímos al menos 5 canciones (para no cortar con el índice inicial)
-        const normLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-        if (songs.length > 5 && (normLine.startsWith("indice numerico") || normLine.startsWith("indice alfabetico") || normLine === "tabla de contenido")) {
-            isInsideEndIndex = true;
-            saveCurrentSong();
-            break;
-        }
-
-        if (isInsideEndIndex) break;
-
         // Detección de momentos independientes
-        if (["ENTRADA", "GLORIA", "OFERTORIO", "COMUNIÓN", "COMUNION", "SALIDA", "VARIOS"].includes(line.toUpperCase())) {
+        if (["ENTRADA", "GLORIA", "OFERTORIO", "COMUNIÓN", "COMUNION", "SALIDA", "VARIOS", "SALMOS"].includes(line.toUpperCase())) {
             let m = line.toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
             currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase();
             continue;
@@ -2650,10 +2643,10 @@ function parseBatchSongsText(text) {
         let match = line.match(songHeaderRegex);
 
         if (match) {
-            // Validar que la coincidencia no sea una línea corta de letra
             let candidateTitle = match[3].trim();
+            
             if (candidateTitle.length > 2) {
-                saveCurrentSong();
+                saveCurrentSong(); // Guarda la canción anterior e inicia la nueva
 
                 if (match[1]) {
                     let m = match[1].toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
@@ -2666,7 +2659,7 @@ function parseBatchSongsText(text) {
             }
         } else {
             if (currentTitle) {
-                // Filtramos números de página sueltos al inicio de línea
+                // Filtramos números de página sueltos
                 if (/^\d{1,3}$/.test(line)) continue;
                 
                 currentLines.push(rawLine);
