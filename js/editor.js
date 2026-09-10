@@ -2541,11 +2541,11 @@ function processBatchInputText() {
         setBusy(false);
     }, 100);
 }
-// Corta el texto por títulos de forma inteligente, asigna momentos y convierte acordes
+// Corta el texto por títulos de forma inteligente (con o sin números), detecta autores y asigna momentos
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
 
-    // 1. Limpieza de basura común de pie de página de PDFs
+    // Limpieza de encabezados de PDF
     let cleanedText = text
         .replace(/Parroquia Catedral de San Isidro/gi, '')
         .replace(/POR FAVOR DEJE ESTE CANCIONERO/gi, '')
@@ -2559,47 +2559,24 @@ function parseBatchSongsText(text) {
         .replace(/sigue >/gi, '');
 
     const lines = cleanedText.split('\n');
-    
-    // REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
-    const hasMultipleSongsPattern = /(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]+[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi.test(cleanedText);
-
-    if (!hasMultipleSongsPattern) {
-        let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
-        if (cleanLines.length === 0) return [];
-
-        let singleTitle = cleanLines[0].replace(/^(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]*\s*)/i, '').trim().toUpperCase();
-        let singleLyrics = lines.slice(lines.indexOf(cleanLines[0]) + 1).join('\n');
-
-        return [{
-            title: singleTitle.replace(/\s+/g, ' '),
-            lyrics: processLyricsFormatAndChords(singleLyrics).trim(),
-            moment: "Varios",
-            selected: true,
-            status: "nueva",
-            matchDetails: "🟢 Canción Única"
-        }];
-    }
-
-    // REGLA 2: MODO CANCIONERO MASIVO (SOPORTA TÍTULOS SIN RENGLÓN EN BLANCO PREVIO)
     const songs = [];
     let currentTitle = "";
+    let currentAuthor = "Desconocido";
     let currentLines = [];
     let currentDetectedMoment = "Varios";
+    let isInsideEndIndex = false;
 
-    // Patrón universal para detectar títulos (ej: "1- A LA LUZ...", "1. Abre los ojos", "OFERTORIO 16. Alimento...")
-    const songHeaderRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL|SALMOS)\s*)?(?:(\d+)[\s\.\-\:\)]*\s*)([A-ZÁÉÍÓÚÑ0-9\s\,\'\¿\?\¡\!\(\)\/\#]+)/i;
+    // Patrón con número (ej: "1- A LA LUZ...", "16. ALIMENTO...")
+    const numberedRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL|SALMOS)\s*)?(?:(\d+)[\s\.\-\:\)]*\s*)([A-ZÁÉÍÓÚÑ0-9\s\,\'\¿\?\¡\!\(\)\/\#]+)/i;
 
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
             let lyricsText = currentLines.join('\n').trim();
-            
-            // 🛡️ FILTRO CLAVE: Una canción real debe tener al menos 2 renglones de letra (descarta el Índice)
-            const validLyricsLines = currentLines.filter(l => l.trim().length > 0);
-            
+            const validLyricsLines = currentLines.filter(l => l.trim().length > 0 && !l.trim().startsWith("Autor:"));
+
             if (validLyricsLines.length >= 2) {
                 let processedLyrics = processLyricsFormatAndChords(lyricsText);
-                
-                // Título limpio siempre en MAYÚSCULAS
+
                 let cleanTitle = currentTitle
                     .replace(/^(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS)\s*)?/i, '')
                     .replace(/^(?:\d+[\s\.\-\:\)]*\s*)/i, '')
@@ -2607,12 +2584,12 @@ function parseBatchSongsText(text) {
                     .trim()
                     .toUpperCase();
 
-                // Quitar anotaciones de tono en el título (ej: "A TANTO AMOR (SOL / MI)" -> "A TANTO AMOR")
                 cleanTitle = cleanTitle.replace(/\s*\([A-GDoReMiFaSolLaSi\s\/\#mb]+\)$/i, '').trim();
 
                 if (cleanTitle.length > 2) {
                     songs.push({
                         title: cleanTitle,
+                        artist: currentAuthor, // 🚀 AUTOR DETECTADO
                         lyrics: processedLyrics.trim(),
                         moment: currentDetectedMoment,
                         selected: true,
@@ -2624,6 +2601,7 @@ function parseBatchSongsText(text) {
         }
         currentLines = [];
         currentTitle = "";
+        currentAuthor = "Desconocido";
     }
 
     for (let i = 0; i < lines.length; i++) {
@@ -2632,35 +2610,66 @@ function parseBatchSongsText(text) {
 
         if (line.length === 0) continue;
 
-        // Detección de momentos independientes
-        if (["ENTRADA", "GLORIA", "OFERTORIO", "COMUNIÓN", "COMUNION", "SALIDA", "VARIOS", "SALMOS"].includes(line.toUpperCase())) {
-            let m = line.toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
-            currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase();
+        // 🛡️ Filtro de Índices con números de página al final del renglón (ej: "Digno de Alabar 10")
+        if (/\s+\d{1,3}$/.test(line) && (line.toLowerCase().includes("cantos") || line.toLowerCase().includes("índice") || line.toLowerCase().includes("indice"))) {
+            continue; // Salta renglones del índice
+        }
+
+        // Detección de secciones de momentos litúrgicos
+        const upperLine = line.toUpperCase();
+        if (upperLine.includes("CANTOS DE ALABANZA") || upperLine.includes("ADORACIÓN")) currentDetectedMoment = "Adoración Eucarística";
+        else if (upperLine.includes("AMOR DE DIOS")) currentDetectedMoment = "Meditación";
+        else if (upperLine.includes("ENTREGA")) currentDetectedMoment = "Ofertorio";
+        else if (upperLine.includes("ESPÍRITU SANTO")) currentDetectedMoment = "Espíritu Santo";
+        else if (upperLine.includes("EUCARÍSTICOS") || upperLine.includes("EUCARISTICOS")) currentDetectedMoment = "Comunión";
+        else if (upperLine.includes("MARÍA") || upperLine.includes("MARIA")) currentDetectedMoment = "Virgen María";
+        else if (upperLine.includes("ORACIÓN") || upperLine.includes("ORACION")) currentDetectedMoment = "Meditación";
+        else if (upperLine.includes("SANACIÓN") || upperLine.includes("SANACION")) currentDetectedMoment = "Meditación";
+        else if (upperLine.includes("ADVIENTO") || upperLine.includes("NAVIDAD")) currentDetectedMoment = "Adviento";
+        else if (upperLine.includes("BODAS") || upperLine.includes("MATRIMONIOS")) currentDetectedMoment = "Matrimonios";
+        else if (upperLine.includes("ANIMACIÓN") || upperLine.includes("ANIMACION")) currentDetectedMoment = "Animación";
+        else if (upperLine.includes("ROSARIO")) currentDetectedMoment = "Santo Rosario";
+        else if (upperLine.includes("SALMOS")) currentDetectedMoment = "Salmos";
+
+        // Detección de Autor
+        if (line.toLowerCase().startsWith("autor:")) {
+            currentAuthor = line.substring(6).trim();
             continue;
         }
 
-        // Buscar coincidencia de título con número
-        let match = line.match(songHeaderRegex);
+        // 🛡️ REGLA A: BÚSQUEDA DE TÍTULO CON NÚMERO (ej: "1- A LA LUZ...", "15. SANTO")
+        let numberedMatch = line.match(numberedRegex);
 
-        if (match) {
-            let candidateTitle = match[3].trim();
+        // 🛡️ REGLA B: BÚSQUEDA DE TÍTULO SIN NÚMERO (Línea en MAYÚSCULAS seguida por Autor: o INTRO o Acordes)
+        let isUnnumberedTitle = false;
+        if (!numberedMatch && line.length > 2 && line.length < 55 && line === line.toUpperCase() && !line.includes('[') && !line.includes('(')) {
+            // Verificar si el renglón siguiente tiene Autor:, INTRO, VERSO o acordes
+            let nextLine1 = (i + 1 < lines.length) ? lines[i + 1].trim() : "";
+            let nextLine2 = (i + 2 < lines.length) ? lines[i + 2].trim() : "";
             
-            if (candidateTitle.length > 2) {
-                saveCurrentSong(); // Guarda la canción anterior e inicia la nueva
-
-                if (match[1]) {
-                    let m = match[1].toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
-                    currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase();
-                }
-
-                currentTitle = line;
-            } else {
-                if (currentTitle) currentLines.push(rawLine);
+            if (nextLine1.toLowerCase().startsWith("autor:") || 
+                nextLine1.toLowerCase().startsWith("para tocar") || 
+                nextLine1.toLowerCase().startsWith("intro") || 
+                nextLine1.toLowerCase().startsWith("verso") ||
+                nextLine2.toLowerCase().startsWith("autor:") ||
+                /^\s*(?:[A-G][#b]?(?:m|7)?\s*|(?:Do|Re|Mi|Fa|Sol|La|Si)[#b]?(?:m|7)?\s*)+$/i.test(nextLine1)) {
+                isUnnumberedTitle = true;
             }
+        }
+
+        if (numberedMatch || isUnnumberedTitle) {
+            saveCurrentSong();
+
+            if (numberedMatch && numberedMatch[1]) {
+                let m = numberedMatch[1].toUpperCase().replace('COMUNIÓ N', 'COMUNIÓN').replace('COMUNION', 'COMUNIÓN');
+                currentDetectedMoment = m.charAt(0) + m.slice(1).toLowerCase();
+            }
+
+            currentTitle = line;
         } else {
             if (currentTitle) {
-                // Filtramos números de página sueltos
-                if (/^\d{1,3}$/.test(line)) continue;
+                // Ignorar renglones sueltos de número de página o de transporte (ej: "Para tocar en...")
+                if (/^\d{1,3}$/.test(line) || line.toLowerCase().startsWith("para tocar en la tonalidad")) continue;
                 
                 currentLines.push(rawLine);
             }
