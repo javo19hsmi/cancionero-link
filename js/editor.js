@@ -2561,7 +2561,7 @@ function parseBatchSongsText(text) {
     const lines = cleanedText.split('\n');
     
     // REGLA 1: DETECTAR SI ES UNA SOLA CANCIÓN PEGADA
-    const hasMultipleSongsPattern = RegExp(/(?:^\s*\d+[\s\.\-\:\)]+\s*[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi).test(cleanedText);
+    const hasMultipleSongsPattern = /(?:(?:\bENTRADA|\bGLORIA|\bOFERTORIO|\bCOMUNION|\bSALIDA|\bVARIOS)?\s*\d+[\s\.\-\:\)]+[A-ZÁÉÍÓÚÑ])|(?:^\s*(?:CANCIÓN|CANTICO|SALMO)\s+\d+)/mi.test(cleanedText);
 
     if (!hasMultipleSongsPattern) {
         let cleanLines = lines.map(l => l.trim()).filter(l => l.length > 0);
