@@ -2541,12 +2541,13 @@ function processBatchInputText() {
         setBusy(false);
     }, 100);
 }
-// Corta el texto por títulos de forma inteligente (con o sin números), detecta autores y asigna momentos
+// Corta el texto por títulos de forma inteligente (con números, mayúsculas o palabras clave como Salmo/Cántico)
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
 
-    // Limpieza de encabezados de PDF
+    // Limpieza de encabezados e íconos de PDF/TXT
     let cleanedText = text
+        .replace(/LogoÍNDICE/gi, '')
         .replace(/Parroquia Catedral de San Isidro/gi, '')
         .replace(/POR FAVOR DEJE ESTE CANCIONERO/gi, '')
         .replace(/SOBRE EL BANCO.*GRACIAS\./gi, '')
@@ -2564,7 +2565,6 @@ function parseBatchSongsText(text) {
     let currentAuthor = "Desconocido";
     let currentLines = [];
     let currentDetectedMoment = "Varios";
-    let isInsideEndIndex = false;
 
     // Patrón con número (ej: "1- A LA LUZ...", "16. ALIMENTO...")
     const numberedRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL|SALMOS)\s*)?(?:(\d+)[\s\.\-\:\)]*\s*)([A-ZÁÉÍÓÚÑ0-9\s\,\'\¿\?\¡\!\(\)\/\#]+)/i;
@@ -2574,7 +2574,7 @@ function parseBatchSongsText(text) {
             let lyricsText = currentLines.join('\n').trim();
             const validLyricsLines = currentLines.filter(l => l.trim().length > 0 && !l.trim().startsWith("Autor:"));
 
-            if (validLyricsLines.length >= 2) {
+            if (validLyricsLines.length >= 1) {
                 let processedLyrics = processLyricsFormatAndChords(lyricsText);
 
                 let cleanTitle = currentTitle
@@ -2589,7 +2589,7 @@ function parseBatchSongsText(text) {
                 if (cleanTitle.length > 2) {
                     songs.push({
                         title: cleanTitle,
-                        artist: currentAuthor, // 🚀 AUTOR DETECTADO
+                        artist: currentAuthor,
                         lyrics: processedLyrics.trim(),
                         moment: currentDetectedMoment,
                         selected: true,
@@ -2610,10 +2610,8 @@ function parseBatchSongsText(text) {
 
         if (line.length === 0) continue;
 
-        // 🛡️ Filtro de Índices con números de página al final del renglón (ej: "Digno de Alabar 10")
-        if (/\s+\d{1,3}$/.test(line) && (line.toLowerCase().includes("cantos") || line.toLowerCase().includes("índice") || line.toLowerCase().includes("indice"))) {
-            continue; // Salta renglones del índice
-        }
+        // Limpiar renglón de escalas de piano (ej: "LAbLASIbSIDOREb...")
+        if (/^LAbLASIb/i.test(line)) continue;
 
         // Detección de secciones de momentos litúrgicos
         const upperLine = line.toUpperCase();
@@ -2637,13 +2635,16 @@ function parseBatchSongsText(text) {
             continue;
         }
 
-        // 🛡️ REGLA A: BÚSQUEDA DE TÍTULO CON NÚMERO (ej: "1- A LA LUZ...", "15. SANTO")
+        // 🛡️ REGLA A: BÚSQUEDA DE TÍTULO CON NÚMERO
         let numberedMatch = line.match(numberedRegex);
 
-        // 🛡️ REGLA B: BÚSQUEDA DE TÍTULO SIN NÚMERO (Línea en MAYÚSCULAS seguida por Autor: o INTRO o Acordes)
+        // 🛡️ REGLA B: PALABRAS CLAVE AL INICIO (Salmo, Cántico, Antífona, Himno, Secuencia)
+        let isKeywordTitle = /^\s*(?:Salmo|Cántico|Cantico|Antífona|Antifona|Secuencia|Himno|Misa)\b/i.test(line);
+        if (isKeywordTitle) currentDetectedMoment = "Salmos";
+
+        // 🛡️ REGLA C: TÍTULO EN MAYÚSCULAS SIN NÚMERO
         let isUnnumberedTitle = false;
-        if (!numberedMatch && line.length > 2 && line.length < 55 && line === line.toUpperCase() && !line.includes('[') && !line.includes('(')) {
-            // Verificar si el renglón siguiente tiene Autor:, INTRO, VERSO o acordes
+        if (!numberedMatch && !isKeywordTitle && line.length > 2 && line.length < 60 && line === line.toUpperCase() && !line.includes('[') && !line.includes('(')) {
             let nextLine1 = (i + 1 < lines.length) ? lines[i + 1].trim() : "";
             let nextLine2 = (i + 2 < lines.length) ? lines[i + 2].trim() : "";
             
@@ -2657,7 +2658,7 @@ function parseBatchSongsText(text) {
             }
         }
 
-        if (numberedMatch || isUnnumberedTitle) {
+        if (numberedMatch || isKeywordTitle || isUnnumberedTitle) {
             saveCurrentSong();
 
             if (numberedMatch && numberedMatch[1]) {
@@ -2668,7 +2669,6 @@ function parseBatchSongsText(text) {
             currentTitle = line;
         } else {
             if (currentTitle) {
-                // Ignorar renglones sueltos de número de página o de transporte (ej: "Para tocar en...")
                 if (/^\d{1,3}$/.test(line) || line.toLowerCase().startsWith("para tocar en la tonalidad")) continue;
                 
                 currentLines.push(rawLine);
