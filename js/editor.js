@@ -2541,43 +2541,40 @@ function processBatchInputText() {
         setBusy(false);
     }, 100);
 }
-// Corta el texto por títulos de forma inteligente (con o sin números), detecta autores y asigna momentos
+// Motor Genérico Universal: Procesa cualquier cancionero (Word, PDF, TXT) sin tocar código
 function parseBatchSongsText(text) {
     if (!text || text.trim().length === 0) return [];
 
-    // Limpieza de encabezados e íconos de PDF/TXT
-    let cleanedText = text
-        .replace(/LogoÍNDICE/gi, '')
-        .replace(/Parroquia Catedral de San Isidro/gi, '')
-        .replace(/POR FAVOR DEJE ESTE CANCIONERO/gi, '')
-        .replace(/SOBRE EL BANCO.*GRACIAS\./gi, '')
-        .replace(/www\.catedraldesanisidro\.org/gi, '')
-        .replace(/Pascua J oven \| San Isidro/gi, '')
-        .replace(/“Me amó y se entregó por mí”\. Gal 2, 20/gi, '')
-        .replace(/www\.pascuajovensi\.com/gi, '')
-        .replace(/Coro Pascua Joven San Isidro/gi, '')
-        .replace(/30 años\s*Cancionero/gi, '')
-        .replace(/sigue >/gi, '');
-
-    const lines = cleanedText.split('\n');
+    const lines = text.split('\n');
     const songs = [];
     let currentTitle = "";
     let currentAuthor = "Desconocido";
     let currentLines = [];
     let currentDetectedMoment = "Varios";
 
-    // Palabras reservadas que SON ESTRUCTURA DE LA CANCIÓN y NUNCA deben ser títulos
-    const reservedStructureRegex = /^\s*(?:VERSO|CORO|PRE-CORO|PRE CORO|CHORUS|PUENTE|INTRO|INTER|INTERLUDIO|INSTRUMENTAL|OUTRO|TAG|SOLO|ESTRIBILLO|INDICE|ÍNDICE|DE MARZO DE \d+)\b/i;
+    // 1. Lista de Acordes Sueltos y Notas (NUNCA pueden ser títulos de canción)
+    const isSingleChordRegex = /^\s*(?:[A-G][#b]?(?:m|maj7|7|sus4|sus2|dim)?|(?:Do|Re|Mi|Fa|Sol|La|Si)[#b]?(?:m|7)?|=?\d+[Mmb]?|1\/2|1T)\s*$/i;
 
-    // Patrón con número (ej: "1- A LA LUZ...", "16. ALIMENTO...")
+    // 2. Lista de Palabras de Estructura e Índices (NUNCA pueden ser títulos de canción)
+    const reservedStructureRegex = /^\s*(?:VERSO|CORO|PRE-CORO|PRE CORO|CHORUS|PUENTE|INTRO|INTER|INTERLUDIO|INSTRUMENTAL|OUTRO|TAG|SOLO|ESTRIBILLO|INDICE|ÍNDICE|TABLA|ESCALA|FUNDA|ACORDES|DE MARZO DE \d+|MISTERIO)\b/i;
+
+    // 3. Patrón de Título Numerado (ej: "1 - ...", "1. ...", "1) ...")
     const numberedRegex = /^\s*(?:(ENTRADA|GLORIA|OFERTORIO|COMUNION|COMUNIÓ N|SALIDA|VARIOS|ACTO PENITENCIAL|SALMOS)\s*)?(?:(\d+)[\s\.\-\:\)]*\s*)([A-ZÁÉÍÓÚÑ0-9\s\,\'\¿\?\¡\!\(\)\/\#]+)/i;
 
     function saveCurrentSong() {
         if (currentTitle && currentLines.length > 0) {
-            let lyricsText = currentLines.join('\n').trim();
-            const validLyricsLines = currentLines.filter(l => l.trim().length > 0 && !l.trim().startsWith("Autor:"));
+            // Filtramos las líneas de letra reales (ignorando notas sueltas, "Autor:" o tablas)
+            const validLyricsLines = currentLines.filter(l => {
+                let trimL = l.trim();
+                return trimL.length > 0 && 
+                       !trimL.startsWith("Autor:") && 
+                       !isSingleChordRegex.test(trimL) &&
+                       !/^LAbLASIb/i.test(trimL);
+            });
 
-            if (validLyricsLines.length >= 1) {
+            // 🛡️ REGLA OBLIGATORIA: Debe tener al menos 2 líneas de letra real
+            if (validLyricsLines.length >= 2) {
+                let lyricsText = currentLines.join('\n').trim();
                 let processedLyrics = processLyricsFormatAndChords(lyricsText);
 
                 let cleanTitle = currentTitle
@@ -2589,7 +2586,8 @@ function parseBatchSongsText(text) {
 
                 cleanTitle = cleanTitle.replace(/\s*\([A-GDoReMiFaSolLaSi\s\/\#mb]+\)$/i, '').trim();
 
-                if (cleanTitle.length > 2 && !reservedStructureRegex.test(cleanTitle)) {
+                // Validamos que el título no sea un acorde ni palabra reservada
+                if (cleanTitle.length > 2 && !isSingleChordRegex.test(cleanTitle) && !reservedStructureRegex.test(cleanTitle)) {
                     songs.push({
                         title: cleanTitle,
                         artist: currentAuthor,
@@ -2613,13 +2611,13 @@ function parseBatchSongsText(text) {
 
         if (line.length === 0) continue;
 
-        // 🛡️ Filtro de barras de acordes e Índices con números de página al final (ej: "Digno de Alabar 10", "| A D |")
-        if (line.startsWith('|') || (/\s+\d{1,3}$/.test(line) && (line.toLowerCase().includes("cantos") || line.toLowerCase().includes("índice") || line.toLowerCase().includes("indice")))) {
+        // Descartar tablas de acordes, escalas o separadores con barras (|)
+        if (line.startsWith('|') || /^LAbLASIb/i.test(line) || /^\d{1,2}\/\d{1,2}/.test(line)) {
             if (currentTitle) currentLines.push(rawLine);
             continue;
         }
 
-        // Detección de secciones de momentos litúrgicos
+        // Detección de Secciones Litúrgicas
         const upperLine = line.toUpperCase();
         if (upperLine.includes("CANTOS DE ALABANZA") || upperLine.includes("ADORACIÓN")) currentDetectedMoment = "Adoración Eucarística";
         else if (upperLine.includes("AMOR DE DIOS")) currentDetectedMoment = "Meditación";
@@ -2641,28 +2639,34 @@ function parseBatchSongsText(text) {
             continue;
         }
 
-        // 🛡️ REGLA A: BÚSQUEDA DE TÍTULO CON NÚMERO
+        // 🛡️ REGLA A: Título con Número (ej: "1 - ...", "1. ...")
         let numberedMatch = line.match(numberedRegex);
 
-        // 🛡️ REGLA B: PALABRAS CLAVE AL INICIO (Salmo, Cántico, Antífona, Himno, Secuencia)
+        // 🛡️ REGLA B: Títulos de Salmos o Cánticos
         let isKeywordTitle = /^\s*(?:Salmo|Cántico|Cantico|Antífona|Antifona|Secuencia|Himno|Misa)\b/i.test(line);
         if (isKeywordTitle) currentDetectedMoment = "Salmos";
 
-        // 🛡️ REGLA C: TÍTULO EN MAYÚSCULAS SIN NÚMERO (Excluyendo estrictamente palabras de estructura como VERSO/CORO)
+        // 🛡️ REGLA C: Título en Mayúsculas (Excluyendo acordes o palabras reservadas)
         let isUnnumberedTitle = false;
+        let isChord = isSingleChordRegex.test(line);
         let isReserved = reservedStructureRegex.test(line);
 
-        if (!numberedMatch && !isKeywordTitle && !isReserved && line.length > 2 && line.length < 55 && line === line.toUpperCase() && !line.includes('[') && !line.includes('(')) {
-            let nextLine1 = (i + 1 < lines.length) ? lines[i + 1].trim() : "";
-            let nextLine2 = (i + 2 < lines.length) ? lines[i + 2].trim() : "";
-            
-            if (nextLine1.toLowerCase().startsWith("autor:") || 
-                nextLine1.toLowerCase().startsWith("para tocar") || 
-                nextLine1.toLowerCase().startsWith("intro") || 
-                nextLine1.toLowerCase().startsWith("verso") ||
-                nextLine2.toLowerCase().startsWith("autor:") ||
-                /^\s*(?:[A-G][#b]?(?:m|7)?\s*|(?:Do|Re|Mi|Fa|Sol|La|Si)[#b]?(?:m|7)?\s*)+$/i.test(nextLine1)) {
-                isUnnumberedTitle = true;
+        if (!numberedMatch && !isKeywordTitle && !isChord && !isReserved && line.length > 2 && line.length < 60) {
+            // Si el renglón está en mayúsculas o empieza con Salmo/Cántico y está seguido por letra o acordes
+            let isUpper = (line === line.toUpperCase());
+            if (isUpper) {
+                let nextLine1 = (i + 1 < lines.length) ? lines[i + 1].trim() : "";
+                let nextLine2 = (i + 2 < lines.length) ? lines[i + 2].trim() : "";
+
+                if (nextLine1.toLowerCase().startsWith("autor:") || 
+                    nextLine1.toLowerCase().startsWith("para tocar") || 
+                    nextLine1.toLowerCase().startsWith("intro") || 
+                    nextLine1.toLowerCase().startsWith("verso") ||
+                    nextLine2.toLowerCase().startsWith("autor:") ||
+                    /^\s*(?:[A-G][#b]?(?:m|7)?\s*|(?:Do|Re|Mi|Fa|Sol|La|Si)[#b]?(?:m|7)?\s*)+$/i.test(nextLine1) ||
+                    nextLine1.length > 10) {
+                    isUnnumberedTitle = true;
+                }
             }
         }
 
@@ -2678,7 +2682,6 @@ function parseBatchSongsText(text) {
         } else {
             if (currentTitle) {
                 if (/^\d{1,3}$/.test(line) || line.toLowerCase().startsWith("para tocar en la tonalidad")) continue;
-                
                 currentLines.push(rawLine);
             }
         }
