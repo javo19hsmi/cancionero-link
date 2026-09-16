@@ -56,10 +56,9 @@ auth.onAuthStateChanged(async user => {
         if (canS) document.getElementById('tab-songs').style.display = 'block';
         if (canA) document.getElementById('tab-announcements').style.display = 'block';
         if (canG) document.getElementById('tab-scripts').style.display = 'block';
-        
-        // 🚀 Mostramos la pestaña de oraciones si tiene permiso canP
-        if (canP) { 
-            document.getElementById('tab-prayers').style.display = 'block'; 
+        if (canP) document.getElementById('tab-prayers').style.display = 'block'; 
+        if (canS && document.getElementById('tab-reports')) {
+            document.getElementById('tab-reports').style.display = 'block';
         }
         
         if (userRole === 'super_admin') { 
