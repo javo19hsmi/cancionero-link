@@ -438,6 +438,12 @@ function switchMod(mod) {
         } else {
             targetMain.style.display = 'grid'; 
         }
+    // PARA EL MÓDULO DE REPORTES
+    if (mod === 'reports') {
+        if (typeof renderReportsModule === 'function') {
+            renderReportsModule();
+        }
+      }
     }
     
     // 4. Activamos visualmente el botón superior correspondiente
@@ -2966,4 +2972,157 @@ async function saveBatchSelectedToBorrador() {
     } finally {
         setBusy(false);
     }
+}
+
+/* ==========================================================
+   16. MÓDULO DE REPORTES Y AUDITORÍA DEL CANCIONERO
+   ========================================================== */
+let activeReportFilter = 'all';
+
+// 1. Renderiza las métricas y la tabla de reportes
+function renderReportsModule() {
+    if (!allSongs || allSongs.length === 0) return;
+
+    const total = allSongs.length;
+    let countAudio = 0, countSheet = 0, countChords = 0, countArtist = 0;
+
+    allSongs.forEach(s => {
+        if (s.link && s.link.trim() !== '') countAudio++;
+        if (s.sheetMusicLink && s.sheetMusicLink.trim() !== '') countSheet++;
+        if (s.lyrics && s.lyrics.includes('[')) countChords++;
+        if (s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido') countArtist++;
+    });
+
+    // Actualizar métricas del Dashboard
+    const totalEl = document.getElementById('rep-total-songs');
+    if (totalEl) totalEl.innerText = total;
+
+    document.getElementById('rep-count-audio').innerText = countAudio;
+    document.getElementById('rep-pct-audio').innerText = `${Math.round((countAudio / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-sheet').innerText = countSheet;
+    document.getElementById('rep-pct-sheet').innerText = `${Math.round((countSheet / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-chords').innerText = countChords;
+    document.getElementById('rep-pct-chords').innerText = `${Math.round((countChords / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-artist').innerText = countArtist;
+    document.getElementById('rep-pct-artist').innerText = `${Math.round((countArtist / total) * 100)}% del catálogo`;
+
+    // Renderizar la tabla con el filtro activo
+    filterReportList(activeReportFilter);
+}
+
+// 2. Filtra la lista según el botón presionado
+function filterReportList(filterType) {
+    activeReportFilter = filterType;
+
+    // Actualizar estados visuales de los botones de filtro
+    document.querySelectorAll('.rep-filter-btn').forEach(btn => {
+        btn.style.background = 'rgba(255,255,255,0.05)';
+        btn.style.color = 'white';
+        btn.style.borderColor = 'var(--glass-border)';
+    });
+
+    const activeBtn = document.getElementById(`btn-rep-${filterType}`);
+    if (activeBtn) {
+        activeBtn.style.background = 'var(--primary)';
+        activeBtn.style.color = 'black';
+        activeBtn.style.borderColor = 'var(--primary)';
+    }
+
+    const tbody = document.getElementById('reports-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+
+    const filtered = allSongs.filter(s => {
+        const hasAudio = s.link && s.link.trim() !== '';
+        const hasSheet = s.sheetMusicLink && s.sheetMusicLink.trim() !== '';
+        const hasChords = s.lyrics && s.lyrics.includes('[');
+        const hasArtist = s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido';
+        const hasMoment = s.moments && s.moments.length > 0 && !s.moments.includes('Varios');
+
+        if (filterType === 'no-audio') return !hasAudio;
+        if (filterType === 'no-sheet') return !hasSheet;
+        if (filterType === 'no-chords') return !hasChords;
+        if (filterType === 'no-artist') return !hasArtist;
+        if (filterType === 'no-moment') return !hasMoment;
+        return true; // 'all'
+    });
+
+    document.getElementById('rep-list-count').innerText = `Mostrando ${filtered.length} canciones`;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5;">🎉 ¡Impecable! No hay canciones que necesiten este ajuste.</td></tr>';
+        return;
+    }
+
+    filtered.forEach(s => {
+        const hasAudio = s.link && s.link.trim() !== '';
+        const hasSheet = s.sheetMusicLink && s.sheetMusicLink.trim() !== '';
+        const hasChords = s.lyrics && s.lyrics.includes('[');
+        const hasArtist = s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido';
+
+        const tr = document.createElement('tr');
+        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+
+        const momentText = (s.moments && s.moments.length > 0) ? s.moments.join(', ') : 'Varios';
+
+        tr.innerHTML = `
+            <td style="padding:10px;">
+                <b style="font-size:13px; color:white;">${s.title}</b>
+                <div style="font-size:10px; opacity:0.6;">👤 ${hasArtist ? s.artist : 'Sin Autor'}</div>
+            </td>
+            <td style="padding:10px; font-size:11px; opacity:0.8;">📍 ${momentText}</td>
+            <td style="padding:10px; text-align:center;">
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasAudio ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasAudio ? '🎧 Audio' : '🎧 Sin Audio'}</span>
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasSheet ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasSheet ? '🎼 Partitura' : '🎼 Sin Partitura'}</span>
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasChords ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasChords ? '🎸 Acordes' : '🎸 Sin Acordes'}</span>
+            </td>
+            <td style="padding:10px; text-align:center;">
+                <button class="btn btn-save" style="padding:4px 10px; font-size:10px; font-weight:bold;" onclick="jumpToEditSongFromReport('${s.id}')">✏️ Ir a Editar</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// 3. Salto Mágico: Cambia a la solapa Cancionero y carga la canción para editar
+function jumpToEditSongFromReport(songId) {
+    const targetSong = allSongs.find(s => s.id === songId);
+    if (!targetSong) return;
+
+    // Cambiar a la pestaña de Cancionero
+    switchMod('songs');
+
+    // Cargar la canción en el editor en 100ms
+    setTimeout(() => {
+        loadSong(targetSong);
+    }, 100);
+}
+
+// 4. Descargar Reporte en Excel (CSV)
+function exportReportToCSV() {
+    if (!allSongs || allSongs.length === 0) return alert("❌ No hay canciones para exportar.");
+
+    let csvContent = "data:text/csv;charset=utf-8,ID,Titulo,Artista,Momentos,Tiene_Audio,Tiene_Partitura,Tiene_Acordes\n";
+
+    allSongs.forEach(s => {
+        const hasAudio = (s.link && s.link.trim() !== '') ? "SI" : "NO";
+        const hasSheet = (s.sheetMusicLink && s.sheetMusicLink.trim() !== '') ? "SI" : "NO";
+        const hasChords = (s.lyrics && s.lyrics.includes('[')) ? "SI" : "NO";
+        const titleClean = (s.title || "").replace(/,/g, " ");
+        const artistClean = (s.artist || "Desconocido").replace(/,/g, " ");
+        const momentClean = (s.moments || ["Varios"]).join(";").replace(/,/g, " ");
+
+        csvContent += `"${s.id}","${titleClean}","${artistClean}","${momentClean}","${hasAudio}","${hasSheet}","${hasChords}"\n`;
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `Reporte_Salud_Cancionero_${Date.now()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
