@@ -29,8 +29,8 @@ auth.onAuthStateChanged(async user => {
         if (p.guiones || p.admin) canG = true; 
         if (p.oraciones || p.admin) canP = true; // Detecta si tiene acceso a oraciones en este nodo
         
-        // Ahora evalúa si tiene anuncios, oraciones O admin para cargar la comunidad
-        if (p.anuncios || p.oraciones || p.admin) {
+        // Ahora evalúa si tiene anuncios, oraciones, guiones O admin para cargar la comunidad
+        if (p.anuncios || p.oraciones || p.guiones || p.admin) {
             canA = true;
             let path = p.ruta_base ? p.ruta_base : `comunidades/${id}`;
             
@@ -45,6 +45,27 @@ auth.onAuthStateChanged(async user => {
             }
             
             authorizedCommunities.push({ id: id, path: path, nombre: nombreOficial });
+
+            // 🏛️ SI ES ADMIN DE LA SEDE PRINCIPAL (No es un sub-nodo), LE DAMOS ACCESO A SUS CAPILLAS (SUB-NODOS)
+            if (!path.includes('/sub_nodos/')) {
+                try {
+                    const subSnap = await db.ref(`${path}/sub_nodos`).once('value');
+                    if (subSnap.exists()) {
+                        const subData = subSnap.val() || {};
+                        for (const [subId, subVal] of Object.entries(subData)) {
+                            if (subVal && subVal.nombre) {
+                                authorizedCommunities.push({
+                                    id: subId,
+                                    path: `${path}/sub_nodos/${subId}`,
+                                    nombre: `🏛️ ${subVal.nombre}`
+                                });
+                            }
+                        }
+                    }
+                } catch(e) {
+                    console.warn("Error leyendo sub_nodos de", path, e);
+                }
+            }
         }
       }
 
@@ -61,10 +82,16 @@ auth.onAuthStateChanged(async user => {
             document.getElementById('tab-reports').style.display = 'block';
         }
         
-        if (userRole === 'super_admin') { 
-            document.getElementById('pencil-btn').style.display = 'block'; 
-            document.getElementById('global-pub-btn').style.display = 'block'; 
-                      //Mostrar botón de importador masivo
+        // ⚡ BOTÓN SUBIR VERSIÓN PÚBLICA (Habilitado para Súper Admin Y Músico Editor / Editor Global)
+        if (canS || userRole === 'super_admin') {
+            if (document.getElementById('global-pub-btn')) {
+                document.getElementById('global-pub-btn').style.display = 'block';
+            }
+        }
+
+        // 📥 IMPORTADOR MASIVO Y HERRAMIENTAS EXCLUSIVAS DE SÚPER ADMIN
+        if (userRole === 'super_admin') {
+            if (document.getElementById('pencil-btn')) document.getElementById('pencil-btn').style.display = 'block';
             if (document.getElementById('batch-import-btn')) {
                 document.getElementById('batch-import-btn').style.display = 'block';
             }
