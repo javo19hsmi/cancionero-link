@@ -157,6 +157,10 @@
               if (sl.exists()) mostrarContenido(sl.val(), blockIdx, waitingDiv, lyricsDiv);
             });
           });
+        } else if (d.lectura_actual_titulo) {
+          const tipoTexto = d.lectura_actual_tipo ? ` (${d.lectura_actual_tipo})` : '';
+          const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0; font-size:1.3rem;">${d.lectura_actual_titulo}</h2><br><p style="font-size:0.95rem; opacity:0.85; line-height:1.5;">Proclamación de la Palabra de Dios en la Misa.</p>`;
+          mostrarContenido(htmlLectura, -1, waitingDiv, lyricsDiv);
         } else {
           waitingDiv.style.display='block'; lyricsDiv.style.display='none';
           waitTitle.innerText = "Cantemos Juntos 🎶";
