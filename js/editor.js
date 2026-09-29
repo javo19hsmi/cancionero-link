@@ -682,7 +682,6 @@ function toggleAcordes() {
 /* ==========================================================
    9. INSERCIÓN, MODIFICACIÓN Y NAVEGACIÓN DE ACORDES
    ========================================================== */
-// Inserta un nuevo acorde visual respetando la posición memorizada del cursor
 // Inserta un nuevo acorde visual respetando la posición memorizada del cursor sin romper formatos
 function insChordVisual(chordText) {
     const area = document.getElementById('lyrics-editor');
@@ -714,8 +713,12 @@ function insChordVisual(chordText) {
     chip.contentEditable = "false";
     chip.setAttribute('data-chord', chordText);
 
-    // Insertamos el nodo sin romper las etiquetas de negrita/cursiva adyacentes
-    range.deleteContents(); // Borra si había texto seleccionado
+    // 🛡️ PROTECCIÓN ANTI-PÉRDIDA DE LETRA:
+    // Si el usuario seleccionó o resaltó texto por error, colapsamos la selección al inicio
+    // para insertar el acorde ANTES del texto, SIN BORRAR NADA DE LA LETRA.
+    if (!range.collapsed) {
+        range.collapse(true);
+    }
     range.insertNode(chip);
 
     // Movemos el cursor justo después del acorde
