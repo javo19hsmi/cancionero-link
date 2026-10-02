@@ -10,7 +10,7 @@ const RESOURCES = {"assets/AssetManifest.bin": "4633246cf02cb394e6cd626abe6eb0b4
 "assets/assets/images/Logo_Ministerio_Musica.png": "b2b69e11518496a576d20eb7c1b353da",
 "assets/assets/songs.json": "b1d45242037ab6db14b4b88044543291",
 "assets/FontManifest.json": "7b2a36307916a9721811788013e65289",
-"assets/fonts/MaterialIcons-Regular.otf": "5e6b0db43ff73d4a79d00d3121439e28",
+"assets/fonts/MaterialIcons-Regular.otf": "b562ac4226fd6ef03f3d3c9d13635382",
 "assets/NOTICES": "6a0a04259008751ed8c872d5f7d50aa0",
 "assets/packages/wakelock_plus/assets/no_sleep.js": "7748a45cd593f33280669b29c2c8919a",
 "assets/shaders/ink_sparkle.frag": "ecc85a2e95f5e9f53123dcaf8cb9b6ce",
@@ -28,15 +28,15 @@ const RESOURCES = {"assets/AssetManifest.bin": "4633246cf02cb394e6cd626abe6eb0b4
 "canvaskit/skwasm_heavy.wasm": "8034ad26ba2485dab2fd49bdd786837b",
 "favicon.png": "b2b69e11518496a576d20eb7c1b353da",
 "flutter.js": "888483df48293866f9f41d3d9274a779",
-"flutter_bootstrap.js": "93a1684c389c824be8dcc542758fe28d",
+"flutter_bootstrap.js": "c5b95788d93aba931d188b06b21d9e3a",
 "icons/Icon-192.png": "ac9a721a12bbc803b44f645561ecb1e1",
 "icons/Icon-512.png": "96e752610906ba2a93c65f8abe1645f1",
 "icons/Icon-maskable-192.png": "c457ef57daa1d16f64b27b786ec2ea3c",
 "icons/Icon-maskable-512.png": "301a7604d45b3e739efc881eb04896ea",
 "index.html": "51b40a7921ff71f5e260ef234d5ca60b",
 "/": "51b40a7921ff71f5e260ef234d5ca60b",
-"main.dart.js": "7ac3470ceca79fef82a497f998efff75",
-"manifest.json": "3ba80f89ec11553906b3cfae59cfc6e1",
+"main.dart.js": "5b44ffe8d5bf3d8b25f03fc4ff1adc66",
+"manifest.json": "5f1eee3bb3a13f7847619a640f7cfca9",
 "version.json": "dc56baf162a95845e231cb15b2203272"};
 // The application shell files that are downloaded before a service worker can
 // start.
