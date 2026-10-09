@@ -84,17 +84,24 @@
     const db = firebase.database();
 
     const urlParams = new URLSearchParams(window.location.search);
-    const comunidad = urlParams.get('comunidad') || 'comunidades/san_cayetano';
+    let comunidadPath = urlParams.get('comunidad') || 'comunidades/san_cayetano';
+    if (!comunidadPath.startsWith('comunidades/')) {
+      comunidadPath = 'comunidades/' + comunidadPath;
+    }
 
-    db.ref(comunidad + '/proyeccion_vivo').on('value', snapshot => {
+    db.ref(comunidadPath + '/proyeccion_vivo').on('value', snapshot => {
       const data = snapshot.val();
-      if (!data) return;
-
       const cuerpo = document.getElementById('cuerpo');
       const headerParroquia = document.getElementById('header-parroquia');
       const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
       const footerPage = document.getElementById('footer-page');
+
+      if (!data) {
+        headerParroquia.innerText = "Comunidad Sintonizada";
+        texto.innerText = "Bienvenidos a la Santa Misa 🕊️";
+        return;
+      }
 
       if (data.modo === 'NEGRA') {
         cuerpo.className = 'pantalla-negra';
