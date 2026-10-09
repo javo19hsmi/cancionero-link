@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Proyector Parroquial en Vivo 🕊️</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+  <style>
+    body {
+      margin: 0; padding: 0;
+      background-color: #050505; color: #FFFFFF;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: center;
+      min-height: 100vh; text-align: center;
+      overflow: hidden;
+    }
+    .pantalla-negra { background-color: #000000 !important; }
+    .parroquia-title { font-size: 3rem; color: #FFD700; font-weight: bold; margin-bottom: 20px; }
+    .cancion-title { font-size: 2.2rem; color: #4DB6AC; font-weight: bold; margin-bottom: 30px; letter-spacing: 1px; }
+    .bloque-texto { font-size: 4rem; line-height: 1.4; font-weight: bold; max-width: 90%; margin: 0 auto; white-space: pre-wrap; }
+    .footer-page { position: absolute; bottom: 20px; right: 30px; font-size: 1.2rem; color: #666; }
+  </style>
+</head>
+<body id="cuerpo">
+  <div id="contenido">
+    <div id="parroquia" class="parroquia-title">Sintonizando Proyector...</div>
+    <div id="texto-principal" class="bloque-texto">Bienvenidos a la Celebración 🕊️</div>
+  </div>
+  <div id="footer" class="footer-page"></div>
+
+  <script>
+    firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
+    const db = firebase.database();
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const comunidad = urlParams.get('comunidad') || 'comunidades/san_cayetano';
+
+    db.ref(comunidad + '/proyeccion_vivo').on('value', snapshot => {
+      const data = snapshot.val();
+      if (!data) return;
+
+      const cuerpo = document.getElementById('cuerpo');
+      const parroquia = document.getElementById('parroquia');
+      const texto = document.getElementById('texto-principal');
+      const footer = document.getElementById('footer');
+
+      if (data.modo === 'NEGRA') {
+        cuerpo.className = 'pantalla-negra';
+        document.getElementById('contenido').style.display = 'none';
+        footer.innerText = '';
+        return;
+      }
+
+      cuerpo.className = '';
+      document.getElementById('contenido').style.display = 'block';
+
+      if (data.modo === 'BIENVENIDA') {
+        parroquia.innerText = data.comunidadNombre || 'Parroquia';
+        texto.innerText = data.titulo || 'Bienvenidos a la Santa Misa';
+        footer.innerText = '';
+      } else {
+        parroquia.innerText = data.titulo || '';
+        parroquia.className = 'cancion-title';
+        texto.innerText = data.bloqueTexto || '';
+        footer.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
+      }
+    });
+  </script>
+</body>
+</html>
