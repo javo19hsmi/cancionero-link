@@ -14,23 +14,72 @@
       display: flex; flex-direction: column;
       justify-content: center; align-items: center;
       min-height: 100vh; text-align: center;
-      overflow: hidden;
+      overflow: hidden; position: relative;
     }
     .pantalla-negra { background-color: #000000 !important; }
-    .parroquia-title { font-size: 3rem; color: #FFD700; font-weight: bold; margin-bottom: 20px; }
-    .cancion-title { font-size: 2.2rem; color: #4DB6AC; font-weight: bold; margin-bottom: 30px; letter-spacing: 1px; }
-    .bloque-texto { font-size: 4rem; line-height: 1.4; font-weight: bold; max-width: 90%; margin: 0 auto; white-space: pre-wrap; }
-    .footer-page { position: absolute; bottom: 20px; right: 30px; font-size: 1.2rem; color: #666; }
+
+    .top-left-parroquia {
+      position: absolute; top: 25px; left: 35px;
+      font-size: 1.1rem; color: #888888; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    .cancion-title {
+      position: absolute; top: 35px;
+      font-size: 2.2rem; color: #4DB6AC; font-weight: bold;
+      letter-spacing: 1px; width: 80%; margin: 0 auto;
+    }
+
+    .bloque-texto {
+      font-size: 3.8rem; line-height: 1.35; font-weight: bold;
+      max-width: 88%; margin: 0 auto; padding-top: 40px;
+    }
+    .bloque-texto b { color: #FFFFFF; }
+    .bloque-texto i { font-style: italic; color: #E0E0E0; }
+
+    .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; }
+    .footer-right { position: absolute; bottom: 25px; right: 35px; font-size: 1.1rem; color: #FFD700; font-weight: bold; opacity: 0.85; }
+
+    .btn-fs {
+      position: absolute; top: 20px; right: 25px;
+      background: rgba(255,255,255,0.1); color: #fff;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
+      transition: opacity 0.3s; z-index: 999;
+    }
+    .btn-fs:hover { opacity: 1; background: rgba(255,255,255,0.25); }
   </style>
 </head>
-<body id="cuerpo">
+<body id="cuerpo" onclick="toggleFS()">
+  <button id="btnFS" class="btn-fs" onclick="toggleFS(); event.stopPropagation();">⛶ Pantalla Completa (F11)</button>
+  <div id="header-parroquia" class="top-left-parroquia">Parroquia</div>
+  <div id="cancion-header" class="cancion-title" style="display:none;"></div>
+
   <div id="contenido">
-    <div id="parroquia" class="parroquia-title">Sintonizando Proyector...</div>
-    <div id="texto-principal" class="bloque-texto">Bienvenidos a la Celebración 🕊️</div>
+    <div id="texto-principal" class="bloque-texto">Sintonizando proyector...</div>
   </div>
-  <div id="footer" class="footer-page"></div>
+
+  <div id="footer-page" class="footer-left"></div>
+  <div class="footer-right">Cancionero Parroquial 🕊️</div>
 
   <script>
+    function darFormato(t) {
+      if (!t) return "";
+      return t
+        .replace(/\[.*?\]/g, "")
+        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
+        .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
+        .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+    }
+
+    function toggleFS() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+      }
+    }
+
     firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
     const db = firebase.database();
 
@@ -42,29 +91,34 @@
       if (!data) return;
 
       const cuerpo = document.getElementById('cuerpo');
-      const parroquia = document.getElementById('parroquia');
+      const headerParroquia = document.getElementById('header-parroquia');
+      const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
-      const footer = document.getElementById('footer');
+      const footerPage = document.getElementById('footer-page');
 
       if (data.modo === 'NEGRA') {
         cuerpo.className = 'pantalla-negra';
         document.getElementById('contenido').style.display = 'none';
-        footer.innerText = '';
+        headerParroquia.style.display = 'none';
+        cancionHeader.style.display = 'none';
+        footerPage.innerText = '';
         return;
       }
 
       cuerpo.className = '';
       document.getElementById('contenido').style.display = 'block';
+      headerParroquia.style.display = 'block';
+      headerParroquia.innerText = data.comunidadNombre || 'Parroquia';
 
       if (data.modo === 'BIENVENIDA') {
-        parroquia.innerText = data.comunidadNombre || 'Parroquia';
-        texto.innerText = data.titulo || 'Bienvenidos a la Santa Misa';
-        footer.innerText = '';
+        cancionHeader.style.display = 'none';
+        texto.innerHTML = darFormato(data.titulo || 'Bienvenidos a la Santa Misa 🕊️');
+        footerPage.innerText = '';
       } else {
-        parroquia.innerText = data.titulo || '';
-        parroquia.className = 'cancion-title';
-        texto.innerText = data.bloqueTexto || '';
-        footer.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
+        cancionHeader.style.display = 'block';
+        cancionHeader.innerText = data.titulo || '';
+        texto.innerHTML = darFormato(data.bloqueTexto || '');
+        footerPage.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
       }
     });
   </script>
