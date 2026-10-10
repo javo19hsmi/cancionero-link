@@ -159,10 +159,10 @@
         <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
         <div class="sub-controls-bar">
           <div class="font-size-group">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Tamaño:</span>
-            <button class="btn-mini" onclick="cambiarTamanoLetra(-0.3)">A-</button>
-            <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">3.8rem</span>
-            <button class="btn-mini" onclick="cambiarTamanoLetra(0.3)">A+</button>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Tamaño Previa:</span>
+            <button class="btn-mini" onclick="cambiarTamanoPreview(-0.3)">A-</button>
+            <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">1.2rem</span>
+            <button class="btn-mini" onclick="cambiarTamanoPreview(0.3)">A+</button>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
@@ -210,6 +210,15 @@
             <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
             <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
             <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Tamaño de Letra Cañón (En Vivo):</label>
+          <select id="cfg-tamano" onchange="guardarEstiloConfig()">
+            <option value="3.0rem">Pequeña (3.0rem)</option>
+            <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
+            <option value="4.5rem">Grande (4.5rem)</option>
+            <option value="5.2rem">Gigante (5.2rem)</option>
           </select>
         </div>
         <div class="field-group">
@@ -327,7 +336,7 @@
     let baseParroquiaNombre = "Parroquia";
     let galeriaFotos = [];
     let fotoActivaIdx = 0;
-    let fontSizeVal = "3.8rem";
+    let previewFontSize = "1.2rem";
     let perfilesCustom = {};
 
     function switchTab(tabId, el) {
@@ -353,10 +362,7 @@
       if (cfg) {
         if (cfg.fondo) document.getElementById('cfg-fondo').value = cfg.fondo;
         if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
-        if (cfg.tamano) {
-          fontSizeVal = cfg.tamano;
-          document.getElementById('lbl-tamano').innerText = fontSizeVal;
-        }
+        if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
         if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
@@ -384,7 +390,7 @@
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
-        tamano: fontSizeVal,
+        tamano: document.getElementById('cfg-tamano').value,
         transicion: document.getElementById('cfg-transicion').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
@@ -406,7 +412,7 @@
       perfilesCustom[nombre] = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
-        tamano: fontSizeVal,
+        tamano: document.getElementById('cfg-tamano').value,
         transicion: document.getElementById('cfg-transicion').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value
@@ -422,10 +428,7 @@
       if (!p) return;
       if (p.fondo) document.getElementById('cfg-fondo').value = p.fondo;
       if (p.fuente) document.getElementById('cfg-fuente').value = p.fuente;
-      if (p.tamano) {
-        fontSizeVal = p.tamano;
-        document.getElementById('lbl-tamano').innerText = fontSizeVal;
-      }
+      if (p.tamano) document.getElementById('cfg-tamano').value = p.tamano;
       if (p.transicion) document.getElementById('cfg-transicion').value = p.transicion;
       if (p.colorTitulo) document.getElementById('cfg-color-titulo').value = p.colorTitulo;
       if (p.colorTexto) document.getElementById('cfg-color-texto').value = p.colorTexto;
@@ -445,14 +448,14 @@
       `).join('');
     }
 
-    function cambiarTamanoLetra(delta) {
-      let sizes = ["2.5rem", "3.1rem", "3.8rem", "4.5rem", "5.2rem"];
-      let idx = sizes.indexOf(fontSizeVal);
+    function cambiarTamanoPreview(delta) {
+      let sizes = ["0.9rem", "1.1rem", "1.3rem", "1.5rem", "1.8rem"];
+      let idx = sizes.indexOf(previewFontSize);
       if (idx === -1) idx = 2;
       idx = (idx + (delta > 0 ? 1 : -1)).clamp(0, sizes.length - 1);
-      fontSizeVal = sizes[idx];
-      document.getElementById('lbl-tamano').innerText = fontSizeVal;
-      guardarEstiloConfig();
+      previewFontSize = sizes[idx];
+      document.getElementById('lbl-tamano').innerText = previewFontSize;
+      document.getElementById('prev-texto').style.fontSize = previewFontSize;
     }
 
     function aplicarPaleta(fondoHex, tituloHex, textoHex, fuenteTipo) {
@@ -487,7 +490,6 @@
       });
 
       texts.forEach(t => {
-        t.style.fontSize = '1.1rem';
         if (cfg.colorTexto) t.style.color = cfg.colorTexto;
       });
 
