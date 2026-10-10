@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consola del Operador de Proyector 🎛️</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     body {
@@ -21,6 +22,7 @@
     .stanza-card { background: #1E1E1E; border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.5; }
     .stanza-card:hover { background: #2A2A2A; border-color: #4DB6AC; }
     .stanza-card.active { background: #004D40; border-color: #80CBC4; font-weight: bold; color: #FFF; }
+    .transmision-info { background: #1E2827; border: 1px solid #00695C; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; color: #80CBC4; }
   </style>
 </head>
 <body>
@@ -33,12 +35,17 @@
     </div>
   </div>
 
+  <div id="info-transmision" class="transmision-info">📡 Sintonizando señal del músico en vivo...</div>
   <div id="cancion-titulo" style="font-size:1.2rem; color:#FFD700; margin-bottom:15px; font-weight:bold;">Seleccioná una estrofa para proyectar al instante:</div>
-  <div id="estrofas-container" class="stanzas-list">Cargando estrofas...</div>
+  <div id="estrofas-container" class="stanzas-list">Esperando canción seleccionada en la App...</div>
 
   <script>
     firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
+    const auth = firebase.auth();
     const db = firebase.database();
+
+    // Autenticación Anónima para permitir escrituras en Firebase
+    auth.signInAnonymously().catch(err => console.log("Auth Anónima:", err));
 
     const urlParams = new URLSearchParams(window.location.search);
     let comunidadPath = urlParams.get('comunidad') || 'comunidades/san_cayetano';
@@ -51,11 +58,20 @@
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
-      document.getElementById('parroquia-nombre').innerText = (d.nombre || 'Parroquia') + " - Operador";
+      document.getElementById('parroquia-nombre').innerText = (d.nombre || 'Parroquia') + " - Operador Proyector";
+
+      const infoBox = document.getElementById('info-transmision');
+      if (d.estado_vivo) {
+        infoBox.innerHTML = `🟢 <b>Misa en Vivo ACTIVA</b> · Transmitiendo para la asamblea`;
+      } else {
+        infoBox.innerHTML = `⚪ <b>Misa en Vivo INACTIVA</b> · Tocá "Transmitir" en la App para emitir`;
+      }
 
       if (d.cancion_actual && d.cancion_actual !== cancionActualId) {
         cancionActualId = d.cancion_actual;
         cargarCancion(cancionActualId);
+      } else if (!d.cancion_actual) {
+        document.getElementById('estrofas-container').innerHTML = `<div style="text-align:center; padding:30px; color:#888;">El músico no ha seleccionado ninguna canción aún.<br>Abrí cualquier canción en la App para ver las estrofas aquí.</div>`;
       }
     });
 
@@ -63,7 +79,7 @@
       db.ref(`canciones_base/${id}`).once('value', s => {
         if (!s.exists()) return;
         const c = s.val();
-        document.getElementById('cancion-titulo').innerText = "🎶 " + (c.title || "Canción en Vivo");
+        document.getElementById('cancion-titulo').innerText = "🎶 Canción Activa: " + (c.title || "Canción en Vivo");
         const lyrics = (c.lyrics || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
         estrofasList = lyrics.split(/\n\s*\n/).filter(x => x.trim().length > 0);
         renderEstrofas(c.title || "Canción");
@@ -72,6 +88,10 @@
 
     function renderEstrofas(titulo) {
       const container = document.getElementById('estrofas-container');
+      if (estrofasList.length === 0) {
+        container.innerHTML = "No hay letra disponible para esta canción.";
+        return;
+      }
       container.innerHTML = estrofasList.map((e, idx) => `
         <div class="stanza-card ${idx === activeIdx ? 'active' : ''}" onclick="proyectarEstrofa('${titulo.replace(/'/g, "\\'")}', ${idx})">
           <small style="color:#80CBC4">Estrofa ${idx + 1}:</small><br>${e.trim()}
