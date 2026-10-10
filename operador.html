@@ -3,119 +3,242 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Consola del Operador de Proyector 🎛️</title>
+  <title>Dashboard Pro - Consola de Operador de Proyector 🎛️</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
-    body {
-      font-family: sans-serif; background: #121212; color: #E0E0E0;
-      margin: 0; padding: 20px; box-sizing: border-box;
+    :root {
+      --bg: #0d1117;
+      --sidebar-bg: #161b22;
+      --card-bg: #21262d;
+      --card-hover: #30363d;
+      --active-bg: #004d40;
+      --active-border: #80cbc4;
+      --accent: #00695C;
+      --accent-light: #4DB6AC;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --gold: #FFD700;
     }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #00695C; padding-bottom: 15px; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
-    h1 { color: #4DB6AC; margin: 0; font-size: 1.4rem; }
-    .btn { background: #00695C; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg); color: var(--text);
+      margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; box-sizing: border-box;
+    }
+    /* SIDEBAR LATERAL */
+    .sidebar {
+      width: 240px; background: var(--sidebar-bg); border-right: 1px solid #30363d;
+      display: flex; flex-direction: column; padding: 20px 10px; gap: 8px;
+    }
+    .sidebar-brand { font-size: 1.1rem; font-weight: bold; color: var(--accent-light); padding: 0 10px 20px 10px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 8px; }
+    .nav-item {
+      padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+    }
+    .nav-item:hover { background: var(--card-hover); color: var(--text); }
+    .nav-item.active { background: var(--accent); color: white; }
+
+    /* CONTENIDO PRINCIPAL EN 2 COLUMNAS (CENTRO + PREVIEW) */
+    .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 420px; height: 100vh; overflow: hidden; }
+
+    /* PANEL CENTRAL DE CONTROL */
+    .control-panel { padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #30363d; }
+    .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 14px; border: 1px solid #30363d; }
+    .parroquia-title { font-size: 1.2rem; font-weight: bold; color: var(--accent-light); }
+
+    .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
     .btn-red { background: #C62828; }
     .btn-amber { background: #FF8F00; color: #000; }
     .btn-blue { background: #0288D1; }
-    .stanzas-list { display: flex; flex-direction: column; gap: 12px; }
-    .stanza-card { background: #1E1E1E; border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.5; }
-    .stanza-card:hover { background: #2A2A2A; border-color: #4DB6AC; }
-    .stanza-card.active { background: #004D40; border-color: #80CBC4; font-weight: bold; color: #FFF; }
-    .stanza-card b { color: #80CBC4; }
-    .stanza-card i { font-style: italic; opacity: 0.9; }
-    .transmision-info { background: #1E2827; border: 1px solid #00695C; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; color: #80CBC4; }
 
-    .design-panel { background: #1A1A1A; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-    .design-panel summary { font-weight: bold; color: #4DB6AC; cursor: pointer; font-size: 1.05rem; }
-    .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
-    .field-group { display: flex; flex-direction: column; gap: 5px; }
-    .field-group label { font-size: 0.85rem; color: #AAA; font-weight: bold; }
-    .field-group select, .field-group input { background: #2A2A2A; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 0.9rem; }
-    .galeria-thumbs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-    .thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 2px solid #444; cursor: pointer; transition: transform 0.2s; }
-    .thumb:hover { transform: scale(1.08); border-color: #4DB6AC; }
-    .thumb.active { border-color: #FFD700; }
+    .nav-arrows { display: flex; gap: 12px; margin-bottom: 5px; }
+    .btn-arrow { flex: 1; background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
+    .btn-arrow:hover { background: var(--accent); color: white; }
+
+    .quick-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .quick-btn { background: var(--card-bg); border: 1px solid #30363d; color: var(--text); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: center; font-size: 0.85rem; transition: all 0.2s; }
+    .quick-btn:hover { background: var(--card-hover); border-color: var(--accent-light); }
+
+    .stanzas-container { display: flex; flex-direction: column; gap: 10px; }
+    .stanza-row {
+      background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
+    }
+    .stanza-row:hover { background: var(--card-hover); border-color: var(--accent-light); }
+    .stanza-row.active { background: var(--active-bg); border-color: var(--active-border); }
+    .stanza-info { flex: 1; white-space: pre-wrap; font-size: 1rem; line-height: 1.4; }
+    .stanza-badge { background: #333; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: #888; font-weight: bold; }
+    .stanza-row.active .stanza-badge { background: var(--accent-light); color: #000; }
+
+    /* PANEL DERECHO: VISTA PREVIA EN VIVO (LIVE PREVIEW 16:9) */
+    .preview-panel { background: #090d12; padding: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .preview-container { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: 0 12px 32px rgba(0,0,0,0.8); background-size: cover; background-position: center; }
+    .preview-parroquia { position: absolute; top: 12px; left: 15px; font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; }
+    .preview-titulo { position: absolute; top: 16px; font-size: 1rem; color: var(--accent-light); font-weight: bold; }
+    .preview-texto { font-size: 1.6rem; font-weight: bold; line-height: 1.35; max-width: 90%; }
+    .preview-footer { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: var(--gold); font-weight: bold; }
+    .preview-counter { position: absolute; bottom: 10px; left: 15px; font-size: 0.7rem; color: #666; }
+
+    /* PALETAS LITÚRGICAS */
+    .palettes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .palette-card { background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .palette-card:hover { border-color: var(--accent-light); }
+    .palette-colors { display: flex; gap: 4px; }
+    .color-dot { width: 16px; height: 16px; border-radius: 50%; }
+
+    /* SECCIONES DINÁMICAS */
+    .section-view { display: none; flex-direction: column; gap: 20px; }
+    .section-view.active { display: flex; }
+    .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+    .field-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
+    .field-group select, .field-group input { background: var(--card-bg); color: white; border: 1px solid #30363d; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h1 id="parroquia-nombre">Consola Operador Proyector 🎛️</h1>
-    <div style="display:flex; gap:8px; flex-wrap:wrap;">
-      <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Pantalla Cañón (Monitor 2)</button>
-      <button class="btn btn-amber" onclick="mostrarBienvenida()">⛪ BIENVENIDA</button>
-      <button class="btn btn-red" onclick="mostrarNegra()">⬛ APAGÓN (NEGRA)</button>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-brand">
+      <span>🕊️</span> Cancionero Pro
     </div>
+    <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
+    <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
+    <div class="nav-item" onclick="switchTab('fondos', this)">🖼️ Fondos & Galería</div>
+    <div class="nav-item" onclick="switchTab('atajos', this)">⌨️ Atajos de Teclado</div>
   </div>
 
-  <div id="info-transmision" class="transmision-info">📡 Sintonizando señal del músico en vivo...</div>
+  <!-- MAIN LAYOUT -->
+  <div class="main-layout">
 
-  <!-- PANEL DESPLEGABLE DE PERSONALIZACIÓN -->
-  <details class="design-panel">
-    <summary>🎨 Personalización de Estilo del Proyector (Guardado en Nube y PC)</summary>
-    <div class="panel-grid">
-      <div class="field-group">
-        <label>Fondo del Proyector:</label>
-        <select id="cfg-fondo" onchange="guardarEstiloConfig()">
-          <option value="#050505">Negro Absoluto (Misa)</option>
-          <option value="#0D1B2A">Azul Noche Litúrgico</option>
-          <option value="#1B0024">Púrpura / Morado (Cuaresma/Adviento)</option>
-          <option value="#002411">Verde Litúrgico</option>
-          <option value="#00FF00">🟩 Modo OBS Chroma Key (Verde Transparente)</option>
-          <option value="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)">Degradado Azul a Negro</option>
-          <option value="linear-gradient(135deg, #1B0024 0%, #000000 100%)">Degradado Borgoña a Negro</option>
-          <option value="custom">🖼️ Usar Imagen Propia / Galería</option>
-        </select>
+    <!-- PANEL CENTRAL -->
+    <div class="control-panel">
+
+      <!-- TOP BAR -->
+      <div class="top-bar">
+        <div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada</div>
+          <div id="parroquia-nombre" class="parroquia-title">Cargando...</div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Cañón</button>
+          <button class="btn btn-amber" onclick="mostrarBienvenida()">⛪ Bienvenida</button>
+          <button class="btn btn-red" onclick="mostrarNegra()">⬛ Apagón</button>
+        </div>
       </div>
 
-      <div class="field-group">
-        <label>Cargar Imágenes de Fondo (Varias):</label>
-        <input type="file" id="cfg-imagenes-multiples" accept="image/*" multiple onchange="cargarGaleriaFotos(event)">
-        <div id="galeria-preview" class="galeria-thumbs"></div>
+      <!-- VISTA TAB: CONTROL -->
+      <div id="tab-control" class="section-view active">
+        <div class="nav-arrows">
+          <button class="btn-arrow" onclick="moverEstrofa(-1)">◀ Anterior</button>
+          <button class="btn-arrow" onclick="moverEstrofa(1)">Siguiente ▶</button>
+        </div>
+
+        <div id="cancion-titulo" style="font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-top: 5px;">🎶 Esperando canción en la App...</div>
+
+        <div id="estrofas-container" class="stanzas-container">
+          <div style="text-align: center; padding: 40px; color: var(--text-muted);">Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>
+        </div>
       </div>
 
-      <div class="field-group">
-        <label>Tipografía:</label>
-        <select id="cfg-fuente" onchange="guardarEstiloConfig()">
-          <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
-          <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
-          <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
-        </select>
+      <!-- VISTA TAB: APARIENCIA -->
+      <div id="tab-apariencia" class="section-view">
+        <h3 style="color: var(--accent-light); margin:0;">Paletas Litúrgicas Rápidas</h3>
+        <div class="palettes-grid">
+          <div class="palette-card" onclick="aplicarPaleta('#0D1B2A', '#4DB6AC', '#FFFFFF', 'Sans-serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#0D1B2A"></div><div class="color-dot" style="background:#4DB6AC"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>Azul Noche y Oro</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#002411', '#81C784', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#002411"></div><div class="color-dot" style="background:#81C784"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>Verde Litúrgico</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#1B0024', '#BA68C8', '#FFFFFF', 'Sans-serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#1B0024"></div><div class="color-dot" style="background:#BA68C8"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>Cuaresma Violeta</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#050505', '#FFD700', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#050505"></div><div class="color-dot" style="background:#FFD700"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>Negro y Dorado Solemne</span>
+          </div>
+        </div>
+
+        <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes Detallados</h3>
+        <div class="field-group">
+          <label>Tipografía:</label>
+          <select id="cfg-fuente" onchange="guardarEstiloConfig()">
+            <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
+            <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
+            <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Tamaño de Letra Estrofas:</label>
+          <select id="cfg-tamano" onchange="guardarEstiloConfig()">
+            <option value="2.5rem">Pequeña (2.5rem)</option>
+            <option value="3.5rem" selected>Mediana / Estándar (3.5rem)</option>
+            <option value="4.5rem">Grande (4.5rem)</option>
+            <option value="5.5rem">Gigante (5.5rem)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Nombre Capilla / Parroquia:</label>
+          <input type="text" id="cfg-nombre-parroquia" onchange="guardarEstiloConfig()">
+        </div>
+        <div class="field-group">
+          <label>Mensaje de Bienvenida:</label>
+          <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="guardarEstiloConfig()">
+        </div>
       </div>
 
-      <div class="field-group">
-        <label>Tamaño de Letra Estrofas:</label>
-        <select id="cfg-tamano" onchange="guardarEstiloConfig()">
-          <option value="3.0rem">Pequeña (3.0rem)</option>
-          <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
-          <option value="4.5rem">Grande (4.5rem)</option>
-          <option value="5.2rem">Gigante (5.2rem)</option>
-        </select>
+      <!-- VISTA TAB: FONDOS -->
+      <div id="tab-fondos" class="section-view">
+        <h3 style="color: var(--accent-light); margin:0;">Fondos y Chroma Key</h3>
+        <div class="field-group">
+          <label>Fondo del Proyector:</label>
+          <select id="cfg-fondo" onchange="guardarEstiloConfig()">
+            <option value="#050505">Negro Absoluto (Misa)</option>
+            <option value="#0D1B2A">Azul Noche Litúrgico</option>
+            <option value="#1B0024">Púrpura / Morado (Cuaresma/Adviento)</option>
+            <option value="#002411">Verde Litúrgico</option>
+            <option value="#00FF00">🟩 Modo OBS Chroma Key (Verde Transparente)</option>
+            <option value="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)">Degradado Azul a Negro</option>
+            <option value="linear-gradient(135deg, #1B0024 0%, #000000 100%)">Degradado Borgoña a Negro</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Subir Imagen de Fondo Propia:</label>
+          <input type="file" id="cfg-imagen-fondo" accept="image/*" onchange="cargarImagenFondo(event)">
+        </div>
       </div>
 
-      <div class="field-group">
-        <label>Nombre Capilla/Parroquia:</label>
-        <input type="text" id="cfg-nombre-parroquia" placeholder="Cargando nombre..." onchange="guardarEstiloConfig()">
+      <!-- VISTA TAB: ATAJOS -->
+      <div id="tab-atajos" class="section-view">
+        <h3 style="color: var(--accent-light); margin:0;">Atajos de Teclado y Pedal</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+          Podés usar el teclado de la computadora o un pedal Bluetooth configurado como flechas para pasar estrofas sin usar el mouse:
+        </p>
+        <ul style="color: var(--text); line-height: 1.8; font-size: 0.95rem;">
+          <li><b>Barra Espaciadora / Flecha Abajo (↓):</b> Siguiente estrofa</li>
+          <li><b>Flecha Arriba (↑):</b> Estrofa anterior</li>
+          <li><b>Tecla N:</b> Pantalla Negra (Apagón)</li>
+          <li><b>Tecla B:</b> Pantalla de Bienvenida</li>
+        </ul>
       </div>
 
-      <div class="field-group">
-        <label>Mensaje de Bienvenida Personalizado:</label>
-        <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="guardarEstiloConfig()">
-      </div>
+    </div>
 
-      <div class="field-group">
-        <label>Color Título Canción:</label>
-        <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="guardarEstiloConfig()">
-      </div>
-
-      <div class="field-group">
-        <label>Color Texto Estrofas:</label>
-        <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="guardarEstiloConfig()">
+    <!-- PANEL DERECHO: VISTA PREVIA EN VIVO (LIVE PREVIEW 16:9) -->
+    <div class="preview-panel">
+      <div style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">📺 Vista previa del proyector</div>
+      <div id="preview-box" class="preview-container">
+        <div id="prev-parroquia" class="preview-parroquia">Parroquia</div>
+        <div id="prev-titulo" class="preview-titulo" style="display:none;">Título</div>
+        <div id="prev-texto" class="preview-texto">Vista previa en vivo</div>
+        <div id="prev-counter" class="preview-counter"></div>
+        <div class="preview-footer">Cancionero Parroquial 🕊️</div>
       </div>
     </div>
-  </details>
 
-  <div id="cancion-titulo" style="font-size:1.2rem; color:#FFD700; margin-bottom:15px; font-weight:bold;">Seleccioná una estrofa para proyectar al instante:</div>
-  <div id="estrofas-container" class="stanzas-list">Esperando canción seleccionada en la App...</div>
+  </div>
 
   <script>
     firebase.initializeApp({
@@ -131,8 +254,14 @@
     let estrofasList = [];
     let activeIdx = -1;
     let baseParroquiaNombre = "Parroquia";
-    let galeriaFotos = [];
-    let fotoActivaIdx = 0;
+    let customImageBg = "";
+
+    function switchTab(tabId, el) {
+      document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      el.classList.add('active');
+    }
 
     function darFormato(t) {
       if (!t) return "";
@@ -144,7 +273,7 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // Cargar configuración guardada en la Nube
+    // Cargar config
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (cfg) {
@@ -153,18 +282,14 @@
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
-        if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
-        if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
+        if (cfg.imagenBg) customImageBg = cfg.imagenBg;
+        actualizarPreviewEstilos(cfg);
       }
     });
 
-    // Cargar galería de fotos desde localStorage de la PC
     try {
-      const savedGaleria = localStorage.getItem('proyector_galeria_' + comunidadPath);
-      if (savedGaleria) {
-        galeriaFotos = JSON.parse(savedGaleria);
-        renderGaleriaThumbs();
-      }
+      const savedBg = localStorage.getItem('proyector_bg_' + comunidadPath);
+      if (savedBg) customImageBg = savedBg;
     } catch(e) {}
 
     function guardarEstiloConfig() {
@@ -174,75 +299,114 @@
         tamano: document.getElementById('cfg-tamano').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
-        colorTitulo: document.getElementById('cfg-color-titulo').value,
-        colorTexto: document.getElementById('cfg-color-texto').value,
-        imagenBg: galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : ""
+        colorTitulo: '#4DB6AC',
+        colorTexto: '#FFFFFF',
+        imagenBg: customImageBg
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
+      actualizarPreviewEstilos(cfg);
     }
 
-    function cargarGaleriaFotos(event) {
-      const files = event.target.files;
-      if (!files || files.length === 0) return;
-
-      let cargadas = 0;
-      for (let i = 0; i < files.length; i++) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          galeriaFotos.push(e.target.result);
-          cargadas++;
-          if (cargadas === files.length) {
-            try {
-              localStorage.setItem('proyector_galeria_' + comunidadPath, JSON.stringify(galeriaFotos));
-            } catch(err) {}
-            renderGaleriaThumbs();
-            document.getElementById('cfg-fondo').value = 'custom';
-            fotoActivaIdx = galeriaFotos.length - 1;
-            guardarEstiloConfig();
-            alert(`¡${files.length} imágenes cargadas con éxito! Hacé clic en las miniaturas para cambiarlas en vivo.`);
-          }
-        };
-        reader.readAsDataURL(files[i]);
+    function aplicarPaleta(fondoHex, tituloHex, textoHex, fuenteTipo) {
+      document.getElementById('cfg-fondo').value = fondoHex;
+      if (fuenteTipo === 'Serif') {
+        document.getElementById('cfg-fuente').value = "'Georgia', 'Playfair Display', serif";
+      } else {
+        document.getElementById('cfg-fuente').value = "'Helvetica Neue', Arial, sans-serif";
       }
-    }
-
-    function renderGaleriaThumbs() {
-      const preview = document.getElementById('galeria-preview');
-      preview.innerHTML = galeriaFotos.map((img, idx) => `
-        <img src="${img}" class="thumb ${idx === fotoActivaIdx ? 'active' : ''}" onclick="seleccionarFoto(${idx})" title="Toma ${idx + 1}">
-      `).join('');
-    }
-
-    function seleccionarFoto(idx) {
-      fotoActivaIdx = idx;
-      renderGaleriaThumbs();
-      document.getElementById('cfg-fondo').value = 'custom';
       guardarEstiloConfig();
+    }
+
+    function actualizarPreviewEstilos(cfg) {
+      const box = document.getElementById('preview-box');
+      const txt = document.getElementById('prev-texto');
+      const tit = document.getElementById('prev-titulo');
+      const par = document.getElementById('prev-parroquia');
+
+      if (cfg.fondo === 'custom' && cfg.imagenBg) {
+        box.style.backgroundImage = `url(${cfg.imagenBg})`;
+        box.style.backgroundColor = 'transparent';
+      } else if (cfg.fondo && cfg.fondo.startsWith('linear-gradient')) {
+        box.style.background = cfg.fondo;
+      } else if (cfg.fondo) {
+        box.style.backgroundColor = cfg.fondo;
+        box.style.backgroundImage = 'none';
+      }
+      if (cfg.fuente) box.style.fontFamily = cfg.fuente;
+      if (cfg.tamano) {
+        // Escalar tamaño para el preview miniatura
+        txt.style.fontSize = '1.3rem';
+      }
+      if (cfg.nombreParroquia) par.innerText = cfg.nombreParroquia;
+    }
+
+    function cargarImagenFondo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customImageBg = e.target.result;
+        try {
+          localStorage.setItem('proyector_bg_' + comunidadPath, customImageBg);
+        } catch(err) {}
+        document.getElementById('cfg-fondo').value = 'custom';
+        guardarEstiloConfig();
+        alert("¡Imagen de fondo cargada!");
+      };
+      reader.readAsDataURL(file);
     }
 
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
       baseParroquiaNombre = d.nombre || 'Parroquia';
-      document.getElementById('parroquia-nombre').innerText = baseParroquiaNombre + " - Operador";
+      document.getElementById('parroquia-nombre').innerText = baseParroquiaNombre;
 
       const nombreInput = document.getElementById('cfg-nombre-parroquia');
       if (!nombreInput.value) {
         nombreInput.value = baseParroquiaNombre;
       }
 
-      const infoBox = document.getElementById('info-transmision');
-      if (d.estado_vivo) {
-        infoBox.innerHTML = `🟢 <b>Misa en Vivo ACTIVA</b> · Transmitiendo para la asamblea`;
-      } else {
-        infoBox.innerHTML = `⚪ <b>Misa en Vivo INACTIVA</b> · Tocá "Transmitir" en la App para emitir`;
-      }
-
       if (d.cancion_actual && d.cancion_actual !== cancionActualId) {
         cancionActualId = d.cancion_actual;
         cargarCancion(cancionActualId);
-      } else if (!d.cancion_actual) {
-        document.getElementById('estrofas-container').innerHTML = `<div style="text-align:center; padding:30px; color:#888;">El músico no ha seleccionado ninguna canción aún.<br>Abrí cualquier canción en la App para ver las estrofas aquí.</div>`;
+      }
+    });
+
+    // Escuchar proyeccion_vivo para actualizar el Preview en tiempo real
+    db.ref(comunidadPath + '/proyeccion_vivo').on('value', s => {
+      const data = s.val();
+      const par = document.getElementById('prev-parroquia');
+      const tit = document.getElementById('prev-titulo');
+      const txt = document.getElementById('prev-texto');
+      const cnt = document.getElementById('prev-counter');
+
+      if (!data) {
+        par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+        tit.style.display = 'none';
+        txt.innerHTML = "Bienvenidos a la Santa Misa 🕊️";
+        cnt.innerText = "";
+        return;
+      }
+
+      par.innerText = data.comunidadNombre || 'Parroquia';
+
+      if (data.modo === 'NEGRA') {
+        tit.style.display = 'none';
+        txt.innerHTML = "<span style='color:#333'>[ Pantalla Negra ]</span>";
+        cnt.innerText = "";
+        return;
+      }
+
+      if (data.modo === 'BIENVENIDA') {
+        tit.style.display = 'none';
+        txt.innerHTML = darFormato(data.titulo || 'Bienvenidos');
+        cnt.innerText = "";
+      } else {
+        tit.style.display = 'block';
+        tit.innerText = data.titulo || '';
+        txt.innerHTML = darFormato(data.bloqueTexto || '');
+        cnt.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
       }
     });
 
@@ -250,29 +414,40 @@
       db.ref(`canciones_base/${id}`).once('value', s => {
         if (!s.exists()) return;
         const c = s.val();
-        document.getElementById('cancion-titulo').innerText = "🎶 Canción Activa: " + (c.title || "Canción en Vivo");
+        document.getElementById('cancion-titulo').innerText = "🎶 " + (c.title || "Canción en Vivo");
         const lyrics = (c.lyrics || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
         estrofasList = lyrics.split(/\n\s*\n/).filter(x => x.trim().length > 0);
-        renderEstrofas(c.title || "Canción");
+        renderEstrofas();
       });
     }
 
-    function renderEstrofas(titulo) {
+    function renderEstrofas() {
       const container = document.getElementById('estrofas-container');
       if (estrofasList.length === 0) {
         container.innerHTML = "No hay letra disponible para esta canción.";
         return;
       }
       container.innerHTML = estrofasList.map((e, idx) => `
-        <div class="stanza-card ${idx === activeIdx ? 'active' : ''}" onclick="proyectarEstrofa('${titulo.replace(/'/g, "\\'")}', ${idx})">
-          <small style="color:#80CBC4">Estrofa ${idx + 1}:</small><br>${darFormato(e.trim())}
+        <div class="stanza-card ${idx === activeIdx ? 'active' : ''}" onclick="proyectarEstrofa(${idx})">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:0.8rem; color:var(--accent-light); font-weight:bold;">Estrofa ${idx + 1}</span>
+            <span class="stanza-badge">${idx === activeIdx ? 'Actual' : 'Seleccionar'}</span>
+          </div>
+          <div class="stanza-info">${darFormato(e.trim())}</div>
         </div>
       `).join('');
     }
 
-    function proyectarEstrofa(titulo, idx) {
+    function moverEstrofa(delta) {
+      if (estrofasList.length === 0) return;
+      activeIdx = (activeIdx + delta).clamp(0, estrofasList.length - 1);
+      proyectarEstrofa(activeIdx);
+    }
+
+    function proyectarEstrofa(idx) {
       activeIdx = idx;
-      renderEstrofas(titulo);
+      renderEstrofas();
+      const titulo = document.getElementById('cancion-titulo').innerText.replace("🎶 Canción Activa: ", "");
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'CANCCION',
@@ -300,20 +475,40 @@
 
     function mostrarNegra() {
       activeIdx = -1;
-      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'NEGRA',
         titulo: '',
         bloqueTexto: '',
         bloqueIndex: 0,
         totalBloques: 0,
-        comunidadNombre: nombreParroquia
+        comunidadNombre: document.getElementById('cfg-nombre-parroquia').value.trim()
       });
     }
 
     function abrirProyectorCañon() {
       window.open('proyector.html?comunidad=' + encodeURIComponent(comunidadPath), '_blank', 'width=1280,height=720');
     }
+
+    // ATAJOS DE TECLADO / PEDAL BLUETOOTH
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        moverEstrofa(1);
+      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        e.preventDefault();
+        moverEstrofa(-1);
+      } else if (e.key.toLowerCase() === 'n') {
+        mostrarNegra();
+      } else if (e.key.toLowerCase() === 'b') {
+        mostrarBienvenida();
+      }
+    });
+
+    // Helper clamp para índices
+    Number.prototype.clamp = function(min, max) {
+      return Math.min(Math.max(this, min), max);
+    };
   </script>
 </body>
 </html>
