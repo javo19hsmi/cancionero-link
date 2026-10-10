@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consola del Operador de Proyector 🎛️</title>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     body {
@@ -41,14 +40,9 @@
 
   <script>
     firebase.initializeApp({
-      apiKey: "AIzaSyAoWW-KDKXaC06zIvvMqvUjRoEpSbFtaj8",
       databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
     });
-    const auth = firebase.auth();
     const db = firebase.database();
-
-    // Autenticación Anónima para permitir escrituras en Firebase sin error
-    auth.signInAnonymously().catch(err => console.log("Auth Anónima:", err));
 
     const urlParams = new URLSearchParams(window.location.search);
     let comunidadPath = urlParams.get('comunidad') || 'comunidades/san_cayetano';
