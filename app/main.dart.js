@@ -85620,10 +85620,13 @@ case 5:case 3:return B.o(null,r)}})
 return B.p($async$GQ,r)},
 aCP(a,b){var s=B.c63(this.a.c.e,this.d)
 return new B.bi($.cm(),new B.btC(this,a,s,b),null,null,t.A)},
-aJE(){var s=this.a.c,r=B.a_("\\[[^\\]]*\\]",!0,!1,!1,!1),q=A.h.l0(A.h.a2(B.ai(s.d,r,"")),B.a_("\\n\\s*\\n",!0,!1,!1,!1))
-s=B.a0(q).i("bf<1>")
-s=B.N(new B.bf(q,new B.btY(),s),s.i("z.E"))
-return s},
+aJE(){var s,r=this.a.c,q=B.a_("\\{.*?\\}",!0,!1,!1,!1)
+r=B.ai(r.d,q,"")
+q=B.a_("\\[[^\\]]*\\]",!0,!1,!1,!1)
+s=A.h.l0(A.h.a2(B.ai(r,q,"")),B.a_("\\n\\s*\\n",!0,!1,!1,!1))
+r=B.a0(s).i("bf<1>")
+r=B.N(new B.bf(s,new B.btY(),r),r.i("z.E"))
+return r},
 GU(){var s=0,r=B.q(t.H),q,p=this,o,n,m,l,k,j,i,h
 var $async$GU=B.m(function(a,b){if(a===1)return B.n(b,r)
 while(true)switch(s){case 0:h=p.c
