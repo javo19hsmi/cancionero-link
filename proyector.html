@@ -100,16 +100,8 @@
 
     let customParroquiaNombre = "";
 
-    // Aplicar imagen de fondo si existe en localStorage
-    try {
-      const savedImg = localStorage.getItem('proyector_bg_' + comunidadPath);
-      if (savedImg) {
-        document.body.style.backgroundImage = `url(${savedImg})`;
-      }
-    } catch(e) {}
-
     // Escuchar configuración de estilo en vivo desde la Nube
-    db.ref(comunidadPath + '/proyeccion_config').on('value', s => {
+    db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (!cfg) return;
 
@@ -118,10 +110,15 @@
       const texto = document.getElementById('texto-principal');
 
       if (cfg.fondo) {
-        if (cfg.fondo.startsWith('linear-gradient')) {
+        if (cfg.fondo === 'custom' && cfg.imagenBg) {
+          cuerpo.style.backgroundImage = `url(${cfg.imagenBg})`;
+          cuerpo.style.backgroundSize = 'cover';
+          cuerpo.style.backgroundPosition = 'center';
+        } else if (cfg.fondo.startsWith('linear-gradient')) {
           cuerpo.style.background = cfg.fondo;
         } else {
           cuerpo.style.backgroundColor = cfg.fondo;
+          cuerpo.style.backgroundImage = 'none';
         }
       }
       if (cfg.fuente) cuerpo.style.fontFamily = cfg.fuente;
