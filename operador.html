@@ -21,7 +21,17 @@
     .stanza-card { background: #1E1E1E; border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 1.1rem; line-height: 1.5; }
     .stanza-card:hover { background: #2A2A2A; border-color: #4DB6AC; }
     .stanza-card.active { background: #004D40; border-color: #80CBC4; font-weight: bold; color: #FFF; }
+    .stanza-card b { color: #80CBC4; }
+    .stanza-card i { font-style: italic; opacity: 0.9; }
     .transmision-info { background: #1E2827; border: 1px solid #00695C; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; color: #80CBC4; }
+
+    /* Panel de Personalización */
+    .design-panel { background: #1A1A1A; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+    .design-panel summary { font-weight: bold; color: #4DB6AC; cursor: pointer; font-size: 1.05rem; }
+    .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    .field-group label { font-size: 0.85rem; color: #AAA; font-weight: bold; }
+    .field-group select, .field-group input { background: #2A2A2A; color: white; border: 1px solid #444; padding: 8px; border-radius: 6px; font-size: 0.9rem; }
   </style>
 </head>
 <body>
@@ -35,6 +45,61 @@
   </div>
 
   <div id="info-transmision" class="transmision-info">📡 Sintonizando señal del músico en vivo...</div>
+
+  <!-- PANEL DESPLEGABLE DE PERSONALIZACIÓN -->
+  <details class="design-panel">
+    <summary>🎨 Personalización de Estilo del Proyector (Guardado en Nube)</summary>
+    <div class="panel-grid">
+      <div class="field-group">
+        <label>Fondo del Proyector:</label>
+        <select id="cfg-fondo" onchange="guardarEstiloConfig()">
+          <option value="#050505">Negro Absoluto (Misa)</option>
+          <option value="#0D1B2A">Azul Noche Litúrgico</option>
+          <option value="#1B0024">Púrpura / Morado (Cuaresma/Adviento)</option>
+          <option value="#002411">Verde Litúrgico</option>
+          <option value="#00FF00">🟩 Modo OBS Chroma Key (Verde Transparente)</option>
+          <option value="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)">Degradado Azul a Negro</option>
+          <option value="linear-gradient(135deg, #1B0024 0%, #000000 100%)">Degradado Borgoña a Negro</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>Tipografía:</label>
+        <select id="cfg-fuente" onchange="guardarEstiloConfig()">
+          <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
+          <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
+          <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>Tamaño de Letra Estrofas:</label>
+        <select id="cfg-tamano" onchange="guardarEstiloConfig()">
+          <option value="3.0rem">Pequeña (3.0rem)</option>
+          <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
+          <option value="4.5rem">Grande (4.5rem)</option>
+
+          <option value="5.2rem">Gigante (5.2rem)</option>
+        </select>
+      </div>
+
+      <div class="field-group">
+        <label>Nombre Capilla/Parroquia:</label>
+        <input type="text" id="cfg-nombre-parroquia" placeholder="Ej: Capilla San Cayetano" onchange="guardarEstiloConfig()">
+      </div>
+
+      <div class="field-group">
+        <label>Color Título Canción:</label>
+        <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="guardarEstiloConfig()">
+      </div>
+
+      <div class="field-group">
+        <label>Color Texto Estrofas:</label>
+        <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="guardarEstiloConfig()">
+      </div>
+    </div>
+  </details>
+
   <div id="cancion-titulo" style="font-size:1.2rem; color:#FFD700; margin-bottom:15px; font-weight:bold;">Seleccioná una estrofa para proyectar al instante:</div>
   <div id="estrofas-container" class="stanzas-list">Esperando canción seleccionada en la App...</div>
 
@@ -52,10 +117,46 @@
     let estrofasList = [];
     let activeIdx = -1;
 
+    function darFormato(t) {
+      if (!t) return "";
+      return t
+        .replace(/\{.*?\}/g, "")
+        .replace(/\[.*?\]/g, "")
+        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
+        .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
+        .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+    }
+
+    // Cargar configuración guardada en la Nube
+    db.ref(comunidadPath + '/proyector_config').on('value', s => {
+      const cfg = s.val();
+      if (cfg) {
+        if (cfg.fondo) document.getElementById('cfg-fondo').value = cfg.fondo;
+        if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
+        if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
+        if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
+        if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
+        if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
+      }
+    });
+
+    function guardarEstiloConfig() {
+      const cfg = {
+        fondo: document.getElementById('cfg-fondo').value,
+        fuente: document.getElementById('cfg-fuente').value,
+        tamano: document.getElementById('cfg-tamano').value,
+        nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
+        colorTitulo: document.getElementById('cfg-color-titulo').value,
+        colorTexto: document.getElementById('cfg-color-texto').value,
+      };
+      db.ref(comunidadPath + '/proyector_config').set(cfg);
+    }
+
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
-      document.getElementById('parroquia-nombre').innerText = (d.nombre || 'Parroquia') + " - Operador";
+      const customNombre = document.getElementById('cfg-nombre-parroquia').value.trim();
+      document.getElementById('parroquia-nombre').innerText = (customNombre || d.nombre || 'Parroquia') + " - Operador";
 
       const infoBox = document.getElementById('info-transmision');
       if (d.estado_vivo) {
@@ -91,7 +192,7 @@
       }
       container.innerHTML = estrofasList.map((e, idx) => `
         <div class="stanza-card ${idx === activeIdx ? 'active' : ''}" onclick="proyectarEstrofa('${titulo.replace(/'/g, "\\'")}', ${idx})">
-          <small style="color:#80CBC4">Estrofa ${idx + 1}:</small><br>${e.trim()}
+          <small style="color:#80CBC4">Estrofa ${idx + 1}:</small><br>${darFormato(e.trim())}
         </div>
       `).join('');
     }
@@ -105,31 +206,33 @@
         bloqueTexto: estrofasList[idx],
         bloqueIndex: idx,
         totalBloques: estrofasList.length,
-        comunidadNombre: document.getElementById('parroquia-nombre').innerText
+        comunidadNombre: document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "")
       });
     }
 
     function mostrarBienvenida() {
       activeIdx = -1;
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "");
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'BIENVENIDA',
         titulo: 'Bienvenidos a la Santa Misa 🕊️',
-        bloqueTexto: document.getElementById('parroquia-nombre').innerText,
+        bloqueTexto: nombreParroquia,
         bloqueIndex: 0,
         totalBloques: 1,
-        comunidadNombre: document.getElementById('parroquia-nombre').innerText
+        comunidadNombre: nombreParroquia
       });
     }
 
     function mostrarNegra() {
       activeIdx = -1;
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "");
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'NEGRA',
         titulo: '',
         bloqueTexto: '',
         bloqueIndex: 0,
         totalBloques: 0,
-        comunidadNombre: document.getElementById('parroquia-nombre').innerText
+        comunidadNombre: nombreParroquia
       });
     }
 

@@ -16,7 +16,7 @@
       min-height: 100vh; text-align: center;
       overflow: hidden; position: relative;
     }
-    .pantalla-negra { background-color: #000000 !important; }
+    .pantalla-negra { background: #000000 !important; }
 
     .top-left-parroquia {
       position: absolute; top: 25px; left: 35px;
@@ -34,8 +34,8 @@
       font-size: 3.8rem; line-height: 1.35; font-weight: bold;
       max-width: 88%; margin: 0 auto; padding-top: 40px;
     }
-    .bloque-texto b { color: #FFFFFF; }
-    .bloque-texto i { font-style: italic; color: #E0E0E0; }
+    .bloque-texto b { color: inherit; }
+    .bloque-texto i { font-style: italic; opacity: 0.9; }
 
     .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; }
     .footer-right { position: absolute; bottom: 25px; right: 35px; font-size: 1.1rem; color: #FFD700; font-weight: bold; opacity: 0.85; }
@@ -66,6 +66,7 @@
     function darFormato(t) {
       if (!t) return "";
       return t
+        .replace(/\{.*?\}/g, "")
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
@@ -96,6 +97,34 @@
       comunidadPath = 'comunidades/' + comunidadPath;
     }
 
+    let customParroquiaNombre = "";
+
+    // Escuchar configuración de estilo en vivo desde la Nube
+    db.ref(comunidadPath + '/proyector_config').on('value', s => {
+      const cfg = s.val();
+      if (!cfg) return;
+
+      const cuerpo = document.getElementById('cuerpo');
+      const cancionHeader = document.getElementById('cancion-header');
+      const texto = document.getElementById('texto-principal');
+
+      if (cfg.fondo) {
+        if (cfg.fondo.startsWith('linear-gradient')) {
+          cuerpo.style.background = cfg.fondo;
+        } else {
+          cuerpo.style.backgroundColor = cfg.fondo;
+        }
+      }
+      if (cfg.fuente) cuerpo.style.fontFamily = cfg.fuente;
+      if (cfg.tamano) texto.style.fontSize = cfg.tamano;
+      if (cfg.colorTitulo) cancionHeader.style.color = cfg.colorTitulo;
+      if (cfg.colorTexto) texto.style.color = cfg.colorTexto;
+      if (cfg.nombreParroquia) {
+        customParroquiaNombre = cfg.nombreParroquia;
+        document.getElementById('header-parroquia').innerText = cfg.nombreParroquia;
+      }
+    });
+
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', snapshot => {
       const data = snapshot.val();
       const cuerpo = document.getElementById('cuerpo');
@@ -105,7 +134,7 @@
       const footerPage = document.getElementById('footer-page');
 
       if (!data) {
-        headerParroquia.innerText = "Comunidad Sintonizada";
+        headerParroquia.innerText = customParroquiaNombre || "Comunidad Sintonizada";
         texto.innerText = "Bienvenidos a la Santa Misa 🕊️";
         return;
       }
@@ -122,7 +151,7 @@
       cuerpo.className = '';
       document.getElementById('contenido').style.display = 'block';
       headerParroquia.style.display = 'block';
-      headerParroquia.innerText = data.comunidadNombre || 'Parroquia';
+      headerParroquia.innerText = customParroquiaNombre || data.comunidadNombre || 'Parroquia';
 
       if (data.modo === 'BIENVENIDA') {
         cancionHeader.style.display = 'none';
