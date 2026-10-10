@@ -38,7 +38,7 @@
     .nav-item.active { background: var(--accent); color: white; }
 
     /* CONTENIDO PRINCIPAL EN 2 COLUMNAS (CENTRO + PREVIEW) */
-    .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 420px; height: 100vh; overflow: hidden; }
+    .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 440px; height: 100vh; overflow: hidden; }
 
     /* PANEL CENTRAL DE CONTROL */
     .control-panel { padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #30363d; }
@@ -55,28 +55,31 @@
     .btn-arrow { flex: 1; background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
     .btn-arrow:hover { background: var(--accent); color: white; }
 
-    .quick-modes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-    .quick-btn { background: var(--card-bg); border: 1px solid #30363d; color: var(--text); padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; text-align: center; font-size: 0.85rem; transition: all 0.2s; }
-    .quick-btn:hover { background: var(--card-hover); border-color: var(--accent-light); }
-
-    .stanzas-container { display: flex; flex-direction: column; gap: 10px; }
-    .stanza-row {
-      background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;
+    /* GRILLA DE ESTROFAS (ENTRAN 3 POR FILA) */
+    .stanzas-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
     }
-    .stanza-row:hover { background: var(--card-hover); border-color: var(--accent-light); }
-    .stanza-row.active { background: var(--active-bg); border-color: var(--active-border); }
-    .stanza-info { flex: 1; white-space: pre-wrap; font-size: 1rem; line-height: 1.4; }
-    .stanza-badge { background: #333; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; color: #888; font-weight: bold; }
-    .stanza-row.active .stanza-badge { background: var(--accent-light); color: #000; }
+    .stanza-card {
+      background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;
+    }
+    .stanza-card:hover { background: var(--card-hover); border-color: var(--accent-light); }
+    .stanza-card.active { background: var(--active-bg); border-color: var(--active-border); }
+    .stanza-info { flex: 1; }
+    .stanza-badge { background: #333; padding: 3px 8px; border-radius: 20px; font-size: 0.7rem; color: #888; font-weight: bold; }
+    .stanza-card.active .stanza-badge { background: var(--accent-light); color: #000; }
+    .stanza-card b { color: #80CBC4; }
+    .stanza-card i { font-style: italic; opacity: 0.9; }
 
-    /* PANEL DERECHO: VISTA PREVIA EN VIVO (LIVE PREVIEW 16:9) */
-    .preview-panel { background: #090d12; padding: 25px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    .preview-container { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; box-shadow: 0 12px 32px rgba(0,0,0,0.8); background-size: cover; background-position: center; }
-    .preview-parroquia { position: absolute; top: 12px; left: 15px; font-size: 0.75rem; color: #888; font-weight: bold; text-transform: uppercase; }
-    .preview-titulo { position: absolute; top: 16px; font-size: 1rem; color: var(--accent-light); font-weight: bold; }
-    .preview-texto { font-size: 1.6rem; font-weight: bold; line-height: 1.35; max-width: 90%; }
-    .preview-footer { position: absolute; bottom: 10px; right: 15px; font-size: 0.7rem; color: var(--gold); font-weight: bold; }
-    .preview-counter { position: absolute; bottom: 10px; left: 15px; font-size: 0.7rem; color: #666; }
+    /* PANEL DERECHO: VISTA PREVIA EN VIVO ARRIBA + INFO ABAJO */
+    .preview-panel { background: #090d12; padding: 20px; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; overflow-y: auto; }
+    .preview-container { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 16px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px; box-sizing: border-box; box-shadow: 0 12px 32px rgba(0,0,0,0.8); background-size: cover; background-position: center; margin-top: 10px; }
+    .preview-parroquia { position: absolute; top: 10px; left: 12px; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
+    .preview-titulo { position: absolute; top: 12px; font-size: 0.85rem; color: var(--accent-light); font-weight: bold; }
+    .preview-texto { font-size: 1.3rem; font-weight: bold; line-height: 1.35; max-width: 90%; }
+    .preview-footer { position: absolute; bottom: 8px; right: 12px; font-size: 0.6rem; color: var(--gold); font-weight: bold; }
+    .preview-counter { position: absolute; bottom: 8px; left: 12px; font-size: 0.6rem; color: #666; }
 
     /* PALETAS LITÚRGICAS */
     .palettes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -135,7 +138,7 @@
         <div id="cancion-titulo" style="font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-top: 5px;">🎶 Esperando canción en la App...</div>
 
         <div id="estrofas-container" class="stanzas-container">
-          <div style="text-align: center; padding: 40px; color: var(--text-muted);">Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>
+          <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1/-1;">Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>
         </div>
       </div>
 
@@ -173,10 +176,18 @@
         <div class="field-group">
           <label>Tamaño de Letra Estrofas:</label>
           <select id="cfg-tamano" onchange="guardarEstiloConfig()">
-            <option value="2.5rem">Pequeña (2.5rem)</option>
-            <option value="3.5rem" selected>Mediana / Estándar (3.5rem)</option>
+            <option value="3.0rem">Pequeña (3.0rem)</option>
+            <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
             <option value="4.5rem">Grande (4.5rem)</option>
-            <option value="5.5rem">Gigante (5.5rem)</option>
+            <option value="5.2rem">Gigante (5.2rem)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label>Efecto de Transición:</label>
+          <select id="cfg-transicion" onchange="guardarEstiloConfig()">
+            <option value="fade">Fundido Suave (Fade)</option>
+            <option value="slide">Desplazamiento (Slide)</option>
+            <option value="none">Instantáneo (Sin animación)</option>
           </select>
         </div>
         <div class="field-group">
@@ -204,10 +215,6 @@
             <option value="linear-gradient(135deg, #1B0024 0%, #000000 100%)">Degradado Borgoña a Negro</option>
           </select>
         </div>
-        <div class="field-group">
-          <label>Subir Imagen de Fondo Propia:</label>
-          <input type="file" id="cfg-imagen-fondo" accept="image/*" onchange="cargarImagenFondo(event)">
-        </div>
       </div>
 
       <!-- VISTA TAB: ATAJOS -->
@@ -226,15 +233,24 @@
 
     </div>
 
-    <!-- PANEL DERECHO: VISTA PREVIA EN VIVO (LIVE PREVIEW 16:9) -->
+    <!-- PANEL DERECHO: VISTA PREVIA EN VIVO (ARRIBA) + ESTADO ACTUAL (ABAJO) -->
     <div class="preview-panel">
-      <div style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">📺 Vista previa del proyector</div>
+      <div style="font-size: 0.8rem; font-weight: bold; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;">📺 Vista previa del proyector</div>
       <div id="preview-box" class="preview-container">
         <div id="prev-parroquia" class="preview-parroquia">Parroquia</div>
         <div id="prev-titulo" class="preview-titulo" style="display:none;">Título</div>
         <div id="prev-texto" class="preview-texto">Vista previa en vivo</div>
         <div id="prev-counter" class="preview-counter"></div>
         <div class="preview-footer">Cancionero Parroquial 🕊️</div>
+      </div>
+
+      <!-- LO QUE SE ESTÁ VIENDO EN VIVO (ABAJO DEL PREVIEW) -->
+      <div style="width: 100%; margin-top: 15px; background: var(--card-bg); border: 1px solid #30363d; padding: 14px; border-radius: 14px; font-size: 0.85rem;">
+        <div style="color: var(--accent-light); font-weight: bold; margin-bottom: 6px; display:flex; align-items:center; gap:6px;">
+          <span>🟢</span> Lo que se está proyectando ahora:
+        </div>
+        <div id="live-info-titulo" style="color: var(--gold); font-weight: bold; margin-bottom: 4px;">Esperando proyección...</div>
+        <div id="live-info-texto" style="color: var(--text-muted); white-space: pre-wrap; font-size: 0.8rem; line-height: 1.35; max-height: 80px; overflow-y: auto;">-</div>
       </div>
     </div>
 
@@ -254,7 +270,6 @@
     let estrofasList = [];
     let activeIdx = -1;
     let baseParroquiaNombre = "Parroquia";
-    let customImageBg = "";
 
     function switchTab(tabId, el) {
       document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
@@ -280,28 +295,23 @@
         if (cfg.fondo) document.getElementById('cfg-fondo').value = cfg.fondo;
         if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
+        if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
-        if (cfg.imagenBg) customImageBg = cfg.imagenBg;
         actualizarPreviewEstilos(cfg);
       }
     });
-
-    try {
-      const savedBg = localStorage.getItem('proyector_bg_' + comunidadPath);
-      if (savedBg) customImageBg = savedBg;
-    } catch(e) {}
 
     function guardarEstiloConfig() {
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
         tamano: document.getElementById('cfg-tamano').value,
+        transicion: document.getElementById('cfg-transicion').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         colorTitulo: '#4DB6AC',
-        colorTexto: '#FFFFFF',
-        imagenBg: customImageBg
+        colorTexto: '#FFFFFF'
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
       actualizarPreviewEstilos(cfg);
@@ -320,40 +330,16 @@
     function actualizarPreviewEstilos(cfg) {
       const box = document.getElementById('preview-box');
       const txt = document.getElementById('prev-texto');
-      const tit = document.getElementById('prev-titulo');
       const par = document.getElementById('prev-parroquia');
 
-      if (cfg.fondo === 'custom' && cfg.imagenBg) {
-        box.style.backgroundImage = `url(${cfg.imagenBg})`;
-        box.style.backgroundColor = 'transparent';
-      } else if (cfg.fondo && cfg.fondo.startsWith('linear-gradient')) {
+      if (cfg.fondo && cfg.fondo.startsWith('linear-gradient')) {
         box.style.background = cfg.fondo;
       } else if (cfg.fondo) {
         box.style.backgroundColor = cfg.fondo;
         box.style.backgroundImage = 'none';
       }
       if (cfg.fuente) box.style.fontFamily = cfg.fuente;
-      if (cfg.tamano) {
-        // Escalar tamaño para el preview miniatura
-        txt.style.fontSize = '1.3rem';
-      }
       if (cfg.nombreParroquia) par.innerText = cfg.nombreParroquia;
-    }
-
-    function cargarImagenFondo(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        customImageBg = e.target.result;
-        try {
-          localStorage.setItem('proyector_bg_' + comunidadPath, customImageBg);
-        } catch(err) {}
-        document.getElementById('cfg-fondo').value = 'custom';
-        guardarEstiloConfig();
-        alert("¡Imagen de fondo cargada!");
-      };
-      reader.readAsDataURL(file);
     }
 
     db.ref(comunidadPath).on('value', snapshot => {
@@ -373,19 +359,23 @@
       }
     });
 
-    // Escuchar proyeccion_vivo para actualizar el Preview en tiempo real
+    // Escuchar proyeccion_vivo para actualizar el Preview y la tarjeta "Lo que se está viendo"
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', s => {
       const data = s.val();
       const par = document.getElementById('prev-parroquia');
       const tit = document.getElementById('prev-titulo');
       const txt = document.getElementById('prev-texto');
       const cnt = document.getElementById('prev-counter');
+      const liveTit = document.getElementById('live-info-titulo');
+      const liveTxt = document.getElementById('live-info-texto');
 
       if (!data) {
         par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
         tit.style.display = 'none';
         txt.innerHTML = "Bienvenidos a la Santa Misa 🕊️";
         cnt.innerText = "";
+        liveTit.innerText = "Bienvenida";
+        liveTxt.innerText = "Bienvenidos a la Santa Misa 🕊️";
         return;
       }
 
@@ -393,8 +383,10 @@
 
       if (data.modo === 'NEGRA') {
         tit.style.display = 'none';
-        txt.innerHTML = "<span style='color:#333'>[ Pantalla Negra ]</span>";
+        txt.innerHTML = "<span style='color:#555'>[ Pantalla Negra ]</span>";
         cnt.innerText = "";
+        liveTit.innerText = "Apagón (Pantalla Negra)";
+        liveTxt.innerText = "Sin contenido en pantalla";
         return;
       }
 
@@ -402,11 +394,15 @@
         tit.style.display = 'none';
         txt.innerHTML = darFormato(data.titulo || 'Bienvenidos');
         cnt.innerText = "";
+        liveTit.innerText = "Pantalla de Bienvenida";
+        liveTxt.innerText = data.titulo || '';
       } else {
         tit.style.display = 'block';
         tit.innerText = data.titulo || '';
         txt.innerHTML = darFormato(data.bloqueTexto || '');
         cnt.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
+        liveTit.innerText = data.titulo || 'Canción';
+        liveTxt.innerText = data.bloqueTexto || '';
       }
     });
 
@@ -424,13 +420,13 @@
     function renderEstrofas() {
       const container = document.getElementById('estrofas-container');
       if (estrofasList.length === 0) {
-        container.innerHTML = "No hay letra disponible para esta canción.";
+        container.innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:30px; color:#888;'>No hay letra disponible para esta canción.</div>";
         return;
       }
       container.innerHTML = estrofasList.map((e, idx) => `
         <div class="stanza-card ${idx === activeIdx ? 'active' : ''}" onclick="proyectarEstrofa(${idx})">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <span style="font-size:0.8rem; color:var(--accent-light); font-weight:bold;">Estrofa ${idx + 1}</span>
+            <span style="font-size:0.75rem; color:var(--accent-light); font-weight:bold;">Estrofa ${idx + 1}</span>
             <span class="stanza-badge">${idx === activeIdx ? 'Actual' : 'Seleccionar'}</span>
           </div>
           <div class="stanza-info">${darFormato(e.trim())}</div>
@@ -447,7 +443,7 @@
     function proyectarEstrofa(idx) {
       activeIdx = idx;
       renderEstrofas();
-      const titulo = document.getElementById('cancion-titulo').innerText.replace("🎶 Canción Activa: ", "");
+      const titulo = document.getElementById('cancion-titulo').innerText.replace("🎶 ", "");
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'CANCCION',
@@ -475,13 +471,14 @@
 
     function mostrarNegra() {
       activeIdx = -1;
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'NEGRA',
         titulo: '',
         bloqueTexto: '',
         bloqueIndex: 0,
         totalBloques: 0,
-        comunidadNombre: document.getElementById('cfg-nombre-parroquia').value.trim()
+        comunidadNombre: nombreParroquia
       });
     }
 
@@ -505,7 +502,6 @@
       }
     });
 
-    // Helper clamp para índices
     Number.prototype.clamp = function(min, max) {
       return Math.min(Math.max(this, min), max);
     };
