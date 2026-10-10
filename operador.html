@@ -14,7 +14,6 @@
       --card-hover: #30363d;
       --active-bg: #004d40;
       --active-border: #80cbc4;
-      --preview-bg: #1f242c;
       --accent: #00695C;
       --accent-light: #4DB6AC;
       --text: #e6edf3;
@@ -53,11 +52,13 @@
     .btn-blue { background: #0288D1; }
 
     .nav-arrows { display: flex; gap: 12px; margin-bottom: 2px; }
-    .btn-arrow { flex: 1; background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); padding: 14px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
-    .btn-arrow:hover { background: var(--accent); color: white; }
+    .btn-arrow { flex: 1; background: #2E2E2E; color: #FFF; border: 1px solid #444; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
+    .btn-arrow:hover { background: var(--card-hover); border-color: var(--accent-light); }
+    .btn-send { flex: 1.5; background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); padding: 12px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s; }
+    .btn-send:hover { background: var(--accent); color: white; }
 
     /* CONTROLES EXTRA DEBAJO DE LAS FLECHAS */
-    .sub-controls-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 10px; }
+    .sub-controls-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
     .font-size-group { display: flex; align-items: center; gap: 6px; }
     .btn-mini { background: #2E2E2E; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
     .btn-mini:hover { background: var(--accent); }
@@ -103,6 +104,9 @@
     .palette-colors { display: flex; gap: 4px; }
     .color-dot { width: 16px; height: 16px; border-radius: 50%; }
 
+    /* PERFILES GUARDADOS */
+    .perfiles-box { background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px; }
+
     /* SECCIONES DINÁMICAS */
     .section-view { display: none; flex-direction: column; gap: 20px; }
     .section-view.active { display: flex; }
@@ -145,10 +149,11 @@
 
       <!-- VISTA TAB: CONTROL -->
       <div id="tab-control" class="section-view active">
-        <!-- FLECHAS DE NAVEGACIÓN -->
+        <!-- FLECHAS Y BOTÓN ENVIAR AL CAÑÓN -->
         <div class="nav-arrows">
           <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
-          <button class="btn-arrow" onclick="enviarAlCañon()" style="background:#00695C; color:#FFF;">Siguiente / Enviar ➔</button>
+          <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
+          <button class="btn-send" onclick="enviarAlCañon()">📡 ENVIAR AL CAÑON ➔</button>
         </div>
 
         <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
@@ -159,7 +164,7 @@
             <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">3.8rem</span>
             <button class="btn-mini" onclick="cambiarTamanoLetra(0.3)">A+</button>
           </div>
-          <div>
+          <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
             <select id="cfg-transicion" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="guardarEstiloConfig()">
               <option value="fade">Fundido (Fade)</option>
@@ -223,6 +228,16 @@
           <label>Color Texto Estrofas:</label>
           <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="guardarEstiloConfig()">
         </div>
+
+        <!-- PERFILES DE COLOR PERSONALIZADOS -->
+        <div class="perfiles-box">
+          <h4 style="color: var(--gold); margin: 0 0 10px 0;">Guardar Perfil Personalizado</h4>
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="input-nombre-perfil" placeholder="Ej: Misa de Jóvenes" style="flex:1;">
+            <button class="btn" onclick="guardarPerfilCustom()">Guardar Perfil</button>
+          </div>
+          <div id="lista-perfiles" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;"></div>
+        </div>
       </div>
 
       <!-- VISTA TAB: FONDOS -->
@@ -255,10 +270,11 @@
           Podés usar el teclado de la computadora o un pedal Bluetooth configurado como flechas para pasar estrofas sin usar el mouse:
         </p>
         <ul style="color: var(--text); line-height: 1.8; font-size: 0.95rem;">
-          <li><b>Barra Espaciadora / Flecha Abajo (↓):</b> Enviar siguiente estrofa al Cañón</li>
-          <li><b>Flecha Arriba (↑):</b> Enviar estrofa anterior al Cañón</li>
-          <li><b>Tecla N:</b> Pantalla Negra (Apagón)</li>
-          <li><b>Tecla B:</b> Pantalla de Bienvenida</li>
+          <li><b>Barra Espaciadora / Enter:</b> Enviar estrofa actual al Cañón</li>
+          <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Preview</li>
+          <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Preview</li>
+          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Vivo</li>
+          <li><b>Tecla B:</b> Pantalla de Bienvenida en Vivo</li>
         </ul>
       </div>
 
@@ -312,6 +328,7 @@
     let galeriaFotos = [];
     let fotoActivaIdx = 0;
     let fontSizeVal = "3.8rem";
+    let perfilesCustom = {};
 
     function switchTab(tabId, el) {
       document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
@@ -330,7 +347,7 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // Cargar config
+    // Cargar config y perfiles
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (cfg) {
@@ -338,14 +355,17 @@
         if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
         if (cfg.tamano) {
           fontSizeVal = cfg.tamano;
-          document.getElementById('cfg-tamano').value = cfg.tamano;
-          document.getElementById('lbl-tamano').innerText = cfg.tamano;
+          document.getElementById('lbl-tamano').innerText = fontSizeVal;
         }
         if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
+        if (cfg.perfiles) {
+          perfilesCustom = cfg.perfiles;
+          renderPerfilesList();
+        }
         if (cfg.imagenBg) customImageBg = cfg.imagenBg;
         actualizarMonitoresEstilos(cfg);
       }
@@ -370,14 +390,62 @@
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
+        perfiles: perfilesCustom,
         imagenBg: galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
       actualizarMonitoresEstilos(cfg);
     }
 
+    function guardarPerfilCustom() {
+      const nombre = document.getElementById('input-nombre-perfil').value.trim();
+      if (!nombre) {
+        alert("Escribí un nombre para el perfil (ej: Misa de Jóvenes)");
+        return;
+      }
+      perfilesCustom[nombre] = {
+        fondo: document.getElementById('cfg-fondo').value,
+        fuente: document.getElementById('cfg-fuente').value,
+        tamano: fontSizeVal,
+        transicion: document.getElementById('cfg-transicion').value,
+        colorTitulo: document.getElementById('cfg-color-titulo').value,
+        colorTexto: document.getElementById('cfg-color-texto').value
+      };
+      document.getElementById('input-nombre-perfil').value = "";
+      guardarEstiloConfig();
+      renderPerfilesList();
+      alert(`¡Perfil "${nombre}" guardado con éxito!`);
+    }
+
+    function cargarPerfilCustom(nombre) {
+      const p = perfilesCustom[nombre];
+      if (!p) return;
+      if (p.fondo) document.getElementById('cfg-fondo').value = p.fondo;
+      if (p.fuente) document.getElementById('cfg-fuente').value = p.fuente;
+      if (p.tamano) {
+        fontSizeVal = p.tamano;
+        document.getElementById('lbl-tamano').innerText = fontSizeVal;
+      }
+      if (p.transicion) document.getElementById('cfg-transicion').value = p.transicion;
+      if (p.colorTitulo) document.getElementById('cfg-color-titulo').value = p.colorTitulo;
+      if (p.colorTexto) document.getElementById('cfg-color-texto').value = p.colorTexto;
+      guardarEstiloConfig();
+      alert(`¡Perfil "${nombre}" aplicado!`);
+    }
+
+    function renderPerfilesList() {
+      const container = document.getElementById('lista-perfiles');
+      const keys = Object.keys(perfilesCustom);
+      if (keys.length === 0) {
+        container.innerHTML = "<span style='font-size:0.8rem; color:#888;'>No hay perfiles guardados aún.</span>";
+        return;
+      }
+      container.innerHTML = keys.map(k => `
+        <button class="btn" style="background:#30363d; font-size:0.75rem; padding:6px 10px;" onclick="cargarPerfilCustom('${k}')">📂 ${k}</button>
+      `).join('');
+    }
+
     function cambiarTamanoLetra(delta) {
-      // Ajuste rápido de tamaño
       let sizes = ["2.5rem", "3.1rem", "3.8rem", "4.5rem", "5.2rem"];
       let idx = sizes.indexOf(fontSizeVal);
       if (idx === -1) idx = 2;
@@ -419,7 +487,7 @@
       });
 
       texts.forEach(t => {
-        t.style.fontSize = '1.1rem'; // Escala para miniatura
+        t.style.fontSize = '1.1rem';
         if (cfg.colorTexto) t.style.color = cfg.colorTexto;
       });
 
@@ -637,10 +705,11 @@
       if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
         e.preventDefault();
         moverEstrofa(1);
-        enviarAlCañon();
       } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
         e.preventDefault();
         moverEstrofa(-1);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
         enviarAlCañon();
       } else if (e.key.toLowerCase() === 'n') {
         mostrarNegra();
