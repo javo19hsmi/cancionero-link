@@ -15,6 +15,7 @@
       justify-content: center; align-items: center;
       min-height: 100vh; text-align: center;
       overflow: hidden; position: relative;
+      background-size: cover; background-position: center;
     }
     .pantalla-negra { background: #000000 !important; }
 
@@ -99,8 +100,16 @@
 
     let customParroquiaNombre = "";
 
+    // Aplicar imagen de fondo si existe en localStorage
+    try {
+      const savedImg = localStorage.getItem('proyector_bg_' + comunidadPath);
+      if (savedImg) {
+        document.body.style.backgroundImage = `url(${savedImg})`;
+      }
+    } catch(e) {}
+
     // Escuchar configuración de estilo en vivo desde la Nube
-    db.ref(comunidadPath + '/proyector_config').on('value', s => {
+    db.ref(comunidadPath + '/proyeccion_config').on('value', s => {
       const cfg = s.val();
       if (!cfg) return;
 

@@ -125,7 +125,6 @@
     let estrofasList = [];
     let activeIdx = -1;
     let baseParroquiaNombre = "Parroquia";
-    let customImageBg = "";
 
     function darFormato(t) {
       if (!t) return "";
@@ -137,7 +136,7 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // Cargar configuración guardada en la Nube
+    // Cargar configuración guardada en la Nube (texto liviano)
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (cfg) {
@@ -148,7 +147,6 @@
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
-        if (cfg.imagenBg) customImageBg = cfg.imagenBg;
       }
     });
 
@@ -160,8 +158,7 @@
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
-        colorTexto: document.getElementById('cfg-color-texto').value,
-        imagenBg: customImageBg
+        colorTexto: document.getElementById('cfg-color-texto').value
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
     }
@@ -171,9 +168,11 @@
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        customImageBg = e.target.result;
-        guardarEstiloConfig();
-        alert("¡Imagen de fondo cargada con éxito!");
+        const base64Img = e.target.result;
+        try {
+          localStorage.setItem('proyector_bg_' + comunidadPath, base64Img);
+        } catch(err) {}
+        alert("¡Imagen de fondo cargada con éxito en esta PC!");
       };
       reader.readAsDataURL(file);
     }
