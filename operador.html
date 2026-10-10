@@ -25,7 +25,6 @@
     .stanza-card i { font-style: italic; opacity: 0.9; }
     .transmision-info { background: #1E2827; border: 1px solid #00695C; padding: 10px 15px; border-radius: 10px; margin-bottom: 15px; font-size: 0.95rem; color: #80CBC4; }
 
-    /* Panel de Personalización */
     .design-panel { background: #1A1A1A; border: 1px solid #333; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
     .design-panel summary { font-weight: bold; color: #4DB6AC; cursor: pointer; font-size: 1.05rem; }
     .panel-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
@@ -64,6 +63,11 @@
       </div>
 
       <div class="field-group">
+        <label>Imagen de Fondo Propia (PC):</label>
+        <input type="file" id="cfg-imagen-fondo" accept="image/*" onchange="cargarImagenFondo(event)">
+      </div>
+
+      <div class="field-group">
         <label>Tipografía:</label>
         <select id="cfg-fuente" onchange="guardarEstiloConfig()">
           <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
@@ -78,14 +82,18 @@
           <option value="3.0rem">Pequeña (3.0rem)</option>
           <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
           <option value="4.5rem">Grande (4.5rem)</option>
-
           <option value="5.2rem">Gigante (5.2rem)</option>
         </select>
       </div>
 
       <div class="field-group">
         <label>Nombre Capilla/Parroquia:</label>
-        <input type="text" id="cfg-nombre-parroquia" placeholder="Ej: Capilla San Cayetano" onchange="guardarEstiloConfig()">
+        <input type="text" id="cfg-nombre-parroquia" placeholder="Cargando nombre..." onchange="guardarEstiloConfig()">
+      </div>
+
+      <div class="field-group">
+        <label>Mensaje de Bienvenida Personalizado:</label>
+        <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="guardarEstiloConfig()">
       </div>
 
       <div class="field-group">
@@ -116,6 +124,8 @@
     let cancionActualId = "";
     let estrofasList = [];
     let activeIdx = -1;
+    let baseParroquiaNombre = "Parroquia";
+    let customImageBg = "";
 
     function darFormato(t) {
       if (!t) return "";
@@ -135,8 +145,10 @@
         if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
+        if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
+        if (cfg.imagenBg) customImageBg = cfg.imagenBg;
       }
     });
 
@@ -146,17 +158,36 @@
         fuente: document.getElementById('cfg-fuente').value,
         tamano: document.getElementById('cfg-tamano').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
+        bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
+        imagenBg: customImageBg
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
+    }
+
+    function cargarImagenFondo(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customImageBg = e.target.result;
+        guardarEstiloConfig();
+        alert("¡Imagen de fondo cargada con éxito!");
+      };
+      reader.readAsDataURL(file);
     }
 
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
-      const customNombre = document.getElementById('cfg-nombre-parroquia').value.trim();
-      document.getElementById('parroquia-nombre').innerText = (customNombre || d.nombre || 'Parroquia') + " - Operador";
+      baseParroquiaNombre = d.nombre || 'Parroquia';
+      document.getElementById('parroquia-nombre').innerText = baseParroquiaNombre + " - Operador";
+
+      const nombreInput = document.getElementById('cfg-nombre-parroquia');
+      if (!nombreInput.value) {
+        nombreInput.value = baseParroquiaNombre;
+      }
 
       const infoBox = document.getElementById('info-transmision');
       if (d.estado_vivo) {
@@ -200,22 +231,24 @@
     function proyectarEstrofa(titulo, idx) {
       activeIdx = idx;
       renderEstrofas(titulo);
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'CANCCION',
         titulo: titulo,
         bloqueTexto: estrofasList[idx],
         bloqueIndex: idx,
         totalBloques: estrofasList.length,
-        comunidadNombre: document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "")
+        comunidadNombre: nombreParroquia
       });
     }
 
     function mostrarBienvenida() {
       activeIdx = -1;
-      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "");
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
+      const bienvenidaMsg = document.getElementById('cfg-bienvenida-msg').value.trim() || 'Bienvenidos a la Santa Misa 🕊️';
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'BIENVENIDA',
-        titulo: 'Bienvenidos a la Santa Misa 🕊️',
+        titulo: bienvenidaMsg,
         bloqueTexto: nombreParroquia,
         bloqueIndex: 0,
         totalBloques: 1,
@@ -225,7 +258,7 @@
 
     function mostrarNegra() {
       activeIdx = -1;
-      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim() || document.getElementById('parroquia-nombre').innerText.replace(" - Operador", "");
+      const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: 'NEGRA',
         titulo: '',
