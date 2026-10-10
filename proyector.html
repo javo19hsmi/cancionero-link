@@ -80,6 +80,13 @@
       }
     }
 
+    document.addEventListener('fullscreenchange', () => {
+      const btn = document.getElementById('btnFS');
+      if (btn) {
+        btn.style.display = document.fullscreenElement ? 'none' : 'block';
+      }
+    });
+
     firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
     const db = firebase.database();
 
