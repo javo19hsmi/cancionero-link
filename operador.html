@@ -91,9 +91,22 @@
     .mon-footer { position: absolute; bottom: 6px; right: 10px; font-size: 0.6rem; color: var(--gold); font-weight: bold; }
     .mon-counter { position: absolute; bottom: 6px; left: 10px; font-size: 0.6rem; color: #666; }
 
+    /* GRILLA DE TARJETAS DE FONDOS */
+    .bg-swatches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .bg-swatch-card {
+      height: 80px; border-radius: 10px; border: 2px solid #444; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; box-sizing: border-box; font-size: 0.75rem; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: transform 0.2s, border-color 0.2s; background-size: cover; background-position: center;
+    }
+    .bg-swatch-card:hover { transform: scale(1.04); border-color: var(--accent-light); }
+    .bg-swatch-card.active { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.5); }
+
     /* GALERÍA THUMBS */
-    .galeria-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
-    .thumb { width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border: 2px solid #444; cursor: pointer; transition: transform 0.2s; }
+    .galeria-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+    .thumb { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #444; cursor: pointer; transition: transform 0.2s; }
     .thumb:hover { transform: scale(1.08); border-color: var(--accent-light); }
     .thumb.active { border-color: #FFD700; }
 
@@ -113,6 +126,19 @@
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     .field-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
     .field-group select, .field-group input { background: var(--card-bg); color: white; border: 1px solid #30363d; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
+
+    input[type="color"] {
+      -webkit-appearance: none;
+      border: 2px solid #444;
+      width: 45px;
+      height: 38px;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #2a2a2a;
+      padding: 2px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
   </style>
 </head>
 <body>
@@ -142,8 +168,8 @@
         </div>
         <div class="action-buttons">
           <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Cañón</button>
-          <button class="btn btn-amber" onclick="mostrarBienvenida()">⛪ Bienvenida</button>
-          <button class="btn btn-red" onclick="mostrarNegra()">⬛ Apagón</button>
+          <button class="btn btn-amber" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida (Previa)</button>
+          <button class="btn btn-red" onclick="mostrarNegraPreview()">⬛ Apagón (Previa)</button>
         </div>
       </div>
 
@@ -166,10 +192,15 @@
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
-            <select id="cfg-transicion" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="guardarEstiloConfig()">
+            <select id="cfg-transicion" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
               <option value="fade">Fundido (Fade)</option>
               <option value="slide">Desplazamiento</option>
               <option value="none">Instantáneo</option>
+            </select>
+            <select id="cfg-velocidad" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+              <option value="0.2s">Rápido (0.2s)</option>
+              <option value="0.5s" selected>Normal (0.5s)</option>
+              <option value="1.0s">Lento (1.0s)</option>
             </select>
           </div>
         </div>
@@ -206,37 +237,88 @@
         <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos</h3>
         <div class="field-group">
           <label>Tipografía:</label>
-          <select id="cfg-fuente" onchange="guardarEstiloConfig()">
+          <select id="cfg-fuente" onchange="aplicarEstiloPreviewLocal()">
             <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
             <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
             <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
           </select>
         </div>
-        <div class="field-group">
-          <label>Tamaño de Letra Cañón (En Vivo):</label>
-          <select id="cfg-tamano" onchange="guardarEstiloConfig()">
-            <option value="3.0rem">Pequeña (3.0rem)</option>
-            <option value="3.8rem" selected>Mediana / Estándar (3.8rem)</option>
-            <option value="4.5rem">Grande (4.5rem)</option>
-            <option value="5.2rem">Gigante (5.2rem)</option>
-          </select>
+
+        <!-- 1. NOMBRE PARROQUIA -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre de la Parroquia / Capilla</div>
+          <div class="field-group" style="margin-bottom:8px;">
+            <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Nombre parroquia">
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tamaño:</label>
+              <select id="cfg-tamano-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                <option value="0.9rem">Pequeño</option>
+                <option value="1.1rem" selected>Mediano</option>
+                <option value="1.4rem">Grande</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Color:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="cfg-color-parroquia" value="#888888" onchange="aplicarEstiloPreviewLocal()">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Color Parroquia</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="field-group">
-          <label>Nombre Capilla / Parroquia:</label>
-          <input type="text" id="cfg-nombre-parroquia" onchange="guardarEstiloConfig()">
+
+        <!-- 2. TÍTULO DE CANCIÓN -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🎶 Título de la Canción</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tamaño:</label>
+              <select id="cfg-tamano-titulo" onchange="aplicarEstiloPreviewLocal()">
+                <option value="1.8rem">Pequeño</option>
+                <option value="2.2rem" selected>Mediano</option>
+                <option value="2.8rem">Grande</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Color:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="aplicarEstiloPreviewLocal()">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Color Título</span>
+              </div>
+            </div>
+          </div>
         </div>
+
+        <!-- 3. ESTROFAS -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Estrofas / Letra</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tamaño (Cañón):</label>
+              <select id="cfg-tamano" onchange="aplicarEstiloPreviewLocal()">
+                <option value="3.0rem">Pequeña</option>
+                <option value="3.8rem" selected>Mediana</option>
+                <option value="4.5rem">Grande</option>
+                <option value="5.2rem">Gigante</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Color:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
+                <span style="font-size:0.8rem; color:var(--text-muted);">Color Texto</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="field-group">
           <label>Mensaje de Bienvenida:</label>
-          <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="guardarEstiloConfig()">
+          <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="aplicarEstiloPreviewLocal()">
         </div>
-        <div class="field-group">
-          <label>Color Título Canción:</label>
-          <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="guardarEstiloConfig()">
-        </div>
-        <div class="field-group">
-          <label>Color Texto Estrofas:</label>
-          <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="guardarEstiloConfig()">
-        </div>
+        <button class="btn" style="margin-top:10px;" onclick="guardarEstiloConfig()">💾 Guardar Ajustes en Nube</button>
 
         <!-- PERFILES DE COLOR PERSONALIZADOS -->
         <div class="perfiles-box">
@@ -249,24 +331,26 @@
         </div>
       </div>
 
-      <!-- VISTA TAB: FONDOS -->
+      <!-- VISTA TAB: FONDOS (TARJETAS DE VISTA PREVIA VISUAL) -->
       <div id="tab-fondos" class="section-view">
         <h3 style="color: var(--accent-light); margin:0;">Fondos y Galería</h3>
-        <div class="field-group">
-          <label>Fondo del Proyector:</label>
-          <select id="cfg-fondo" onchange="guardarEstiloConfig()">
-            <option value="#050505">Negro Absoluto (Misa)</option>
-            <option value="#0D1B2A">Azul Noche Litúrgico</option>
-            <option value="#1B0024">Púrpura / Morado (Cuaresma/Adviento)</option>
-            <option value="#002411">Verde Litúrgico</option>
-            <option value="#00FF00">🟩 Modo OBS Chroma Key (Verde Transparente)</option>
-            <option value="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)">Degradado Azul a Negro</option>
-            <option value="linear-gradient(135deg, #1B0024 0%, #000000 100%)">Degradado Borgoña a Negro</option>
-            <option value="custom">🖼️ Imagen Propia / Galería</option>
-          </select>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 4px 0 12px 0;">Hacé clic en cualquier tarjeta de fondo para verla en la Previa:</p>
+
+        <input type="hidden" id="cfg-fondo" value="#050505">
+
+        <!-- GRILLA DE TARJETAS DE FONDOS -->
+        <div class="bg-swatches-grid">
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#050505', this)" data-val="#050505" style="background: #050505;">Negro Absoluto</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#0D1B2A', this)" data-val="#0D1B2A" style="background: #0D1B2A;">Azul Noche</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#1B0024', this)" data-val="#1B0024" style="background: #1B0024;">Cuaresma Violeta</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#002411', this)" data-val="#002411" style="background: #002411;">Verde Litúrgico</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#00FF00', this)" data-val="#00FF00" style="background: #00FF00; color:#000;">Chroma Key (Verde)</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #0D1B2A 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)" style="background: linear-gradient(135deg, #0D1B2A 0%, #000000 100%);">Degradado Azul</div>
+          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
         </div>
-        <div class="field-group">
-          <label>Subir Imágenes de Fondo (Varias):</label>
+
+        <div class="field-group" style="margin-top: 15px;">
+          <label>Cargar Imágenes de Fondo Propia (Galería):</label>
           <input type="file" id="cfg-imagenes-multiples" accept="image/*" multiple onchange="cargarGaleriaFotos(event)">
           <div id="galeria-preview" class="galeria-thumbs"></div>
         </div>
@@ -282,8 +366,8 @@
           <li><b>Barra Espaciadora / Enter:</b> Enviar estrofa actual al Cañón</li>
           <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Preview</li>
           <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Preview</li>
-          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Vivo</li>
-          <li><b>Tecla B:</b> Pantalla de Bienvenida en Vivo</li>
+          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Previa</li>
+          <li><b>Tecla B:</b> Pantalla de Bienvenida en Previa</li>
         </ul>
       </div>
 
@@ -296,8 +380,8 @@
       <div style="width: 100%;">
         <div class="monitor-label" style="color: var(--accent-light);">👁️ 1. Vista Previa (Preparando)</div>
         <div id="preview-box" class="monitor-box">
-          <div id="prev-parroquia" class="mon-parroquia">Parroquia</div>
-          <div id="prev-titulo" class="mon-titulo" style="display:none;">Título</div>
+          <div id="prev-parroquia" class="mon-parroquia" style="font-size:0.6rem;">Parroquia</div>
+          <div id="prev-titulo" class="mon-titulo" style="display:none; font-size:0.7rem;">Título</div>
           <div id="prev-texto" class="mon-texto">Seleccioná una estrofa...</div>
           <div id="prev-counter" class="mon-counter"></div>
           <div class="mon-footer">Vista Previa 🕊️</div>
@@ -308,8 +392,8 @@
       <div style="width: 100%; margin-top: 10px;">
         <div class="monitor-label" style="color: var(--gold);">📡 2. En Vivo (En el Cañón)</div>
         <div id="live-box" class="monitor-box">
-          <div id="live-parroquia" class="mon-parroquia">Parroquia</div>
-          <div id="live-titulo" class="mon-titulo" style="display:none;">Título</div>
+          <div id="live-parroquia" class="mon-parroquia" style="font-size:0.6rem;">Parroquia</div>
+          <div id="live-titulo" class="mon-titulo" style="display:none; font-size:0.7rem;">Título</div>
           <div id="live-texto" class="mon-texto">En espera...</div>
           <div id="live-counter" class="mon-counter"></div>
           <div class="mon-footer">En Vivo 🕊️</div>
@@ -339,6 +423,15 @@
     let previewFontSize = "1.2rem";
     let perfilesCustom = {};
 
+    // Estado interno de la Previa
+    let previewState = {
+      modo: 'BIENVENIDA',
+      titulo: 'Bienvenidos a la Santa Misa 🕊️',
+      bloqueTexto: '',
+      bloqueIndex: 0,
+      totalBloques: 1
+    };
+
     function switchTab(tabId, el) {
       document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -356,24 +449,32 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // Cargar config y perfiles
+    // Cargar config y perfiles (Aplicar estilos SOLO al preview localmente hasta dar Enviar)
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (cfg) {
-        if (cfg.fondo) document.getElementById('cfg-fondo').value = cfg.fondo;
+        if (cfg.fondo) {
+          document.getElementById('cfg-fondo').value = cfg.fondo;
+          marcarSwatchActivo(cfg.fondo);
+        }
         if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
+        if (cfg.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = cfg.tamanoTitulo;
+        if (cfg.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = cfg.tamanoParroquia;
         if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
+        if (cfg.velocidad) document.getElementById('cfg-velocidad').value = cfg.velocidad;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
+        if (cfg.colorParroquia) document.getElementById('cfg-color-parroquia').value = cfg.colorParroquia;
         if (cfg.perfiles) {
           perfilesCustom = cfg.perfiles;
           renderPerfilesList();
         }
         if (cfg.imagenBg) customImageBg = cfg.imagenBg;
-        actualizarMonitoresEstilos(cfg);
+
+        aplicarEstiloPreviewLocal();
       }
     });
 
@@ -386,21 +487,80 @@
       }
     } catch(e) {}
 
+    function seleccionarFondoSwatch(val, el) {
+      document.getElementById('cfg-fondo').value = val;
+      document.querySelectorAll('.bg-swatch-card').forEach(c => c.classList.remove('active'));
+      if (el) el.classList.add('active');
+      aplicarEstiloPreviewLocal();
+    }
+
+    function marcarSwatchActivo(val) {
+      document.querySelectorAll('.bg-swatch-card').forEach(c => {
+        if (c.getAttribute('data-val') === val) {
+          c.classList.add('active');
+        } else {
+          c.classList.remove('active');
+        }
+      });
+    }
+
+    // GUARDAR ESTILOS EN NUBE
     function guardarEstiloConfig() {
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
         tamano: document.getElementById('cfg-tamano').value,
+        tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
+        tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         transicion: document.getElementById('cfg-transicion').value,
+        velocidad: document.getElementById('cfg-velocidad').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
+        colorParroquia: document.getElementById('cfg-color-parroquia').value,
         perfiles: perfilesCustom,
         imagenBg: galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg
       };
       db.ref(comunidadPath + '/proyector_config').set(cfg);
-      actualizarMonitoresEstilos(cfg);
+      aplicarEstiloPreviewLocal();
+      alert("¡Ajustes guardados en la Nube!");
+    }
+
+    // APLICAR ESTILO LOCALMENTE EN LA VISTA PREVIA (MONITOR 1)
+    function aplicarEstiloPreviewLocal() {
+      const box = document.getElementById('preview-box');
+      const text = document.getElementById('prev-texto');
+      const title = document.getElementById('prev-titulo');
+      const par = document.getElementById('prev-parroquia');
+
+      const fondoVal = document.getElementById('cfg-fondo').value;
+      const fuenteVal = document.getElementById('cfg-fuente').value;
+      const colorTitVal = document.getElementById('cfg-color-titulo').value;
+      const colorTxtVal = document.getElementById('cfg-color-texto').value;
+      const colorParVal = document.getElementById('cfg-color-parroquia').value;
+      const tamTitVal = document.getElementById('cfg-tamano-titulo').value;
+      const tamParVal = document.getElementById('cfg-tamano-parroquia').value;
+
+      if (fondoVal === 'custom' && (galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg)) {
+        const img = galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg;
+        box.style.backgroundImage = `url(${img})`;
+        box.style.backgroundColor = 'transparent';
+      } else if (fondoVal.startsWith('linear-gradient')) {
+        box.style.background = fondoVal;
+        box.style.backgroundImage = fondoVal;
+      } else {
+        box.style.backgroundColor = fondoVal;
+        box.style.backgroundImage = 'none';
+      }
+
+      if (fuenteVal) box.style.fontFamily = fuenteVal;
+      if (colorTxtVal) text.style.color = colorTxtVal;
+      if (colorTitVal) title.style.color = colorTitVal;
+      if (colorParVal) par.style.color = colorParVal;
+      if (tamTitVal) title.style.fontSize = tamTitVal == '1.8rem' ? '0.6rem' : (tamTitVal == '2.2rem' ? '0.75rem' : '0.9rem');
+      if (tamParVal) par.style.fontSize = tamParVal == '0.9rem' ? '0.5rem' : (tamParVal == '1.1rem' ? '0.65rem' : '0.8rem');
+      par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
     }
 
     function guardarPerfilCustom() {
@@ -413,9 +573,13 @@
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
         tamano: document.getElementById('cfg-tamano').value,
+        tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
+        tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         transicion: document.getElementById('cfg-transicion').value,
+        velocidad: document.getElementById('cfg-velocidad').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
-        colorTexto: document.getElementById('cfg-color-texto').value
+        colorTexto: document.getElementById('cfg-color-texto').value,
+        colorParroquia: document.getElementById('cfg-color-parroquia').value
       };
       document.getElementById('input-nombre-perfil').value = "";
       guardarEstiloConfig();
@@ -429,10 +593,14 @@
       if (p.fondo) document.getElementById('cfg-fondo').value = p.fondo;
       if (p.fuente) document.getElementById('cfg-fuente').value = p.fuente;
       if (p.tamano) document.getElementById('cfg-tamano').value = p.tamano;
+      if (p.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = p.tamanoTitulo;
+      if (p.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = p.tamanoParroquia;
       if (p.transicion) document.getElementById('cfg-transicion').value = p.transicion;
+      if (p.velocidad) document.getElementById('cfg-velocidad').value = p.velocidad;
       if (p.colorTitulo) document.getElementById('cfg-color-titulo').value = p.colorTitulo;
       if (p.colorTexto) document.getElementById('cfg-color-texto').value = p.colorTexto;
-      guardarEstiloConfig();
+      if (p.colorParroquia) document.getElementById('cfg-color-parroquia').value = p.colorParroquia;
+      aplicarEstiloPreviewLocal();
       alert(`¡Perfil "${nombre}" aplicado!`);
     }
 
@@ -467,39 +635,7 @@
       } else {
         document.getElementById('cfg-fuente').value = "'Helvetica Neue', Arial, sans-serif";
       }
-      guardarEstiloConfig();
-    }
-
-    function actualizarMonitoresEstilos(cfg) {
-      const boxes = [document.getElementById('preview-box'), document.getElementById('live-box')];
-      const texts = [document.getElementById('prev-texto'), document.getElementById('live-texto')];
-      const titles = [document.getElementById('prev-titulo'), document.getElementById('live-titulo')];
-      const pars = [document.getElementById('prev-parroquia'), document.getElementById('live-parroquia')];
-
-      boxes.forEach(box => {
-        if (cfg.fondo === 'custom' && cfg.imagenBg) {
-          box.style.backgroundImage = `url(${cfg.imagenBg})`;
-          box.style.backgroundColor = 'transparent';
-        } else if (cfg.fondo && cfg.fondo.startsWith('linear-gradient')) {
-          box.style.background = cfg.fondo;
-        } else if (cfg.fondo) {
-          box.style.backgroundColor = cfg.fondo;
-          box.style.backgroundImage = 'none';
-        }
-        if (cfg.fuente) box.style.fontFamily = cfg.fuente;
-      });
-
-      texts.forEach(t => {
-        if (cfg.colorTexto) t.style.color = cfg.colorTexto;
-      });
-
-      titles.forEach(tit => {
-        if (cfg.colorTitulo) tit.style.color = cfg.colorTitulo;
-      });
-
-      pars.forEach(par => {
-        if (cfg.nombreParroquia) par.innerText = cfg.nombreParroquia;
-      });
+      aplicarEstiloPreviewLocal();
     }
 
     function cargarGaleriaFotos(event) {
@@ -518,7 +654,7 @@
             renderGaleriaThumbs();
             document.getElementById('cfg-fondo').value = 'custom';
             fotoActivaIdx = galeriaFotos.length - 1;
-            guardarEstiloConfig();
+            aplicarEstiloPreviewLocal();
           }
         };
         reader.readAsDataURL(files[i]);
@@ -536,7 +672,7 @@
       fotoActivaIdx = idx;
       renderGaleriaThumbs();
       document.getElementById('cfg-fondo').value = 'custom';
-      guardarEstiloConfig();
+      aplicarEstiloPreviewLocal();
     }
 
     db.ref(comunidadPath).on('value', snapshot => {
@@ -556,7 +692,7 @@
       }
     });
 
-    // 1. ESCUCHAR PREVIEW (Lo que voy a pasar)
+    // 1. ACTUALIZAR PREVIEW UI (SOLO EN MONITOR 1)
     function actualizarPreviewUI() {
       const par = document.getElementById('prev-parroquia');
       const tit = document.getElementById('prev-titulo');
@@ -564,7 +700,16 @@
       const cnt = document.getElementById('prev-counter');
 
       par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
-      if (estrofasList.length > 0) {
+
+      if (previewState.modo === 'NEGRA') {
+        tit.style.display = 'none';
+        txt.innerHTML = "<span style='color:#555'>[ Pantalla Negra ]</span>";
+        cnt.innerText = "";
+      } else if (previewState.modo === 'BIENVENIDA') {
+        tit.style.display = 'none';
+        txt.innerHTML = darFormato(previewState.titulo || 'Bienvenidos');
+        cnt.innerText = "";
+      } else if (estrofasList.length > 0) {
         tit.style.display = 'block';
         tit.innerText = document.getElementById('cancion-titulo').innerText.replace("🎶 ", "");
         txt.innerHTML = darFormato(estrofasList[previewIdx].trim());
@@ -575,11 +720,13 @@
         cnt.innerText = "";
       }
       renderEstrofas();
+      aplicarEstiloPreviewLocal();
     }
 
-    // 2. ESCUCHAR LIVE PROGRAM (Lo que ve el cañón)
+    // 2. ESCUCHAR LIVE PROGRAM (Lo que ve el cañón en vivo)
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', s => {
       const data = s.val();
+      const box = document.getElementById('live-box');
       const par = document.getElementById('live-parroquia');
       const tit = document.getElementById('live-titulo');
       const txt = document.getElementById('live-texto');
@@ -594,6 +741,30 @@
       }
 
       par.innerText = data.comunidadNombre || 'Parroquia';
+
+      // Aplicar estilos del Vivo enviados al presionar Enviar al Cañón
+      if (data.tamano) {
+        txt.style.fontSize = data.tamano;
+      }
+      if (data.tamanoTitulo) {
+        tit.style.fontSize = data.tamanoTitulo == '1.8rem' ? '0.6rem' : (data.tamanoTitulo == '2.2rem' ? '0.75rem' : '0.9rem');
+      }
+      if (data.tamanoParroquia) {
+        par.style.fontSize = data.tamanoParroquia == '0.9rem' ? '0.5rem' : (data.tamanoParroquia == '1.1rem' ? '0.65rem' : '0.8rem');
+      }
+      if (data.colorTexto) txt.style.color = data.colorTexto;
+      if (data.colorTitulo) tit.style.color = data.colorTitulo;
+      if (data.colorParroquia) par.style.color = data.colorParroquia;
+      if (data.fuente) box.style.fontFamily = data.fuente;
+      if (data.fondo === 'custom' && data.imagenBg) {
+        box.style.backgroundImage = `url(${data.imagenBg})`;
+        box.style.backgroundColor = 'transparent';
+      } else if (data.fondo && data.fondo.startsWith('linear-gradient')) {
+        box.style.background = data.fondo;
+      } else if (data.fondo) {
+        box.style.backgroundColor = data.fondo;
+        box.style.backgroundImage = 'none';
+      }
 
       if (data.modo === 'NEGRA') {
         tit.style.display = 'none';
@@ -622,6 +793,13 @@
         const lyrics = (c.lyrics || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
         estrofasList = lyrics.split(/\n\s*\n/).filter(x => x.trim().length > 0);
         previewIdx = 0;
+        previewState = {
+          modo: 'CANCCION',
+          titulo: c.title || 'Canción',
+          bloqueTexto: estrofasList[0] || '',
+          bloqueIndex: 0,
+          totalBloques: estrofasList.length
+        };
         actualizarPreviewUI();
       });
     }
@@ -633,10 +811,10 @@
         return;
       }
       container.innerHTML = estrofasList.map((e, idx) => `
-        <div class="stanza-card ${idx === previewIdx ? 'active' : ''}" onclick="seleccionarEstrofaPreview(${idx})">
+        <div class="stanza-card ${idx === previewIdx && previewState.modo === 'CANCCION' ? 'active' : ''}" onclick="seleccionarEstrofaPreview(${idx})">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <span style="font-size:0.75rem; color:var(--accent-light); font-weight:bold;">Estrofa ${idx + 1}</span>
-            <span class="stanza-badge">${idx === previewIdx ? 'En Preview' : 'Clic para Previa'}</span>
+            <span class="stanza-badge">${idx === previewIdx && previewState.modo === 'CANCCION' ? 'En Preview' : 'Clic para Previa'}</span>
           </div>
           <div class="stanza-info">${darFormato(e.trim())}</div>
         </div>
@@ -645,27 +823,62 @@
 
     function seleccionarEstrofaPreview(idx) {
       previewIdx = idx;
+      previewState = {
+        modo: 'CANCCION',
+        titulo: document.getElementById('cancion-titulo').innerText.replace("🎶 ", ""),
+        bloqueTexto: estrofasList[idx],
+        bloqueIndex: idx,
+        totalBloques: estrofasList.length
+      };
       actualizarPreviewUI();
     }
 
     function moverEstrofa(delta) {
       if (estrofasList.length === 0) return;
       previewIdx = (previewIdx + delta).clamp(0, estrofasList.length - 1);
+      previewState = {
+        modo: 'CANCCION',
+        titulo: document.getElementById('cancion-titulo').innerText.replace("🎶 ", ""),
+        bloqueTexto: estrofasList[previewIdx],
+        bloqueIndex: previewIdx,
+        totalBloques: estrofasList.length
+      };
       actualizarPreviewUI();
     }
 
-    // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE)
+    // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE) CON TODOS LOS AJUSTES DE ESTILO Y COLOR
     function enviarAlCañon() {
-      if (estrofasList.length === 0) return;
-      const titulo = document.getElementById('cancion-titulo').innerText.replace("🎶 ", "");
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
+      const fontSizeLive = document.getElementById('cfg-tamano').value || "3.8rem";
+      const fontTitLive = document.getElementById('cfg-tamano-titulo').value || "2.2rem";
+      const fontParLive = document.getElementById('cfg-tamano-parroquia').value || "1.1rem";
+      const transicionLive = document.getElementById('cfg-transicion').value || "fade";
+      const velocidadLive = document.getElementById('cfg-velocidad').value || "0.5s";
+      const fondoLive = document.getElementById('cfg-fondo').value;
+      const fuenteLive = document.getElementById('cfg-fuente').value;
+      const colorTitLive = document.getElementById('cfg-color-titulo').value;
+      const colorTxtLive = document.getElementById('cfg-color-texto').value;
+      const colorParLive = document.getElementById('cfg-color-parroquia').value;
+      const imagenBgLive = galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg;
+
       db.ref(comunidadPath + '/proyeccion_vivo').set({
-        modo: 'CANCCION',
-        titulo: titulo,
-        bloqueTexto: estrofasList[previewIdx],
-        bloqueIndex: previewIdx,
-        totalBloques: estrofasList.length,
-        comunidadNombre: nombreParroquia
+        modo: previewState.modo,
+        titulo: previewState.titulo,
+        bloqueTexto: previewState.bloqueTexto,
+        bloqueIndex: previewState.bloqueIndex,
+        totalBloques: previewState.totalBloques,
+        comunidadNombre: nombreParroquia,
+        tamano: fontSizeLive,
+        tamanoTitulo: fontTitLive,
+        tamanoParroquia: fontParLive,
+        transicion: transicionLive,
+        velocidad: velocidadLive,
+        fondo: fondoLive,
+        fuente: fuenteLive,
+        colorTitulo: colorTitLive,
+        colorTexto: colorTxtLive,
+        colorParroquia: colorParLive,
+        imagenBg: imagenBgLive
       });
     }
 
@@ -673,28 +886,28 @@
       moverEstrofa(delta);
     }
 
-    function mostrarBienvenida() {
+    function mostrarBienvenidosPreview() {
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       const bienvenidaMsg = document.getElementById('cfg-bienvenida-msg').value.trim() || 'Bienvenidos a la Santa Misa 🕊️';
-      db.ref(comunidadPath + '/proyeccion_vivo').set({
+      previewState = {
         modo: 'BIENVENIDA',
         titulo: bienvenidaMsg,
         bloqueTexto: nombreParroquia,
         bloqueIndex: 0,
-        totalBloques: 1,
-        comunidadNombre: nombreParroquia
-      });
+        totalBloques: 1
+      };
+      actualizarPreviewUI();
     }
 
-    function mostrarNegra() {
-      db.ref(comunidadPath + '/proyeccion_vivo').set({
+    function mostrarNegraPreview() {
+      previewState = {
         modo: 'NEGRA',
         titulo: '',
         bloqueTexto: '',
         bloqueIndex: 0,
-        totalBloques: 0,
-        comunidadNombre: document.getElementById('cfg-nombre-parroquia').value.trim()
-      });
+        totalBloques: 0
+      };
+      actualizarPreviewUI();
     }
 
     function abrirProyectorCañon() {
@@ -714,9 +927,9 @@
         e.preventDefault();
         enviarAlCañon();
       } else if (e.key.toLowerCase() === 'n') {
-        mostrarNegra();
+        mostrarNegraPreview();
       } else if (e.key.toLowerCase() === 'b') {
-        mostrarBienvenida();
+        mostrarBienvenidosPreview();
       }
     });
 

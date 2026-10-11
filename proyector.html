@@ -16,7 +16,7 @@
       min-height: 100vh; text-align: center;
       overflow: hidden; position: relative;
       background-size: cover; background-position: center;
-      transition: opacity 0.4s ease-in-out, background 0.4s ease-in-out;
+      transition: opacity 0.5s ease-in-out, background 0.5s ease-in-out;
     }
     .pantalla-negra { background: #000000 !important; }
 
@@ -109,6 +109,7 @@
       const cuerpo = document.getElementById('cuerpo');
       const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
+      const headerParroquia = document.getElementById('header-parroquia');
 
       if (cfg.fondo) {
         if (cfg.fondo === 'custom' && cfg.imagenBg) {
@@ -123,7 +124,10 @@
         }
       }
       if (cfg.fuente) cuerpo.style.fontFamily = cfg.fuente;
-      if (cfg.tamano) texto.style.fontSize = cfg.tamano;
+      if (cfg.tamano && !window.lastLiveTamano) texto.style.fontSize = cfg.tamano;
+      if (cfg.tamanoTitulo && !window.lastLiveTamanoTit) cancionHeader.style.fontSize = cfg.tamanoTitulo;
+      if (cfg.tamanoParroquia && !window.lastLiveTamanoPar) headerParroquia.style.fontSize = cfg.tamanoParroquia;
+
       if (cfg.colorTitulo) cancionHeader.style.color = cfg.colorTitulo;
       if (cfg.colorTexto) texto.style.color = cfg.colorTexto;
       if (cfg.transicion) {
@@ -140,7 +144,7 @@
       }
       if (cfg.nombreParroquia) {
         customParroquiaNombre = cfg.nombreParroquia;
-        document.getElementById('header-parroquia').innerText = cfg.nombreParroquia;
+        headerParroquia.innerText = cfg.nombreParroquia;
       }
     });
 
@@ -156,6 +160,33 @@
         headerParroquia.innerText = customParroquiaNombre || "Comunidad Sintonizada";
         texto.innerText = "Bienvenidos a la Santa Misa 🕊️";
         return;
+      }
+
+      if (data.tamano) {
+        window.lastLiveTamano = data.tamano;
+        texto.style.fontSize = data.tamano;
+      }
+      if (data.tamanoTitulo) {
+        window.lastLiveTamanoTit = data.tamanoTitulo;
+        cancionHeader.style.fontSize = data.tamanoTitulo;
+      }
+      if (data.tamanoParroquia) {
+        window.lastLiveTamanoPar = data.tamanoParroquia;
+        headerParroquia.style.fontSize = data.tamanoParroquia;
+      }
+
+      if (data.velocidad && data.transicion) {
+        const dur = data.velocidad;
+        if (data.transicion === 'fade') {
+          cuerpo.style.transition = `opacity ${dur} ease-in-out`;
+          texto.style.transition = `opacity ${dur} ease-in-out`;
+        } else if (data.transicion === 'slide') {
+          cuerpo.style.transition = `transform ${dur} ease, opacity ${dur}`;
+          texto.style.transition = `transform ${dur} ease, opacity ${dur}`;
+        } else {
+          cuerpo.style.transition = 'none';
+          texto.style.transition = 'none';
+        }
       }
 
       if (data.modo === 'NEGRA') {
