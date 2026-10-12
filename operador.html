@@ -14,96 +14,146 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
     :root {
-      --bg: #0d1117;
-      --sidebar-bg: #161b22;
-      --card-bg: #21262d;
-      --card-hover: #30363d;
-      --active-bg: #004d40;
-      --active-border: #80cbc4;
-      --accent: #00695C;
-      --accent-light: #4DB6AC;
-      --text: #e6edf3;
-      --text-muted: #8b949e;
-      --gold: #FFD700;
+      --bg: #090E17;
+      --sidebar-bg: #0D1520;
+      --card-bg: #111827;
+      --card-border: #1E293B;
+      --card-hover: #1E293B;
+      --active-bg: #004D40;
+      --active-border: #80CBC4;
+      --accent: #0891B2;
+      --accent-light: #22D3EE;
+      --text: #F1F5F9;
+      --text-muted: #94A3B8;
+      --gold: #F59E0B;
     }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: var(--bg); color: var(--text);
-      margin: 0; padding: 0; display: flex; height: 100vh; overflow: hidden; box-sizing: border-box;
+      margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; box-sizing: border-box;
     }
-    /* SIDEBAR LATERAL */
+
+    /* TOP HEADER SUPERIOR COMPLETO */
+    .header-bar {
+      height: 60px; background: #0F172A; border-bottom: 1px solid var(--card-border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0 20px; box-sizing: border-box; flex-shrink: 0;
+    }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .header-title { font-size: 1.15rem; font-weight: bold; color: #FFF; display: flex; align-items: center; gap: 8px; }
+    .header-subtitle { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
+
+    .header-right { display: flex; align-items: center; gap: 16px; }
+    .operator-badge { background: #1E293B; border: 1px solid #334155; padding: 6px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; color: var(--text-muted); display: flex; align-items: center; gap: 6px; }
+
+    .status-badge-live {
+      background: rgba(6, 182, 212, 0.15); border: 1px solid #0891B2; color: #22D3EE;
+      padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
+      display: flex; align-items: center; gap: 8px; transition: all 0.3s;
+    }
+    .status-dot { width: 9px; height: 9px; border-radius: 50%; background: #22D3EE; box-shadow: 0 0 8px #22D3EE; animation: pulse 1.8s infinite; }
+    .status-dot.idle { background: #64748B; box-shadow: none; animation: none; }
+    .status-badge-live.idle { background: rgba(100, 116, 139, 0.15); border-color: #475569; color: #94A3B8; }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 211, 238, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 211, 238, 0); }
+    }
+
+    .clock-display { font-size: 0.85rem; font-weight: bold; color: var(--gold); background: #1E293B; padding: 6px 12px; border-radius: 8px; border: 1px solid #334155; }
+
+    /* LAYOUT DE 2 COLUMNAS (SIDEBAR + CONTENT) */
+    .app-body { flex: 1; display: flex; overflow: hidden; }
+
+    /* SIDEBAR LATERAL ELEGANTE */
     .sidebar {
-      width: 240px; background: var(--sidebar-bg); border-right: 1px solid #30363d;
-      display: flex; flex-direction: column; padding: 20px 10px; gap: 8px; flex-shrink: 0;
+      width: 240px; background: var(--sidebar-bg); border-right: 1px solid var(--card-border);
+      display: flex; flex-direction: column; justify-content: space-between; padding: 20px 10px; box-sizing: border-box; flex-shrink: 0;
     }
-    .sidebar-brand { font-size: 1.1rem; font-weight: bold; color: var(--accent-light); padding: 0 10px 20px 10px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 8px; }
+    .nav-list { display: flex; flex-direction: column; gap: 8px; }
     .nav-item {
-      padding: 12px 15px; border-radius: 8px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+      padding: 12px 15px; border-radius: 10px; cursor: pointer; color: var(--text-muted); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; gap: 12px; transition: all 0.2s;
     }
     .nav-item:hover { background: var(--card-hover); color: var(--text); }
-    .nav-item.active { background: var(--accent); color: white; }
+    .nav-item.active { background: #0284C7; color: white; box-shadow: 0 0 14px rgba(2, 132, 199, 0.4); }
+
+    .sidebar-footer-quote {
+      background: #111827; border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; text-align: center;
+    }
+    .quote-text { font-size: 0.75rem; color: var(--text-muted); font-style: italic; line-height: 1.4; }
+    .quote-ref { font-size: 0.7rem; color: var(--accent-light); font-weight: bold; margin-top: 4px; }
 
     /* CONTENIDO PRINCIPAL EN 2 COLUMNAS (CENTRO + PREVIEW/PROGRAM) */
-    .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 440px; height: 100vh; overflow: hidden; }
+    .main-layout { flex: 1; display: grid; grid-template-columns: 1fr 440px; height: 100%; overflow: hidden; }
 
     /* PANEL CENTRAL DE CONTROL */
-    .control-panel { padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid #30363d; }
-    .top-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 15px 20px; border-radius: 14px; border: 1px solid #30363d; }
-    .parroquia-title { font-size: 1.2rem; font-weight: bold; color: var(--accent-light); }
+    .control-panel { padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid var(--card-border); }
 
-    .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
-    .btn:hover { opacity: 0.9; }
-    .btn-send-top { background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); font-weight: bold; font-size: 0.9rem; }
-    .btn-send-top:hover { background: var(--accent); color: white; }
-    .btn-red { background: #C62828; }
-    .btn-red:hover { background: #E53935; }
-    .btn-amber { background: #FF8F00; color: #000; }
-    .btn-amber:hover { background: #FFA726; }
-    .btn-blue { background: #0288D1; }
-    .btn-blue:hover { background: #039BE5; }
+    /* TARJETA PRINCIPAL DE TRANSMISIÓN (PROJECTION CONTROLS) */
+    .control-card-main {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
+      padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    .community-info { display: flex; align-items: center; gap: 14px; }
+    .community-icon-badge {
+      width: 48px; height: 48px; border-radius: 50%; background: rgba(34, 211, 238, 0.1); border: 1px solid var(--accent);
+      display: flex; justify-content: center; align-items: center; font-size: 1.4rem; color: var(--accent-light);
+    }
+    .community-title { font-size: 1.25rem; font-weight: bold; color: #FFF; margin-top: 2px; }
+    .community-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .chip { background: #1E293B; border: 1px solid #334155; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
 
-    .nav-arrows { display: flex; gap: 12px; margin-bottom: 2px; }
-    .btn-arrow { flex: 1; background: #2E2E2E; color: #FFF; border: 1px solid #444; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
-    .btn-arrow:hover { background: var(--card-hover); border-color: var(--accent-light); }
-    .btn-send { flex: 1.5; background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); padding: 12px; border-radius: 12px; font-size: 1rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: all 0.2s; }
-    .btn-send:hover { background: var(--accent); color: white; }
+    /* TRES BOTONES DE MANDO PRINCIPALES ALINEADOS */
+    .main-command-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .btn-command {
+      height: 42px; border: none; padding: 0 18px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
+      display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .btn-command:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-transmit { background: linear-gradient(135deg, #0891B2 0%, #0284C7 100%); color: white; border: 1px solid #22D3EE; box-shadow: 0 0 16px rgba(34, 211, 238, 0.35); }
+    .btn-canon { background: #0369A1; color: white; border: 1px solid #38BDF8; }
+    .btn-welcome { background: #D97706; color: white; border: 1px solid #FBBF24; }
+
+    /* BOTONES DE NAVEGACIÓN */
+    .nav-arrows { display: flex; gap: 12px; }
+    .btn-arrow { flex: 1; background: #1E293B; color: #FFF; border: 1px solid #334155; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
+    .btn-arrow:hover { background: #334155; border-color: var(--accent-light); }
+    .btn-black-nav { flex: 1; background: #0284C7; color: white; border: 1px solid #38BDF8; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; }
+    .btn-black-nav:hover { background: #0369A1; }
 
     /* CONTROLES EXTRA DEBAJO DE LAS FLECHAS */
-    .sub-controls-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 10px; border: 1px solid #30363d; margin-bottom: 10px; flex-wrap: wrap; gap: 10px; }
-    .font-size-group { display: flex; align-items: center; gap: 6px; }
-    .btn-mini { background: #2E2E2E; color: white; border: 1px solid #444; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
+    .sub-controls-bar { display: flex; justify-content: space-between; align-items: center; background: var(--card-bg); padding: 10px 15px; border-radius: 12px; border: 1px solid var(--card-border); margin-bottom: 5px; flex-wrap: wrap; gap: 10px; }
+    .font-size-group { display: flex; align-items: center; gap: 8px; }
+    .btn-mini { background: #1E293B; color: white; border: 1px solid #334155; padding: 6px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
     .btn-mini:hover { background: var(--accent); }
 
-    /* GRILLA DE ESTROFAS (ENTRAN 3 POR FILA) */
+    /* GRILLA DE ESTROFAS (SONG STRUCTURE) */
     .stanzas-container {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 12px;
     }
     .stanza-card {
-      background: var(--card-bg); border: 1px solid #333; padding: 15px; border-radius: 12px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;
+      background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px; border-radius: 14px; cursor: pointer; transition: all 0.2s; white-space: pre-wrap; font-size: 0.95rem; line-height: 1.4; display: flex; flex-direction: column; justify-content: space-between; min-height: 110px;
     }
     .stanza-card:hover { background: var(--card-hover); border-color: var(--accent-light); }
-    .stanza-card.active { background: var(--active-bg); border-color: var(--active-border); }
+    .stanza-card.active { background: #03322B; border-color: #22D3EE; box-shadow: 0 0 14px rgba(34,211,238,0.3); }
     .stanza-info { flex: 1; }
-    .stanza-badge { background: #333; padding: 3px 8px; border-radius: 20px; font-size: 0.7rem; color: #888; font-weight: bold; }
+    .stanza-badge { background: #1E293B; padding: 3px 8px; border-radius: 20px; font-size: 0.72rem; color: var(--text-muted); font-weight: bold; }
     .stanza-card.active .stanza-badge { background: var(--accent-light); color: #000; }
-    .stanza-card b { color: #80CBC4; }
+    .stanza-card b { color: #22D3EE; }
     .stanza-card i { font-style: italic; opacity: 0.9; }
 
     /* PANEL DERECHO: DOS MONITORES (PREVIEW & LIVE PROGRAM) */
-    .preview-panel { background: #090d12; padding: 15px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow-y: auto; }
-    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; background-repeat: no-repeat !important; transition: all 0.3s; }
-    .monitor-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
+    .preview-panel { background: #070B12; padding: 15px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow-y: auto; }
+    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid var(--card-border); border-radius: 14px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; background-repeat: no-repeat !important; transition: all 0.3s; }
+    .monitor-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
     /* POSICIONAMIENTO PARROQUIA EN MONITORES */
-    .mon-parroquia-box {
-      position: absolute; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; line-height: 1.25; transition: all 0.2s;
-    }
-    .mon-parroquia-subtext {
-      font-size: 0.8em; color: rgba(255,255,255,0.85); font-weight: normal; text-transform: none; margin-top: 1px;
-    }
+    .mon-parroquia-box { position: absolute; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; line-height: 1.25; transition: all 0.2s; }
+    .mon-parroquia-subtext { font-size: 0.8em; color: rgba(255,255,255,0.85); font-weight: normal; text-transform: none; margin-top: 1px; }
 
     .mon-pos-top-left { top: 8px; left: 10px; right: auto; bottom: auto; text-align: left; }
     .mon-pos-top-right { top: 8px; right: 10px; left: auto; bottom: auto; text-align: right; }
@@ -117,39 +167,39 @@
     .mon-footer { position: absolute; bottom: 6px; right: 10px; font-size: 0.6rem; color: var(--gold); font-weight: bold; }
     .mon-counter { position: absolute; bottom: 6px; left: 10px; font-size: 0.6rem; color: #666; }
 
+    /* FICHA TÉCNICA DE TRANSMISIÓN DEL OPERADOR (DEBAJO DE MONITOR 2) */
+    .operator-tech-summary {
+      background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; font-size: 0.82rem;
+    }
+    .tech-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1E293B; padding-bottom: 6px; }
+    .tech-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .tech-label { color: var(--text-muted); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .tech-val { color: var(--text); font-weight: bold; }
+
     /* GRILLA DE TARJETAS DE FONDOS */
-    .bg-swatches-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 10px;
-      margin-top: 8px;
-    }
-    .bg-swatch-card {
-      height: 80px; border-radius: 10px; border: 2px solid #444; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; box-sizing: border-box; font-size: 0.75rem; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: transform 0.2s, border-color 0.2s; background-size: cover; background-position: center; position: relative; overflow: hidden;
-    }
+    .bg-swatches-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 8px; }
+    .bg-swatch-card { height: 80px; border-radius: 10px; border: 2px solid #444; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; box-sizing: border-box; font-size: 0.75rem; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: transform 0.2s, border-color 0.2s; background-size: cover; background-position: center; position: relative; overflow: hidden; }
     .bg-swatch-card:hover { transform: scale(1.04); border-color: var(--accent-light); }
-    .bg-swatch-card.active { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.5); }
+    .bg-swatch-card.active { border-color: var(--gold); box-shadow: 0 0 12px rgba(245,158,11,0.5); }
 
     /* GALERÍA THUMBS */
     .galeria-thumbs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
     .thumb { width: 55px; height: 55px; object-fit: cover; border-radius: 6px; border: 2px solid #444; cursor: pointer; transition: transform 0.2s; }
     .thumb:hover { transform: scale(1.08); border-color: var(--accent-light); }
-    .thumb.active { border-color: #FFD700; }
+    .thumb.active { border-color: #F59E0B; }
 
     /* PALETAS LITÚRGICAS */
     .palettes-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-    .palette-card { background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+    .palette-card { background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 10px; }
     .palette-card:hover { border-color: var(--accent-light); }
     .palette-colors { display: flex; gap: 4px; }
-    .color-dot { width: 16px; height: 16px; border-radius: 50%; }
+    .color-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.2); }
 
     /* PERFILES GUARDADOS */
-    .perfiles-box { background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px; }
-    .profile-chip {
-      background: #30363d; color: var(--text); border: 1px solid #444; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
-    }
-    .profile-chip:hover { border-color: var(--accent-light); background: #3e444c; }
-    .profile-delete-btn { color: #ff6b6b; margin-left: 4px; font-weight: bold; padding: 0 4px; border-radius: 50%; cursor: pointer; }
+    .perfiles-box { background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px; border-radius: 12px; margin-top: 15px; }
+    .profile-chip { background: #1E293B; color: var(--text); border: 1px solid #334155; padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
+    .profile-chip:hover { border-color: var(--accent-light); background: #334155; }
+    .profile-delete-btn { color: #FF6B6B; margin-left: 4px; font-weight: bold; padding: 0 4px; border-radius: 50%; cursor: pointer; }
     .profile-delete-btn:hover { background: rgba(255,107,107,0.2); }
 
     /* SECCIONES DINÁMICAS */
@@ -157,36 +207,19 @@
     .section-view.active { display: flex; }
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     .field-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
-    .field-group select, .field-group input, .field-group textarea { background: var(--card-bg); color: white; border: 1px solid #30363d; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
+    .field-group select, .field-group input, .field-group textarea { background: var(--card-bg); color: white; border: 1px solid var(--card-border); padding: 10px; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
 
-    input[type="color"] {
-      -webkit-appearance: none;
-      border: 2px solid #444;
-      width: 45px;
-      height: 38px;
-      border-radius: 8px;
-      cursor: pointer;
-      background: #2a2a2a;
-      padding: 2px;
-    }
+    input[type="color"] { -webkit-appearance: none; border: 2px solid #444; width: 45px; height: 38px; border-radius: 8px; cursor: pointer; background: #2a2a2a; padding: 2px; }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
 
     /* BARRA DE ESTADO / TOAST */
-    #status-toast {
-      position: fixed; bottom: 20px; right: 20px;
-      padding: 10px 18px; border-radius: 10px;
-      font-size: 0.85rem; font-weight: bold; color: white;
-      background: #1f2937; border: 1px solid #374151;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-      display: none; z-index: 9999; transition: opacity 0.3s;
-    }
+    #status-toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; color: white; background: #1F2937; border: 1px solid #374151; box-shadow: 0 4px 14px rgba(0,0,0,0.5); display: none; z-index: 9999; transition: opacity 0.3s; }
 
-    /* RESPONSIVIDAD PARA MONITOR MEDIANO/PEQUEÑO */
     @media (max-width: 1100px) {
       .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
       body { overflow-y: auto; }
-      .preview-panel { border-top: 1px solid #30363d; }
+      .preview-panel { border-top: 1px solid var(--card-border); }
     }
   </style>
 </head>
@@ -195,447 +228,523 @@
   <!-- BARRA DE ESTADO TOAST -->
   <div id="status-toast"></div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-    <div class="sidebar-brand">
-      <span>🕊️</span> Centro de Proyección
+  <!-- ENCABEZADO SUPERIOR COMPLETO (TOP HEADER) -->
+  <header class="header-bar">
+    <div class="header-left">
+      <div class="header-title"><span>🕊️</span> Centro de Proyección</div>
+      <div class="header-subtitle">CANCIONERO PARROQUIAL • <span id="header-community-name">PARROQUIA SANTÍSIMA TRINIDAD</span></div>
     </div>
-    <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
-    <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
-    <div class="nav-item" onclick="switchTab('fondos', this)">🖼️ Fondos & Galería</div>
-    <div class="nav-item" onclick="switchTab('atajos', this)">⌨️ Atajos de Teclado</div>
-  </div>
+    <div class="header-right">
+      <div class="operator-badge">💻 PC Operador</div>
+      <div id="top-status-badge" class="status-badge-live idle">
+        <span id="top-status-dot" class="status-dot idle"></span>
+        <span id="top-status-text">● EN ESPERA</span>
+      </div>
+      <div id="top-clock" class="clock-display">00:00 | Sáb, 21 Jun</div>
+    </div>
+  </header>
 
-  <!-- MAIN LAYOUT -->
-  <div class="main-layout">
+  <!-- BODY CON SIDEBAR Y CONTENIDO -->
+  <div class="app-body">
 
-    <!-- PANEL CENTRAL DE CONTROL -->
-    <div class="control-panel">
-
-      <!-- TOP BAR CON BOTÓN TRANSMITIR SIEMPRE VISIBLE -->
-      <div class="top-bar">
-        <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada</div>
-          <div id="parroquia-nombre" class="parroquia-title">Cargando...</div>
-        </div>
-        <div class="action-buttons">
-          <button class="btn btn-send-top" onclick="enviarAlCañon()">📡 Transmitir</button>
-          <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Cañón</button>
-          <button class="btn btn-amber" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida</button>
-          <button class="btn btn-red" onclick="mostrarNegraPreview()">⬛ Pantalla Negra</button>
-        </div>
+    <!-- SIDEBAR LATERAL ELEGANTE -->
+    <div class="sidebar">
+      <div class="nav-list">
+        <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
+        <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
+        <div class="nav-item" onclick="switchTab('fondos', this)">🖼️ Fondos & Galería</div>
+        <div class="nav-item" onclick="switchTab('atajos', this)">⌨️ Atajos de Teclado</div>
       </div>
 
-      <!-- VISTA TAB: CONTROL -->
-      <div id="tab-control" class="section-view active">
-        <!-- FLECHAS Y BOTÓN TRANSMITIR -->
-        <div class="nav-arrows">
-          <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
-          <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
-          <button class="btn-send" onclick="enviarAlCañon()">📡 Transmitir ➔</button>
-        </div>
-
-        <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
-        <div class="sub-controls-bar">
-          <div class="font-size-group">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala Previa:</span>
-            <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
-            <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">1.0x</span>
-            <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
-          </div>
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
-            <select id="cfg-transicion" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
-              <option value="fade">Fundido (Fade)</option>
-              <option value="slide">Desplazamiento Vertical</option>
-              <option value="slide-horizontal">Desplazamiento Lateral</option>
-              <option value="zoom">Escala (Zoom In)</option>
-              <option value="fade-up">Desvanecer Arriba</option>
-              <option value="none">Instantáneo</option>
-            </select>
-            <select id="cfg-velocidad" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
-              <option value="0.2s">Rápido (0.2s)</option>
-              <option value="0.5s" selected>Normal (0.5s)</option>
-              <option value="1.0s">Lento (1.0s)</option>
-            </select>
-          </div>
-        </div>
-
-        <div id="cancion-titulo" style="font-size: 1.1rem; color: var(--gold); font-weight: bold; margin-top: 5px;">🎶 Esperando canción en la App...</div>
-
-        <div id="estrofas-container" class="stanzas-container">
-          <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1/-1;">Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>
-        </div>
+      <div class="sidebar-footer-quote">
+        <div class="quote-text" id="daily-quote-text">"Canten al Señor un cántico nuevo"</div>
+        <div class="quote-ref" id="daily-quote-ref">Salmos 96:1</div>
       </div>
+    </div>
 
-      <!-- VISTA TAB: APARIENCIA -->
-      <div id="tab-apariencia" class="section-view">
-        <h3 style="color: var(--accent-light); margin:0;">Paletas Litúrgicas Rápidas</h3>
-        <div class="palettes-grid">
-          <div class="palette-card" onclick="aplicarPaleta('#002411', '#888888', '#81C784', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#002411"></div><div class="color-dot" style="background:#81C784"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🌿 Tiempo Ordinario</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#1A002C', '#888888', '#CE93D8', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#1A002C"></div><div class="color-dot" style="background:#CE93D8"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>💜 Cuaresma y Adviento</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#2E0818', '#888888', '#F48FB1', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#2E0818"></div><div class="color-dot" style="background:#F48FB1"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🌸 Gaudete y Laetare</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#380000', '#888888', '#FF5252', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#380000"></div><div class="color-dot" style="background:#FF5252"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🔥 Pentecostés y Mártires</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#0A192F', '#81D4FA', '#4FC3F7', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#0A192F"></div><div class="color-dot" style="background:#4FC3F7"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🕊️ Fiestas Marianas</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#121212', '#B0BEC5', '#E0E0E0', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#121212"></div><div class="color-dot" style="background:#E0E0E0"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🤍 Fiestas del Señor</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#050505', '#888888', '#FFD700', '#FFFFFF', '#FFD700', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#050505"></div><div class="color-dot" style="background:#FFD700"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>✨ Pascua y Navidad</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#0A0A0A', '#888888', '#B39DDB', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#0A0A0A"></div><div class="color-dot" style="background:#B39DDB"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>✝️ Exequias y Difuntos</span>
-          </div>
-          <div class="palette-card" style="grid-column: 1 / -1;" onclick="aplicarPaleta('#00FF00', '#000000', '#000000', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#00FF00"></div><div class="color-dot" style="background:#000000"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>🎥 Streaming (Chroma Key Verde)</span>
-          </div>
-        </div>
+    <!-- MAIN LAYOUT -->
+    <div class="main-layout">
 
-        <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos Independientes</h3>
+      <!-- PANEL CENTRAL DE CONTROL -->
+      <div class="control-panel">
 
-        <!-- 1. NOMBRE Y SUBTÍTULO PARROQUIA -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre y Subtítulo de Parroquia / Capilla</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Nombre Principal:</label>
-              <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Parroquia Santísima Trinidad">
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Subtítulo / Evento / Ciclo:</label>
-              <input type="text" id="cfg-subtitulo-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Fiestas Patronales 2026 / Domingo XXVIII">
-            </div>
-          </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Ubicación:</label>
-              <select id="cfg-posicion-parroquia" onchange="aplicarEstiloPreviewLocal()">
-                <option value="top-left" selected>Arriba Izquierda</option>
-                <option value="top-right">Arriba Derecha</option>
-                <option value="bottom-left">Abajo Izquierda</option>
-                <option value="bottom-right">Abajo Derecha</option>
-                <option value="bottom-center">Abajo Centro</option>
-                <option value="hidden">Ocultar</option>
-              </select>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tamaño:</label>
-              <select id="cfg-tamano-parroquia" onchange="aplicarEstiloPreviewLocal()">
-                <option value="0.9rem">Pequeño</option>
-                <option value="1.1rem" selected>Mediano</option>
-                <option value="1.4rem">Grande</option>
-              </select>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Color:</label>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <input type="color" id="cfg-color-parroquia" value="#888888" onchange="aplicarEstiloPreviewLocal()">
+        <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS) -->
+        <div class="control-card-main">
+          <div class="community-info">
+            <div class="community-icon-badge">🎵</div>
+            <div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
+              <div id="parroquia-nombre" class="community-title">Cargando...</div>
+              <div class="community-chips">
+                <span class="chip">● Proyector Activo</span>
+                <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
+                <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
               </div>
             </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tipografía:</label>
-              <select id="cfg-fuente-parroquia" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', serif">Serif Litúrgica</option>
-                <option value="'Montserrat', sans-serif">Redondeada</option>
-                <option value="'Cinzel', serif">Cinzel Romana</option>
-                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
-                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
-                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
-                <option value="'Caveat', cursive">Caveat Cursiva</option>
-              </select>
-            </div>
+          </div>
+
+          <!-- TRES BOTONES PRINCIPALES DE COMMANDO ALINEADOS -->
+          <div class="main-command-group">
+            <button class="btn-command btn-transmit" onclick="enviarAlCañon()">((e)) Transmitir</button>
+            <button class="btn-command btn-canon" onclick="abrirProyectorCañon()">🖥️ Abrir Proyector</button>
+            <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida</button>
           </div>
         </div>
 
-        <!-- 2. TÍTULO DE CANCIÓN -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🎶 Título de la Canción</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tamaño:</label>
-              <select id="cfg-tamano-titulo" onchange="aplicarEstiloPreviewLocal()">
-                <option value="1.8rem">Pequeño</option>
-                <option value="2.2rem" selected>Mediano</option>
-                <option value="2.8rem">Grande</option>
+        <!-- VISTA TAB: CONTROL -->
+        <div id="tab-control" class="section-view active">
+          <!-- FLECHAS Y BOTÓN TRANSMITIR ABAJO -->
+          <div class="nav-arrows">
+            <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
+            <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
+            <button class="btn-black-nav" onclick="mostrarNegraPreview()">🖥️ Pantalla Negra</button>
+          </div>
+
+          <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
+          <div class="sub-controls-bar">
+            <div class="font-size-group">
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala de Vista:</span>
+              <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
+              <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light); cursor:pointer;" onclick="previewScale=1.0; cambiarTamanoPreview(0);" title="Haz clic para reiniciar a 1.0x">1.0x</span>
+              <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
+              <select id="cfg-transicion" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+                <option value="fade">Fundido (Fade)</option>
+                <option value="slide">Desplazamiento Vertical</option>
+                <option value="slide-horizontal">Desplazamiento Lateral</option>
+                <option value="zoom">Escala (Zoom In)</option>
+                <option value="fade-up">Desvanecer Arriba</option>
+                <option value="none">Instantáneo</option>
+              </select>
+              <select id="cfg-velocidad" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+                <option value="0.2s">Rápido (0.2s)</option>
+                <option value="0.5s" selected>Normal (0.5s)</option>
+                <option value="1.0s">Lento (1.0s)</option>
               </select>
             </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Color:</label>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="aplicarEstiloPreviewLocal()">
+          </div>
+
+          <!-- TÍTULO DE CONTENIDO Y CHIPS -->
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
+            <div id="cancion-titulo" style="font-size: 1.15rem; color: var(--gold); font-weight: bold;">🎶 Esperando canción en la App...</div>
+            <div style="display:flex; gap:6px;">
+              <span id="chip-bloques-cnt" class="stanza-badge">0 bloques</span>
+              <span id="chip-tipo-content" class="stanza-badge" style="background:var(--accent-light); color:#000;">Canción</span>
+            </div>
+          </div>
+
+          <div id="estrofas-container" class="stanzas-container">
+            <div style="text-align: center; padding: 40px; color: var(--text-muted); grid-column: 1/-1;">Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>
+          </div>
+        </div>
+
+        <!-- VISTA TAB: APARIENCIA -->
+        <div id="tab-apariencia" class="section-view">
+          <h3 style="color: var(--accent-light); margin:0;">Paletas Litúrgicas Rápidas</h3>
+          <div class="palettes-grid">
+            <div class="palette-card" onclick="aplicarPaleta('#002411', '#888888', '#81C784', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#002411"></div><div class="color-dot" style="background:#81C784"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🌿 Tiempo Ordinario</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#1A002C', '#888888', '#CE93D8', '#FFFFFF', '#FFFFFF', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#1A002C"></div><div class="color-dot" style="background:#CE93D8"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>💜 Cuaresma y Adviento</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#2E0818', '#888888', '#F48FB1', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#2E0818"></div><div class="color-dot" style="background:#F48FB1"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🌸 Gaudete y Laetare</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#380000', '#888888', '#FF5252', '#FFFFFF', '#FFFFFF', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#380000"></div><div class="color-dot" style="background:#FF5252"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🔥 Pentecostés y Mártires</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#0A192F', '#81D4FA', '#4FC3F7', '#FFFFFF', '#FFFFFF', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#0A192F"></div><div class="color-dot" style="background:#4FC3F7"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🕊️ Fiestas Marianas</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#121212', '#B0BEC5', '#E0E0E0', '#FFFFFF', '#FFFFFF', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#121212"></div><div class="color-dot" style="background:#E0E0E0"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🤍 Fiestas del Señor</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#050505', '#888888', '#FFD700', '#FFFFFF', '#FFD700', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#050505"></div><div class="color-dot" style="background:#FFD700"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>✨ Pascua y Navidad</span>
+            </div>
+            <div class="palette-card" onclick="aplicarPaleta('#0A0A0A', '#888888', '#B39DDB', '#FFFFFF', '#FFFFFF', 'Serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#0A0A0A"></div><div class="color-dot" style="background:#B39DDB"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>✝️ Exequias y Difuntos</span>
+            </div>
+            <div class="palette-card" style="grid-column: 1 / -1;" onclick="aplicarPaleta('#00FF00', '#000000', '#000000', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
+              <div class="palette-colors"><div class="color-dot" style="background:#00FF00"></div><div class="color-dot" style="background:#000000"></div><div class="color-dot" style="background:#FFF"></div></div>
+              <span>🎥 Streaming (Chroma Key Verde)</span>
+            </div>
+          </div>
+
+          <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos Independientes</h3>
+
+          <!-- 1. NOMBRE Y SUBTÍTULO PARROQUIA -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre y Subtítulo de Parroquia / Capilla</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Nombre Principal:</label>
+                <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Parroquia Santísima Trinidad">
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Subtítulo / Evento / Ciclo:</label>
+                <input type="text" id="cfg-subtitulo-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Fiestas Patronales 2026 / Domingo XXVIII">
               </div>
             </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tipografía:</label>
-              <select id="cfg-fuente-titulo" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
-                <option value="'Montserrat', sans-serif">Redondeada</option>
-                <option value="'Cinzel', serif">Cinzel Romana</option>
-                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
-                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
-                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
-                <option value="'Caveat', cursive">Caveat Cursiva</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- 3. ESTROFAS -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Estrofas / Letra</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tamaño (Cañón):</label>
-              <select id="cfg-tamano" onchange="aplicarEstiloPreviewLocal()">
-                <option value="3.0rem">Pequeña</option>
-                <option value="3.8rem" selected>Mediana</option>
-                <option value="4.5rem">Grande</option>
-                <option value="5.2rem">Gigante</option>
-              </select>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Color:</label>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
-              </div>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tipografía:</label>
-              <select id="cfg-fuente-texto" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', sans-serif" selected>Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', serif">Serif Litúrgica</option>
-                <option value="'Montserrat', sans-serif">Redondeada</option>
-                <option value="'Cinzel', serif">Cinzel Romana</option>
-                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
-                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
-                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
-                <option value="'Caveat', cursive">Caveat Cursiva</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. MENSAJE DE BIENVENIDA (MULTILÍNEA CON RENGLONES) -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida (Permite Renglones / Multilínea)</div>
-          <div class="field-group" style="margin-bottom:8px;">
-            <textarea id="cfg-bienvenida-msg" rows="3" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida (Podés presionar Enter para escribir renglones abajo)">Bienvenidos a la Santa Misa 🕊️</textarea>
-          </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tamaño:</label>
-              <select id="cfg-tamano-bienvenida" onchange="aplicarEstiloPreviewLocal()">
-                <option value="2.8rem">Pequeño</option>
-                <option value="3.8rem" selected>Mediano</option>
-                <option value="4.8rem">Grande</option>
-                <option value="5.8rem">Gigante</option>
-              </select>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Color:</label>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <input type="color" id="cfg-color-bienvenida" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
-              </div>
-            </div>
-            <div class="field-group" style="margin-bottom:0;">
-              <label>Tipografía:</label>
-              <select id="cfg-fuente-bienvenida" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
-                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Montserrat', sans-serif">Redondeada</option>
-                <option value="'Cinzel', serif">Cinzel Romana</option>
-                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
-                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
-                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
-                <option value="'Caveat', cursive">Caveat Cursiva</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <button class="btn" style="margin-top:10px;" onclick="guardarEstiloConfig()">💾 Guardar Ajustes en Nube</button>
-
-        <!-- PERFILES DE COLOR PERSONALIZADOS -->
-        <div class="perfiles-box">
-          <h4 style="color: var(--gold); margin: 0 0 10px 0;">Guardar Perfil Personalizado</h4>
-          <div style="display:flex; gap:8px;">
-            <input type="text" id="input-nombre-perfil" placeholder="Ej: Misa de Jóvenes" style="flex:1;">
-            <button class="btn" onclick="guardarPerfilCustom()">Guardar Perfil</button>
-          </div>
-          <div id="lista-perfiles" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
-        </div>
-      </div>
-
-      <!-- VISTA TAB: FONDOS (TARJETAS DE VISTA PREVIA VISUAL) -->
-      <div id="tab-fondos" class="section-view">
-        <h3 style="color: var(--accent-light); margin:0;">Fondos y Galería</h3>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 4px 0 12px 0;">Hacé clic en cualquier tarjeta de fondo para verla en la Previa:</p>
-
-        <input type="hidden" id="cfg-fondo" value="#050505">
-
-        <!-- GRILLA DE TARJETAS DE FONDOS -->
-        <div id="bg-swatches-container" class="bg-swatches-grid">
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#050505', this)" data-val="#050505" style="background: #050505;">Negro Absoluto</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#0D1B2A', this)" data-val="#0D1B2A" style="background: #0D1B2A;">Azul Noche</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#1B0024', this)" data-val="#1B0024" style="background: #1B0024;">Cuaresma Violeta</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#002411', this)" data-val="#002411" style="background: #002411;">Verde Litúrgico</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#00FF00', this)" data-val="#00FF00" style="background: #00FF00; color:#000;">Chroma Key (Verde)</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #0D1B2A 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)" style="background: linear-gradient(135deg, #0D1B2A 0%, #000000 100%);">Degradado Azul</div>
-          <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
-        </div>
-
-        <!-- CREADOR DE FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS CON MUESTRA EN VIVO) -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px;">
-          <h4 style="color: var(--accent-light); margin:0 0 10px 0;">🎨 Creador de Fondos Fijos Propio</h4>
-          <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:12px;">
-            <!-- SÓLIDO -->
-            <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
-              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Fondo Sólido Propio:</div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <input type="color" id="input-swatch-solid" value="#121212">
-                <input type="text" id="input-swatch-solid-name" placeholder="Nombre (ej: Azul Rey)" style="flex:1; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
-                <button class="btn btn-mini" onclick="agregarSwatchSolido()">➕ Guardar</button>
-              </div>
-            </div>
-            <!-- DEGRADADO CON VISTA PREVIA EN VIVO -->
-            <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
-              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Degradado Propio (Con Muestra en Vivo):</div>
-              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <input type="color" id="input-swatch-grad1" value="#0D1B2A" title="Color Inicial" onchange="actualizarDegradadoLivePreview()">
-                <input type="color" id="input-swatch-grad2" value="#1B0024" title="Color Final" onchange="actualizarDegradadoLivePreview()">
-                <select id="select-swatch-angle" style="background:#21262d; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.8rem;" onchange="actualizarDegradadoLivePreview()">
-                  <option value="135deg">135° Diag</option>
-                  <option value="90deg">90° Vert</option>
-                  <option value="180deg">180° Horiz</option>
-                  <option value="45deg">45° Diag Inv</option>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Ubicación:</label>
+                <select id="cfg-posicion-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="top-left" selected>Arriba Izquierda</option>
+                  <option value="top-right">Arriba Derecha</option>
+                  <option value="bottom-left">Abajo Izquierda</option>
+                  <option value="bottom-right">Abajo Derecha</option>
+                  <option value="bottom-center">Abajo Centro</option>
+                  <option value="hidden">Ocultar</option>
                 </select>
-                <!-- MUESTRA VISUAL EN VIVO -->
-                <div id="grad-live-preview" style="width:45px; height:32px; border-radius:6px; border:1px solid #555; background: linear-gradient(135deg, #0D1B2A 0%, #1B0024 100%);" title="Muestra de Degradado"></div>
-                <input type="text" id="input-swatch-grad-name" placeholder="Nombre" style="width:65px; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
-                <button class="btn btn-mini" onclick="agregarSwatchDegradado()">➕ Guardar</button>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tamaño:</label>
+                <select id="cfg-tamano-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="0.9rem">Pequeño</option>
+                  <option value="1.1rem" selected>Mediano</option>
+                  <option value="1.4rem">Grande</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Color:</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="cfg-color-parroquia" value="#888888" onchange="aplicarEstiloPreviewLocal()">
+                </div>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tipografía:</label>
+                <select id="cfg-fuente-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                  <option value="'Playfair Display', serif">Serif Litúrgica</option>
+                  <option value="'Montserrat', sans-serif">Redondeada</option>
+                  <option value="'Cinzel', serif">Cinzel Romana</option>
+                  <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                  <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                  <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                  <option value="'Caveat', cursive">Caveat Cursiva</option>
+                </select>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- GALERÍA DE IMÁGENES DE FONDO -->
-        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px;">
-          <h4 style="color: var(--accent-light); margin:0 0 8px 0;">🖼️ Galería de Imágenes Propias</h4>
-          <input type="file" id="cfg-imagenes-multiples" accept="image/*" multiple onchange="cargarGaleriaFotos(event)">
-          <div id="galeria-preview" class="galeria-thumbs"></div>
-
-          <!-- AJUSTES INTELIGENTES DE FOTO (VERTICAL, CUADRADA, BLUR, ENCUADRE, OSCURECIMIENTO) -->
-          <div style="margin-top: 15px; background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid #30363d;">
-            <div style="font-weight:bold; font-size:0.85rem; color:var(--gold); margin-bottom:10px;">📐 Ajustes de Foto (Vertical / Cuadrada / Encuadre)</div>
+          <!-- 2. TÍTULO DE CANCIÓN -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🎶 Título de la Canción</div>
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
               <div class="field-group" style="margin-bottom:0;">
-                <label>Modo de Ajuste:</label>
-                <select id="cfg-img-fit" onchange="aplicarEstiloPreviewLocal()">
-                  <option value="cover" selected>Rellenar Pantalla (Cover)</option>
-                  <option value="contain">Imagen Completa (Contain)</option>
-                  <option value="blur">Efecto TV Blur (Fondo Desenfocado)</option>
+                <label>Tamaño:</label>
+                <select id="cfg-tamano-titulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="1.8rem">Pequeño</option>
+                  <option value="2.2rem" selected>Mediano</option>
+                  <option value="2.8rem">Grande</option>
                 </select>
               </div>
               <div class="field-group" style="margin-bottom:0;">
-                <label>Alineación / Posición:</label>
-                <select id="cfg-img-position" onchange="aplicarEstiloPreviewLocal()">
-                  <option value="center center" selected>Centro</option>
-                  <option value="top center">Arriba</option>
-                  <option value="bottom center">Abajo</option>
-                  <option value="center left">Izquierda</option>
-                  <option value="center right">Derecha</option>
-                </select>
+                <label>Color:</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="aplicarEstiloPreviewLocal()">
+                </div>
               </div>
               <div class="field-group" style="margin-bottom:0;">
-                <label>Filtro de Oscurecimiento:</label>
-                <select id="cfg-img-overlay" onchange="aplicarEstiloPreviewLocal()">
-                  <option value="0">Sin Filtro (0%)</option>
-                  <option value="0.25" selected>Oscurecer Suave (25%)</option>
-                  <option value="0.5">Oscurecer Medio (50%)</option>
-                  <option value="0.75">Oscurecer Intenso (75%)</option>
+                <label>Tipografía:</label>
+                <select id="cfg-fuente-titulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                  <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
+                  <option value="'Montserrat', sans-serif">Redondeada</option>
+                  <option value="'Cinzel', serif">Cinzel Romana</option>
+                  <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                  <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                  <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                  <option value="'Caveat', cursive">Caveat Cursiva</option>
                 </select>
               </div>
             </div>
           </div>
-        </div>
 
-      </div>
-
-      <!-- VISTA TAB: ATAJOS -->
-      <div id="tab-atajos" class="section-view">
-        <h3 style="color: var(--accent-light); margin:0;">Atajos de Teclado y Pedal</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
-          Podés usar el teclado de la computadora o un pedal Bluetooth configurado como flechas para pasar estrofas sin usar el mouse:
-        </p>
-        <ul style="color: var(--text); line-height: 1.8; font-size: 0.95rem;">
-          <li><b>Barra Espaciadora / Enter:</b> Transmitir estrofa actual al Cañón En Vivo</li>
-          <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Vista Previa</li>
-          <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Vista Previa</li>
-          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Vista Previa</li>
-          <li><b>Tecla B:</b> Pantalla de Bienvenida en Vista Previa</li>
-        </ul>
-      </div>
-
-    </div>
-
-    <!-- PANEL DERECHO: DOS MONITORES (PREVIEW ARRIBA + LIVE PROGRAM ABAJO) -->
-    <div class="preview-panel">
-
-      <!-- MONITOR 1: VISTA PREVIA (LO QUE VOY A PASAR) -->
-      <div style="width: 100%;">
-        <div class="monitor-label" style="color: var(--accent-light);">👁️ 1. Vista Previa (Preparando)</div>
-        <div id="preview-box" class="monitor-box" style="position:relative; overflow:hidden;">
-          <div id="preview-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
-          <div id="preview-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
-
-          <div id="prev-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
-            <div id="prev-parroquia-text">Parroquia</div>
-            <div id="prev-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+          <!-- 3. ESTROFAS -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Estrofas / Letra</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tamaño (Cañón):</label>
+                <select id="cfg-tamano" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="3.0rem">Pequeña</option>
+                  <option value="3.8rem" selected>Mediana</option>
+                  <option value="4.5rem">Grande</option>
+                  <option value="5.2rem">Gigante</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Color:</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
+                </div>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tipografía:</label>
+                <select id="cfg-fuente-texto" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="'Roboto', sans-serif" selected>Sans-Serif (Roboto)</option>
+                  <option value="'Playfair Display', serif">Serif Litúrgica</option>
+                  <option value="'Montserrat', sans-serif">Redondeada</option>
+                  <option value="'Cinzel', serif">Cinzel Romana</option>
+                  <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                  <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                  <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                  <option value="'Caveat', cursive">Caveat Cursiva</option>
+                </select>
+              </div>
+            </div>
           </div>
-          <div id="prev-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
-          <div id="prev-texto" class="mon-texto" style="z-index:3;">Seleccioná una estrofa...</div>
-          <div id="prev-counter" class="mon-counter" style="z-index:3;"></div>
-          <div class="mon-footer" style="z-index:3;">Vista Previa 🕊️</div>
+
+          <!-- 4. MENSAJE DE BIENVENIDA (MULTILÍNEA CON RENGLONES) -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida (Permite Renglones / Multilínea)</div>
+            <div class="field-group" style="margin-bottom:8px;">
+              <textarea id="cfg-bienvenida-msg" rows="3" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida">Bienvenidos a la Santa Misa 🕊️</textarea>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tamaño:</label>
+                <select id="cfg-tamano-bienvenida" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="2.8rem">Pequeño</option>
+                  <option value="3.8rem" selected>Mediano</option>
+                  <option value="4.8rem">Grande</option>
+                  <option value="5.8rem">Gigante</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Color:</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="cfg-color-bienvenida" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
+                </div>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tipografía:</label>
+                <select id="cfg-fuente-bienvenida" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
+                  <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                  <option value="'Montserrat', sans-serif">Redondeada</option>
+                  <option value="'Cinzel', serif">Cinzel Romana</option>
+                  <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                  <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                  <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                  <option value="'Caveat', cursive">Caveat Cursiva</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn" style="margin-top:10px;" onclick="guardarEstiloConfig()">💾 Guardar Ajustes en Nube</button>
+
+          <!-- PERFILES DE COLOR PERSONALIZADOS -->
+          <div class="perfiles-box">
+            <h4 style="color: var(--gold); margin: 0 0 10px 0;">Guardar Perfil Personalizado</h4>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="input-nombre-perfil" placeholder="Ej: Misa de Jóvenes" style="flex:1;">
+              <button class="btn" onclick="guardarPerfilCustom()">Guardar Perfil</button>
+            </div>
+            <div id="lista-perfiles" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
+          </div>
         </div>
+
+        <!-- VISTA TAB: FONDOS (TARJETAS DE VISTA PREVIA VISUAL) -->
+        <div id="tab-fondos" class="section-view">
+          <h3 style="color: var(--accent-light); margin:0;">Fondos y Galería</h3>
+          <p style="color: var(--text-muted); font-size: 0.85rem; margin: 4px 0 12px 0;">Hacé clic en cualquier tarjeta de fondo para verla en la Previa:</p>
+
+          <input type="hidden" id="cfg-fondo" value="#050505">
+
+          <!-- GRILLA DE TARJETAS DE FONDOS -->
+          <div id="bg-swatches-container" class="bg-swatches-grid">
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#050505', this)" data-val="#050505" style="background: #050505;">Negro Absoluto</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#0D1B2A', this)" data-val="#0D1B2A" style="background: #0D1B2A;">Azul Noche</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#1B0024', this)" data-val="#1B0024" style="background: #1B0024;">Cuaresma Violeta</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#002411', this)" data-val="#002411" style="background: #002411;">Verde Litúrgico</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#00FF00', this)" data-val="#00FF00" style="background: #00FF00; color:#000;">Chroma Key (Verde)</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #0D1B2A 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)" style="background: linear-gradient(135deg, #0D1B2A 0%, #000000 100%);">Degradado Azul</div>
+            <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
+          </div>
+
+          <!-- CREADOR DE FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS CON MUESTRA EN VIVO) -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h4 style="color: var(--accent-light); margin:0 0 10px 0;">🎨 Creador de Fondos Fijos Propio</h4>
+            <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:12px;">
+              <!-- SÓLIDO -->
+              <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid var(--card-border);">
+                <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Fondo Sólido Propio:</div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="input-swatch-solid" value="#121212">
+                  <input type="text" id="input-swatch-solid-name" placeholder="Nombre (ej: Azul Rey)" style="flex:1; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
+                  <button class="btn btn-mini" onclick="agregarSwatchSolido()">➕ Guardar</button>
+                </div>
+              </div>
+              <!-- DEGRADADO CON VISTA PREVIA EN VIVO -->
+              <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid var(--card-border);">
+                <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Degradado Propio (Muestra en Vivo):</div>
+                <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                  <input type="color" id="input-swatch-grad1" value="#0D1B2A" title="Color Inicial" onchange="actualizarDegradadoLivePreview()">
+                  <input type="color" id="input-swatch-grad2" value="#1B0024" title="Color Final" onchange="actualizarDegradadoLivePreview()">
+                  <select id="select-swatch-angle" style="background:#21262d; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.8rem;" onchange="actualizarDegradadoLivePreview()">
+                    <option value="135deg">135° Diag</option>
+                    <option value="90deg">90° Vert</option>
+                    <option value="180deg">180° Horiz</option>
+                    <option value="45deg">45° Diag Inv</option>
+                  </select>
+                  <!-- MUESTRA VISUAL EN VIVO -->
+                  <div id="grad-live-preview" style="width:45px; height:32px; border-radius:6px; border:1px solid #555; background: linear-gradient(135deg, #0D1B2A 0%, #1B0024 100%);" title="Muestra de Degradado"></div>
+                  <input type="text" id="input-swatch-grad-name" placeholder="Nombre" style="width:65px; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
+                  <button class="btn btn-mini" onclick="agregarSwatchDegradado()">➕ Guardar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GALERÍA DE IMÁGENES DE FONDO -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 15px; border-radius: 12px; margin-top: 15px;">
+            <h4 style="color: var(--accent-light); margin:0 0 8px 0;">🖼️ Galería de Imágenes Propias</h4>
+            <input type="file" id="cfg-imagenes-multiples" accept="image/*" multiple onchange="cargarGaleriaFotos(event)">
+            <div id="galeria-preview" class="galeria-thumbs"></div>
+
+            <!-- AJUSTES INTELIGENTES DE FOTO (VERTICAL, CUADRADA, BLUR, ENCUADRE, OSCURECIMIENTO) -->
+            <div style="margin-top: 15px; background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid var(--card-border);">
+              <div style="font-weight:bold; font-size:0.85rem; color:var(--gold); margin-bottom:10px;">📐 Ajustes de Foto (Vertical / Cuadrada / Encuadre)</div>
+              <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                <div class="field-group" style="margin-bottom:0;">
+                  <label>Modo de Ajuste:</label>
+                  <select id="cfg-img-fit" onchange="aplicarEstiloPreviewLocal()">
+                    <option value="cover" selected>Rellenar Pantalla (Cover)</option>
+                    <option value="contain">Imagen Completa (Contain)</option>
+                    <option value="blur">Efecto TV Blur (Fondo Desenfocado)</option>
+                  </select>
+                </div>
+                <div class="field-group" style="margin-bottom:0;">
+                  <label>Alineación / Posición:</label>
+                  <select id="cfg-img-position" onchange="aplicarEstiloPreviewLocal()">
+                    <option value="center center" selected>Centro</option>
+                    <option value="top center">Arriba</option>
+                    <option value="bottom center">Abajo</option>
+                    <option value="center left">Izquierda</option>
+                    <option value="center right">Derecha</option>
+                  </select>
+                </div>
+                <div class="field-group" style="margin-bottom:0;">
+                  <label>Filtro de Oscurecimiento:</label>
+                  <select id="cfg-img-overlay" onchange="aplicarEstiloPreviewLocal()">
+                    <option value="0">Sin Filtro (0%)</option>
+                    <option value="0.25" selected>Oscurecer Suave (25%)</option>
+                    <option value="0.5">Oscurecer Medio (50%)</option>
+                    <option value="0.75">Oscurecer Intenso (75%)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- VISTA TAB: ATAJOS -->
+        <div id="tab-atajos" class="section-view">
+          <h3 style="color: var(--accent-light); margin:0;">Atajos de Teclado y Pedal</h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5;">
+            Podés usar el teclado de la computadora o un pedal Bluetooth configurado como flechas para pasar estrofas sin usar el mouse:
+          </p>
+          <ul style="color: var(--text); line-height: 1.8; font-size: 0.95rem;">
+            <li><b>Barra Espaciadora / Enter:</b> Transmitir estrofa actual al Cañón En Vivo</li>
+            <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Vista Previa</li>
+            <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Vista Previa</li>
+            <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Vista Previa</li>
+            <li><b>Tecla B:</b> Pantalla de Bienvenida en Vista Previa</li>
+          </ul>
+        </div>
+
       </div>
 
-      <!-- MONITOR 2: EN VIVO (LO QUE VE LA GENTE EN EL CAÑÓN) -->
-      <div style="width: 100%; margin-top: 10px;">
-        <div class="monitor-label" style="color: var(--gold);">📡 2. En Vivo (En el Cañón)</div>
-        <div id="live-box" class="monitor-box" style="position:relative; overflow:hidden;">
-          <div id="live-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
-          <div id="live-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
+      <!-- PANEL DERECHO: DOS MONITORES + FICHA TÉCNICA DE TRANSMISIÓN DE OPERADOR -->
+      <div class="preview-panel">
 
-          <div id="live-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
-            <div id="live-parroquia-text">Parroquia</div>
-            <div id="live-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+        <!-- MONITOR 1: VISTA PREVIA (LO QUE VOY A PASAR) -->
+        <div style="width: 100%;">
+          <div class="monitor-label" style="color: var(--accent-light);">
+            <span>👁️ 1. Vista Previa (Preparando)</span>
           </div>
-          <div id="live-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
-          <div id="live-texto" class="mon-texto" style="z-index:3;">En espera...</div>
-          <div id="live-counter" class="mon-counter" style="z-index:3;"></div>
-          <div class="mon-footer" style="z-index:3;">En Vivo 🕊️</div>
+          <div id="preview-box" class="monitor-box" style="position:relative; overflow:hidden;">
+            <div id="preview-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+            <div id="preview-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
+
+            <div id="prev-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
+              <div id="prev-parroquia-text">Parroquia</div>
+              <div id="prev-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+            </div>
+            <div id="prev-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
+            <div id="prev-texto" class="mon-texto" style="z-index:3;">Seleccioná una estrofa...</div>
+            <div id="prev-counter" class="mon-counter" style="z-index:3;"></div>
+            <div class="mon-footer" style="z-index:3;">Vista Previa 🕊️</div>
+          </div>
         </div>
+
+        <!-- MONITOR 2: EN VIVO (LO QUE VE LA GENTE EN EL CAÑÓN) -->
+        <div style="width: 100%; margin-top: 5px;">
+          <div class="monitor-label" style="color: var(--gold);">
+            <span>📡 2. En Vivo (En el Cañón)</span>
+            <button class="btn-mini" onclick="abrirProyectorCañon()" title="Pantalla Completa F11">⛶</button>
+          </div>
+          <div id="live-box" class="monitor-box" style="position:relative; overflow:hidden;">
+            <div id="live-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+            <div id="live-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
+
+            <div id="live-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
+              <div id="live-parroquia-text">Parroquia</div>
+              <div id="live-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+            </div>
+            <div id="live-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
+            <div id="live-texto" class="mon-texto" style="z-index:3;">En espera...</div>
+            <div id="live-counter" class="mon-counter" style="z-index:3;"></div>
+            <div class="mon-footer" style="z-index:3;">En Vivo 🕊️</div>
+          </div>
+        </div>
+
+        <!-- FICHA TÉCNICA DE TRANSMISIÓN ÚTIL DEL OPERADOR -->
+        <div class="operator-tech-summary">
+          <div style="font-weight:bold; color:var(--accent-light); font-size:0.85rem; border-bottom:1px solid #1E293B; padding-bottom:6px;">📊 Ficha Técnica de Transmisión</div>
+
+          <div class="tech-row">
+            <span class="tech-label">📂 Perfil Activo:</span>
+            <span id="summary-perfil" class="tech-val">Predeterminado</span>
+          </div>
+          <div class="tech-row">
+            <span class="tech-label">🔤 Tipografía Estrofas:</span>
+            <span id="summary-fuente" class="tech-val">Roboto</span>
+          </div>
+          <div class="tech-row">
+            <span class="tech-label">🎨 Muestra de Colores:</span>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div id="dot-col-par" class="color-dot" style="background:#888" title="Color Parroquia"></div>
+              <div id="dot-col-tit" class="color-dot" style="background:#4DB6AC" title="Color Título"></div>
+              <div id="dot-col-txt" class="color-dot" style="background:#FFFFFF" title="Color Texto"></div>
+            </div>
+          </div>
+          <div class="tech-row">
+            <span class="tech-label">🖼️ Fondo / Galería:</span>
+            <span id="summary-fondo" class="tech-val">Color Sólido</span>
+          </div>
+          <div class="tech-row">
+            <span class="tech-label">📐 Escala & Transición:</span>
+            <span id="summary-escala-trans" class="tech-val">1.0x | Fundido (0.5s)</span>
+          </div>
+        </div>
+
       </div>
 
     </div>
@@ -663,6 +772,37 @@
     let previewScale = 1.0;
     let perfilesCustom = {};
     let customImageBg = "";
+    let perfilActivoNombre = "Predeterminado";
+
+    // FRASES BÍBLICAS Y LITÚRGICAS ALEATORIAS PARA EL SIDEBAR
+    const dailyQuotes = [
+      { text: '"Canten al Señor un cántico nuevo"', ref: 'Salmos 96:1' },
+      { text: '"Sirvan al Señor con alegría, entren en su presencia con cantos de gozo"', ref: 'Salmos 100:2' },
+      { text: '"Canten a Dios con gratitud en sus corazones con salmos e himnos espirituales"', ref: 'Colosenses 3:16' },
+      { text: '"Canten y alaben al Señor de todo corazón"', ref: 'Efesios 5:19' },
+      { text: '"Todo lo que tiene aliento alabe al Señor. ¡Aleluya!"', ref: 'Salmos 150:6' },
+      { text: '"Aclamen al Señor, toda la tierra; profieran voces de gozo y canten salmos"', ref: 'Salmos 98:4' },
+      { text: '"El Señor es mi fuerza y mi escudo; en Él confió mi corazón"', ref: 'Salmos 28:7' },
+      { text: '"Canten de gozo, oh justos, en el Señor; es propia la alabanza de los rectos"', ref: 'Salmos 33:1' }
+    ];
+
+    function cargarFraseAleatoria() {
+      const q = dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
+      document.getElementById('daily-quote-text').innerText = q.text;
+      document.getElementById('daily-quote-ref').innerText = q.ref;
+    }
+
+    // RELOJ EN TIEMPO REAL CON FECHA
+    function actualizarRelojHeader() {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+      const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const dateStr = `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+      document.getElementById('top-clock').innerText = `${timeStr} | ${dateStr}`;
+    }
+
+    setInterval(actualizarRelojHeader, 1000);
 
     // Estado interno de la Previa
     let previewState = {
@@ -725,6 +865,9 @@
 
     // Cargar galería y foto activa guardadas localmente
     try {
+      cargarFraseAleatoria();
+      actualizarRelojHeader();
+
       const savedGaleria = localStorage.getItem('proyector_galeria_' + comunidadPath);
       if (savedGaleria) galeriaFotos = JSON.parse(savedGaleria);
 
@@ -921,6 +1064,28 @@
       box.classList.add(posClass);
     }
 
+    function actualizarFichaTecnicaOperador() {
+      document.getElementById('summary-perfil').innerText = perfilActivoNombre;
+      const fuenteRaw = document.getElementById('cfg-fuente-texto').value;
+      const fontName = fuenteRaw.split(',')[0].replace(/'/g, '');
+      document.getElementById('summary-fuente').innerText = fontName;
+
+      document.getElementById('dot-col-par').style.background = document.getElementById('cfg-color-parroquia').value;
+      document.getElementById('dot-col-tit').style.background = document.getElementById('cfg-color-titulo').value;
+      document.getElementById('dot-col-txt').style.background = document.getElementById('cfg-color-texto').value;
+
+      const fondoVal = document.getElementById('cfg-fondo').value;
+      document.getElementById('summary-fondo').innerText = (fondoVal === 'custom') ? 'Imagen de Galería' : (fondoVal.startsWith('linear-gradient') ? 'Degradado' : 'Color Sólido');
+
+      const transSel = document.getElementById('cfg-transicion');
+      const transName = transSel.options[transSel.selectedIndex].text.split(' ')[0];
+      const velName = document.getElementById('cfg-velocidad').value;
+      document.getElementById('summary-escala-trans').innerText = `${previewScale.toFixed(1)}x | ${transName} (${velName})`;
+
+      document.getElementById('chip-escala-val').innerText = previewScale.toFixed(1) + 'x';
+      document.getElementById('chip-trans-val').innerText = `${transName} (${velName})`;
+    }
+
     // APLICAR ESTILO LOCALMENTE EN LA VISTA PREVIA (MONITOR 1)
     function aplicarEstiloPreviewLocal() {
       const box = document.getElementById('preview-box');
@@ -1026,6 +1191,8 @@
 
       if (tamTitVal) title.style.fontSize = (tamTitVal === '1.8rem') ? '0.65rem' : ((tamTitVal === '2.2rem') ? '0.75rem' : '0.9rem');
       if (tamParVal) parBox.style.fontSize = (tamParVal === '0.9rem') ? '0.55rem' : ((tamParVal === '1.1rem') ? '0.65rem' : '0.8rem');
+
+      actualizarFichaTecnicaOperador();
     }
 
     function guardarPerfilCustom() {
@@ -1034,6 +1201,7 @@
         mostrarToast("Escribí un nombre para el perfil", true);
         return;
       }
+      perfilActivoNombre = nombre;
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
       perfilesCustom[nombre] = {
         fondo: document.getElementById('cfg-fondo').value,
@@ -1081,6 +1249,7 @@
     function cargarPerfilCustom(nombre) {
       const p = perfilesCustom[nombre];
       if (!p) return;
+      perfilActivoNombre = nombre;
       if (p.fondo) document.getElementById('cfg-fondo').value = p.fondo;
 
       if (p.fuenteParroquia) document.getElementById('cfg-fuente-parroquia').value = p.fuenteParroquia;
@@ -1200,12 +1369,28 @@
       aplicarEstiloPreviewLocal();
     }
 
+    function actualizarBadgeStatusTop(isLive) {
+      const dot = document.getElementById('top-status-dot');
+      const text = document.getElementById('top-status-text');
+      const badge = document.getElementById('top-status-badge');
+      if (isLive) {
+        dot.className = 'status-dot';
+        text.innerText = '● EN VIVO';
+        badge.className = 'status-badge-live';
+      } else {
+        dot.className = 'status-dot idle';
+        text.innerText = '● EN ESPERA';
+        badge.className = 'status-badge-live idle';
+      }
+    }
+
     // Escuchar el estado de la comunidad (Canción actual seleccionada por la App)
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
       baseParroquiaNombre = d.nombre || 'Parroquia';
       document.getElementById('parroquia-nombre').innerText = baseParroquiaNombre;
+      document.getElementById('header-community-name').innerText = baseParroquiaNombre.toUpperCase();
 
       const nombreInput = document.getElementById('cfg-nombre-parroquia');
       if (!nombreInput.value) {
@@ -1220,6 +1405,8 @@
           cancionActualId = "";
           estrofasList = [];
           document.getElementById('cancion-titulo').innerText = "🎶 Esperando canción en la App...";
+          document.getElementById('chip-bloques-cnt').innerText = "0 bloques";
+          document.getElementById('chip-tipo-content').innerText = "En espera";
           document.getElementById('estrofas-container').innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:30px; color:#888;'>Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>";
           actualizarPreviewUI();
         }
@@ -1280,12 +1467,15 @@
       const overlayBox = document.getElementById('live-bg-overlay');
 
       if (!data) {
+        actualizarBadgeStatusTop(false);
         parName.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
         tit.style.display = 'none';
         txt.innerHTML = "En espera...";
         cnt.innerText = "";
         return;
       }
+
+      actualizarBadgeStatusTop(data.modo !== 'NEGRA');
 
       parName.innerText = data.comunidadNombre || 'Parroquia';
       if (data.subtituloParroquia) {
@@ -1370,17 +1560,24 @@
         if (!s.exists()) {
           document.getElementById('cancion-titulo').innerText = "🎶 Canción no encontrada en la base de datos";
           estrofasList = [];
+          document.getElementById('chip-bloques-cnt').innerText = "0 bloques";
           renderEstrofas();
           return;
         }
         const c = s.val();
-        document.getElementById('cancion-titulo').innerText = "🎶 " + (c.title || "Canción en Vivo");
+        const titleText = c.title || "Canción en Vivo";
+        document.getElementById('cancion-titulo').innerText = "🎶 " + titleText;
+
         const lyrics = (c.lyrics || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
         estrofasList = lyrics.split(/\n\s*\n/).filter(x => x.trim().length > 0);
         previewIdx = 0;
+
+        document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " bloques";
+        document.getElementById('chip-tipo-content').innerText = c.type || "Canción";
+
         previewState = {
           modo: 'CANCCION',
-          titulo: c.title || 'Canción',
+          titulo: titleText,
           bloqueTexto: estrofasList[0] || '',
           bloqueIndex: 0,
           totalBloques: estrofasList.length
