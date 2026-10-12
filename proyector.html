@@ -161,7 +161,17 @@
           cuerpo.style.backgroundImage = 'none';
         }
       }
-      if (cfg.fuente) cuerpo.style.fontFamily = cfg.fuente;
+
+      // Tipografías independientes
+      if (cfg.fuenteParroquia) headerParroquia.style.fontFamily = cfg.fuenteParroquia;
+      else if (cfg.fuente) headerParroquia.style.fontFamily = cfg.fuente;
+
+      if (cfg.fuenteTitulo) cancionHeader.style.fontFamily = cfg.fuenteTitulo;
+      else if (cfg.fuente) cancionHeader.style.fontFamily = cfg.fuente;
+
+      if (cfg.fuenteTexto) texto.style.fontFamily = cfg.fuenteTexto;
+      else if (cfg.fuente) texto.style.fontFamily = cfg.fuente;
+
       if (cfg.tamano) texto.style.fontSize = cfg.tamano;
       if (cfg.tamanoTitulo) cancionHeader.style.fontSize = cfg.tamanoTitulo;
       if (cfg.tamanoParroquia) headerParroquia.style.fontSize = cfg.tamanoParroquia;
@@ -228,7 +238,7 @@
 
       cuerpo.className = '';
 
-      // Aplicar todos los estilos enviados en vivo
+      // Aplicar fondo
       if (data.fondo) {
         if (data.fondo === 'custom' && data.imagenBg) {
           cuerpo.style.backgroundImage = `url("${data.imagenBg}")`;
@@ -243,12 +253,16 @@
         }
       }
 
-      if (data.fuente) cuerpo.style.fontFamily = data.fuente;
-      if (data.tamano) texto.style.fontSize = data.tamano;
+      // Tipografías, Tamaños y Colores Independientes
+      if (data.fuenteParroquia) headerParroquia.style.fontFamily = data.fuenteParroquia;
+      else if (data.fuente) headerParroquia.style.fontFamily = data.fuente;
+
+      if (data.fuenteTitulo) cancionHeader.style.fontFamily = data.fuenteTitulo;
+      else if (data.fuente) cancionHeader.style.fontFamily = data.fuente;
+
       if (data.tamanoTitulo) cancionHeader.style.fontSize = data.tamanoTitulo;
       if (data.tamanoParroquia) headerParroquia.style.fontSize = data.tamanoParroquia;
 
-      if (data.colorTexto) texto.style.color = data.colorTexto;
       if (data.colorTitulo) cancionHeader.style.color = data.colorTitulo;
       if (data.colorParroquia) headerParroquia.style.color = data.colorParroquia;
 
@@ -260,11 +274,17 @@
 
         if (data.modo === 'BIENVENIDA') {
           cancionHeader.style.display = 'none';
+          texto.style.fontFamily = data.fuenteBienvenida || data.fuenteTexto || data.fuente || 'sans-serif';
+          texto.style.fontSize = data.tamanoBienvenida || data.tamano || '3.8rem';
+          texto.style.color = data.colorBienvenida || data.colorTexto || '#FFFFFF';
           texto.innerHTML = darFormato(data.titulo || 'Bienvenidos a la Santa Misa 🕊️');
           footerPage.innerText = '';
         } else {
           cancionHeader.style.display = 'block';
           cancionHeader.innerText = data.titulo || '';
+          texto.style.fontFamily = data.fuenteTexto || data.fuente || 'sans-serif';
+          texto.style.fontSize = data.tamano || '3.8rem';
+          texto.style.color = data.colorTexto || '#FFFFFF';
           texto.innerHTML = darFormato(data.bloqueTexto || '');
           if (data.totalBloques > 0) {
             footerPage.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;

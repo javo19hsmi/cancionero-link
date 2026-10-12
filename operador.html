@@ -199,7 +199,7 @@
       <!-- TOP BAR -->
       <div class="top-bar">
         <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada (Vía Web)</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada</div>
           <div id="parroquia-nombre" class="parroquia-title">Cargando...</div>
         </div>
         <div class="action-buttons">
@@ -270,15 +270,7 @@
           </div>
         </div>
 
-        <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos</h3>
-        <div class="field-group">
-          <label>Tipografía:</label>
-          <select id="cfg-fuente" onchange="aplicarEstiloPreviewLocal()">
-            <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
-            <option value="'Playfair Display', 'Georgia', serif">Serif Elegante Litúrgica (Playfair Display)</option>
-            <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
-          </select>
-        </div>
+        <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos Independientes</h3>
 
         <!-- 1. NOMBRE PARROQUIA -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
@@ -286,7 +278,7 @@
           <div class="field-group" style="margin-bottom:8px;">
             <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Nombre parroquia">
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
             <div class="field-group" style="margin-bottom:0;">
               <label>Tamaño:</label>
               <select id="cfg-tamano-parroquia" onchange="aplicarEstiloPreviewLocal()">
@@ -299,8 +291,15 @@
               <label>Color:</label>
               <div style="display:flex; align-items:center; gap:8px;">
                 <input type="color" id="cfg-color-parroquia" value="#888888" onchange="aplicarEstiloPreviewLocal()">
-                <span style="font-size:0.8rem; color:var(--text-muted);">Color Parroquia</span>
               </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tipografía:</label>
+              <select id="cfg-fuente-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', 'Georgia', serif">Serif Litúrgica</option>
+                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+              </select>
             </div>
           </div>
         </div>
@@ -308,7 +307,7 @@
         <!-- 2. TÍTULO DE CANCIÓN -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
           <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🎶 Título de la Canción</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
             <div class="field-group" style="margin-bottom:0;">
               <label>Tamaño:</label>
               <select id="cfg-tamano-titulo" onchange="aplicarEstiloPreviewLocal()">
@@ -321,8 +320,15 @@
               <label>Color:</label>
               <div style="display:flex; align-items:center; gap:8px;">
                 <input type="color" id="cfg-color-titulo" value="#4DB6AC" onchange="aplicarEstiloPreviewLocal()">
-                <span style="font-size:0.8rem; color:var(--text-muted);">Color Título</span>
               </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tipografía:</label>
+              <select id="cfg-fuente-titulo" onchange="aplicarEstiloPreviewLocal()">
+                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', 'Georgia', serif" selected>Serif Litúrgica</option>
+                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+              </select>
             </div>
           </div>
         </div>
@@ -330,7 +336,7 @@
         <!-- 3. ESTROFAS -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
           <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Estrofas / Letra</div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
             <div class="field-group" style="margin-bottom:0;">
               <label>Tamaño (Cañón):</label>
               <select id="cfg-tamano" onchange="aplicarEstiloPreviewLocal()">
@@ -344,16 +350,52 @@
               <label>Color:</label>
               <div style="display:flex; align-items:center; gap:8px;">
                 <input type="color" id="cfg-color-texto" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
-                <span style="font-size:0.8rem; color:var(--text-muted);">Color Texto</span>
               </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tipografía:</label>
+              <select id="cfg-fuente-texto" onchange="aplicarEstiloPreviewLocal()">
+                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif" selected>Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', 'Georgia', serif">Serif Litúrgica</option>
+                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+              </select>
             </div>
           </div>
         </div>
 
-        <div class="field-group">
-          <label>Mensaje de Bienvenida:</label>
-          <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="aplicarEstiloPreviewLocal()">
+        <!-- 4. MENSAJE DE BIENVENIDA -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida</div>
+          <div class="field-group" style="margin-bottom:8px;">
+            <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida">
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tamaño:</label>
+              <select id="cfg-tamano-bienvenida" onchange="aplicarEstiloPreviewLocal()">
+                <option value="2.8rem">Pequeño</option>
+                <option value="3.8rem" selected>Mediano</option>
+                <option value="4.8rem">Grande</option>
+                <option value="5.8rem">Gigante</option>
+              </select>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Color:</label>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="cfg-color-bienvenida" value="#FFFFFF" onchange="aplicarEstiloPreviewLocal()">
+              </div>
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Tipografía:</label>
+              <select id="cfg-fuente-bienvenida" onchange="aplicarEstiloPreviewLocal()">
+                <option value="'Playfair Display', 'Georgia', serif" selected>Serif Litúrgica</option>
+                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+              </select>
+            </div>
+          </div>
         </div>
+
         <button class="btn" style="margin-top:10px;" onclick="guardarEstiloConfig()">💾 Guardar Ajustes en Nube</button>
 
         <!-- PERFILES DE COLOR PERSONALIZADOS -->
@@ -529,17 +571,26 @@
           document.getElementById('cfg-fondo').value = cfg.fondo;
           marcarSwatchActivo(cfg.fondo);
         }
-        if (cfg.fuente) document.getElementById('cfg-fuente').value = cfg.fuente;
+        if (cfg.fuenteParroquia) document.getElementById('cfg-fuente-parroquia').value = cfg.fuenteParroquia;
+        if (cfg.fuenteTitulo) document.getElementById('cfg-fuente-titulo').value = cfg.fuenteTitulo;
+        if (cfg.fuenteTexto) document.getElementById('cfg-fuente-texto').value = cfg.fuenteTexto;
+        if (cfg.fuenteBienvenida) document.getElementById('cfg-fuente-bienvenida').value = cfg.fuenteBienvenida;
+
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
         if (cfg.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = cfg.tamanoTitulo;
         if (cfg.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = cfg.tamanoParroquia;
+        if (cfg.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = cfg.tamanoBienvenida;
+
         if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
         if (cfg.velocidad) document.getElementById('cfg-velocidad').value = cfg.velocidad;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
         if (cfg.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = cfg.bienvenidaMsg;
+
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
         if (cfg.colorParroquia) document.getElementById('cfg-color-parroquia').value = cfg.colorParroquia;
+        if (cfg.colorBienvenida) document.getElementById('cfg-color-bienvenida').value = cfg.colorBienvenida;
+
         if (cfg.perfiles) {
           perfilesCustom = cfg.perfiles;
           renderPerfilesList();
@@ -572,10 +623,14 @@
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
-        fuente: document.getElementById('cfg-fuente').value,
+        fuenteParroquia: document.getElementById('cfg-fuente-parroquia').value,
+        fuenteTitulo: document.getElementById('cfg-fuente-titulo').value,
+        fuenteTexto: document.getElementById('cfg-fuente-texto').value,
+        fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
         tamano: document.getElementById('cfg-tamano').value,
         tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
+        tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
         transicion: document.getElementById('cfg-transicion').value,
         velocidad: document.getElementById('cfg-velocidad').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
@@ -583,6 +638,7 @@
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
         colorParroquia: document.getElementById('cfg-color-parroquia').value,
+        colorBienvenida: document.getElementById('cfg-color-bienvenida').value,
         perfiles: perfilesCustom,
         imagenBg: activeImg || ""
       };
@@ -606,13 +662,20 @@
       const par = document.getElementById('prev-parroquia');
 
       const fondoVal = document.getElementById('cfg-fondo').value;
-      const fuenteVal = document.getElementById('cfg-fuente').value;
+      const fuenteParVal = document.getElementById('cfg-fuente-parroquia').value;
+      const fuenteTitVal = document.getElementById('cfg-fuente-titulo').value;
+      const fuenteTxtVal = document.getElementById('cfg-fuente-texto').value;
+      const fuenteBvnVal = document.getElementById('cfg-fuente-bienvenida').value;
+
       const colorTitVal = document.getElementById('cfg-color-titulo').value;
       const colorTxtVal = document.getElementById('cfg-color-texto').value;
       const colorParVal = document.getElementById('cfg-color-parroquia').value;
+      const colorBvnVal = document.getElementById('cfg-color-bienvenida').value;
+
       const tamCanonVal = document.getElementById('cfg-tamano').value;
       const tamTitVal = document.getElementById('cfg-tamano-titulo').value;
       const tamParVal = document.getElementById('cfg-tamano-parroquia').value;
+      const tamBvnVal = document.getElementById('cfg-tamano-bienvenida').value;
 
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
@@ -627,19 +690,34 @@
         box.style.backgroundImage = 'none';
       }
 
-      if (fuenteVal) box.style.fontFamily = fuenteVal;
-      if (colorTxtVal) text.style.color = colorTxtVal;
-      if (colorTitVal) title.style.color = colorTitVal;
-      if (colorParVal) par.style.color = colorParVal;
+      par.style.fontFamily = fuenteParVal;
+      title.style.fontFamily = fuenteTitVal;
+      par.style.color = colorParVal;
+      title.style.color = colorTitVal;
 
-      // Escalar fuente del preview proporcionalmente
-      let basePx = 18;
-      if (tamCanonVal === '3.0rem') basePx = 15;
-      else if (tamCanonVal === '3.8rem') basePx = 18;
-      else if (tamCanonVal === '4.5rem') basePx = 22;
-      else if (tamCanonVal === '5.2rem') basePx = 26;
+      if (previewState.modo === 'BIENVENIDA') {
+        text.style.fontFamily = fuenteBvnVal;
+        text.style.color = colorBvnVal;
 
-      text.style.fontSize = (basePx * previewScale) + 'px';
+        let bPx = 20;
+        if (tamBvnVal === '2.8rem') bPx = 15;
+        else if (tamBvnVal === '3.8rem') bPx = 20;
+        else if (tamBvnVal === '4.8rem') bPx = 25;
+        else if (tamBvnVal === '5.8rem') bPx = 30;
+
+        text.style.fontSize = (bPx * previewScale) + 'px';
+      } else {
+        text.style.fontFamily = fuenteTxtVal;
+        text.style.color = colorTxtVal;
+
+        let basePx = 18;
+        if (tamCanonVal === '3.0rem') basePx = 15;
+        else if (tamCanonVal === '3.8rem') basePx = 18;
+        else if (tamCanonVal === '4.5rem') basePx = 22;
+        else if (tamCanonVal === '5.2rem') basePx = 26;
+
+        text.style.fontSize = (basePx * previewScale) + 'px';
+      }
 
       if (tamTitVal) title.style.fontSize = (tamTitVal === '1.8rem') ? '0.65rem' : ((tamTitVal === '2.2rem') ? '0.75rem' : '0.9rem');
       if (tamParVal) par.style.fontSize = (tamParVal === '0.9rem') ? '0.55rem' : ((tamParVal === '1.1rem') ? '0.65rem' : '0.8rem');
@@ -655,15 +733,24 @@
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
       perfilesCustom[nombre] = {
         fondo: document.getElementById('cfg-fondo').value,
-        fuente: document.getElementById('cfg-fuente').value,
+        fuenteParroquia: document.getElementById('cfg-fuente-parroquia').value,
+        fuenteTitulo: document.getElementById('cfg-fuente-titulo').value,
+        fuenteTexto: document.getElementById('cfg-fuente-texto').value,
+        fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
+
         tamano: document.getElementById('cfg-tamano').value,
         tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
+        tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
+
         transicion: document.getElementById('cfg-transicion').value,
         velocidad: document.getElementById('cfg-velocidad').value,
+
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
         colorParroquia: document.getElementById('cfg-color-parroquia').value,
+        colorBienvenida: document.getElementById('cfg-color-bienvenida').value,
+
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
         imagenBg: activeImg || ""
       };
@@ -684,15 +771,25 @@
       const p = perfilesCustom[nombre];
       if (!p) return;
       if (p.fondo) document.getElementById('cfg-fondo').value = p.fondo;
-      if (p.fuente) document.getElementById('cfg-fuente').value = p.fuente;
+
+      if (p.fuenteParroquia) document.getElementById('cfg-fuente-parroquia').value = p.fuenteParroquia;
+      if (p.fuenteTitulo) document.getElementById('cfg-fuente-titulo').value = p.fuenteTitulo;
+      if (p.fuenteTexto) document.getElementById('cfg-fuente-texto').value = p.fuenteTexto;
+      if (p.fuenteBienvenida) document.getElementById('cfg-fuente-bienvenida').value = p.fuenteBienvenida;
+
       if (p.tamano) document.getElementById('cfg-tamano').value = p.tamano;
       if (p.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = p.tamanoTitulo;
       if (p.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = p.tamanoParroquia;
+      if (p.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = p.tamanoBienvenida;
+
       if (p.transicion) document.getElementById('cfg-transicion').value = p.transicion;
       if (p.velocidad) document.getElementById('cfg-velocidad').value = p.velocidad;
+
       if (p.colorTitulo) document.getElementById('cfg-color-titulo').value = p.colorTitulo;
       if (p.colorTexto) document.getElementById('cfg-color-texto').value = p.colorTexto;
       if (p.colorParroquia) document.getElementById('cfg-color-parroquia').value = p.colorParroquia;
+      if (p.colorBienvenida) document.getElementById('cfg-color-bienvenida').value = p.colorBienvenida;
+
       if (p.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = p.bienvenidaMsg;
       if (p.imagenBg) customImageBg = p.imagenBg;
 
@@ -725,11 +822,11 @@
       document.getElementById('cfg-fondo').value = fondoHex;
       document.getElementById('cfg-color-titulo').value = tituloHex;
       document.getElementById('cfg-color-texto').value = textoHex;
-      if (fuenteTipo === 'Serif') {
-        document.getElementById('cfg-fuente').value = "'Playfair Display', 'Georgia', serif";
-      } else {
-        document.getElementById('cfg-fuente').value = "'Roboto', 'Helvetica Neue', Arial, sans-serif";
-      }
+      const font = (fuenteTipo === 'Serif') ? "'Playfair Display', 'Georgia', serif" : "'Roboto', 'Helvetica Neue', Arial, sans-serif";
+      document.getElementById('cfg-fuente-parroquia').value = font;
+      document.getElementById('cfg-fuente-titulo').value = font;
+      document.getElementById('cfg-fuente-texto').value = font;
+      document.getElementById('cfg-fuente-bienvenida').value = font;
       aplicarEstiloPreviewLocal();
     }
 
@@ -852,15 +949,11 @@
 
       par.innerText = data.comunidadNombre || 'Parroquia';
 
-      // Aplicar estilos del Vivo enviados al presionar Enviar al Cañón
-      if (data.tamano) {
-        const remVal = parseFloat(data.tamano) || 3.8;
-        txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
-      }
-      if (data.colorTexto) txt.style.color = data.colorTexto;
-      if (data.colorTitulo) tit.style.color = data.colorTitulo;
+      // Aplicar fuentes y colores independientes
+      if (data.fuenteParroquia) par.style.fontFamily = data.fuenteParroquia;
+      if (data.fuenteTitulo) tit.style.fontFamily = data.fuenteTitulo;
       if (data.colorParroquia) par.style.color = data.colorParroquia;
-      if (data.fuente) box.style.fontFamily = data.fuente;
+      if (data.colorTitulo) tit.style.color = data.colorTitulo;
 
       if (data.fondo === 'custom' && data.imagenBg) {
         box.style.backgroundImage = `url("${data.imagenBg}")`;
@@ -881,11 +974,23 @@
 
       if (data.modo === 'BIENVENIDA') {
         tit.style.display = 'none';
+        if (data.fuenteBienvenida) txt.style.fontFamily = data.fuenteBienvenida;
+        if (data.colorBienvenida) txt.style.color = data.colorBienvenida;
+        if (data.tamanoBienvenida) {
+          const remVal = parseFloat(data.tamanoBienvenida) || 3.8;
+          txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
+        }
         txt.innerHTML = darFormato(data.titulo || 'Bienvenidos');
         cnt.innerText = "";
       } else {
         tit.style.display = 'block';
         tit.innerText = data.titulo || '';
+        if (data.fuenteTexto) txt.style.fontFamily = data.fuenteTexto;
+        if (data.colorTexto) txt.style.color = data.colorTexto;
+        if (data.tamano) {
+          const remVal = parseFloat(data.tamano) || 3.8;
+          txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
+        }
         txt.innerHTML = darFormato(data.bloqueTexto || '');
         cnt.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
       }
@@ -964,15 +1069,27 @@
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       const baseRem = parseFloat(document.getElementById('cfg-tamano').value) || 3.8;
       const fontSizeLive = (baseRem * previewScale).toFixed(2) + "rem";
+
+      const baseBvnRem = parseFloat(document.getElementById('cfg-tamano-bienvenida').value) || 3.8;
+      const fontBvnSizeLive = (baseBvnRem * previewScale).toFixed(2) + "rem";
+
       const fontTitLive = document.getElementById('cfg-tamano-titulo').value || "2.2rem";
       const fontParLive = document.getElementById('cfg-tamano-parroquia').value || "1.1rem";
+
+      const fuenteParLive = document.getElementById('cfg-fuente-parroquia').value;
+      const fuenteTitLive = document.getElementById('cfg-fuente-titulo').value;
+      const fuenteTxtLive = document.getElementById('cfg-fuente-texto').value;
+      const fuenteBvnLive = document.getElementById('cfg-fuente-bienvenida').value;
+
       const transicionLive = document.getElementById('cfg-transicion').value || "fade";
       const velocidadLive = document.getElementById('cfg-velocidad').value || "0.5s";
       const fondoLive = document.getElementById('cfg-fondo').value;
-      const fuenteLive = document.getElementById('cfg-fuente').value;
+
       const colorTitLive = document.getElementById('cfg-color-titulo').value;
       const colorTxtLive = document.getElementById('cfg-color-texto').value;
       const colorParLive = document.getElementById('cfg-color-parroquia').value;
+      const colorBvnLive = document.getElementById('cfg-color-bienvenida').value;
+
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
       mostrarToast("📡 Transmitiendo al Cañón...");
@@ -983,16 +1100,26 @@
         bloqueIndex: previewState.bloqueIndex,
         totalBloques: previewState.totalBloques,
         comunidadNombre: nombreParroquia,
+
         tamano: fontSizeLive,
         tamanoTitulo: fontTitLive,
         tamanoParroquia: fontParLive,
+        tamanoBienvenida: fontBvnSizeLive,
+
+        fuenteParroquia: fuenteParLive,
+        fuenteTitulo: fuenteTitLive,
+        fuenteTexto: fuenteTxtLive,
+        fuenteBienvenida: fuenteBvnLive,
+
         transicion: transicionLive,
         velocidad: velocidadLive,
         fondo: fondoLive,
-        fuente: fuenteLive,
+
         colorTitulo: colorTitLive,
         colorTexto: colorTxtLive,
         colorParroquia: colorParLive,
+        colorBienvenida: colorBvnLive,
+
         imagenBg: activeImg || ""
       })
       .then(() => {
