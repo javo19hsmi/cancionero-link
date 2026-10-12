@@ -8,7 +8,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700&family=Montserrat:wght@400;600;700&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Quicksand:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -92,12 +92,26 @@
 
     /* PANEL DERECHO: DOS MONITORES (PREVIEW & LIVE PROGRAM) */
     .preview-panel { background: #090d12; padding: 15px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow-y: auto; }
-    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; transition: all 0.3s; }
+    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; background-repeat: no-repeat !important; transition: all 0.3s; }
     .monitor-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
 
-    .mon-parroquia { position: absolute; top: 8px; left: 10px; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
+    /* POSICIONAMIENTO PARROQUIA EN MONITORES */
+    .mon-parroquia-box {
+      position: absolute; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; line-height: 1.25; transition: all 0.2s;
+    }
+    .mon-parroquia-subtext {
+      font-size: 0.8em; color: rgba(255,255,255,0.85); font-weight: normal; text-transform: none; margin-top: 1px;
+    }
+
+    .mon-pos-top-left { top: 8px; left: 10px; right: auto; bottom: auto; text-align: left; }
+    .mon-pos-top-right { top: 8px; right: 10px; left: auto; bottom: auto; text-align: right; }
+    .mon-pos-bottom-left { bottom: 8px; left: 10px; right: auto; top: auto; text-align: left; }
+    .mon-pos-bottom-right { bottom: 8px; right: 10px; left: auto; top: auto; text-align: right; }
+    .mon-pos-bottom-center { bottom: 8px; left: 50%; transform: translateX(-50%); right: auto; top: auto; text-align: center; }
+    .mon-pos-hidden { display: none !important; }
+
     .mon-titulo { position: absolute; top: 10px; font-size: 0.75rem; color: var(--accent-light); font-weight: bold; }
-    .mon-texto { font-size: 1.2rem; font-weight: bold; line-height: 1.35; max-width: 90%; }
+    .mon-texto { font-size: 1.2rem; font-weight: bold; line-height: 1.35; max-width: 90%; white-space: pre-wrap; }
     .mon-footer { position: absolute; bottom: 6px; right: 10px; font-size: 0.6rem; color: var(--gold); font-weight: bold; }
     .mon-counter { position: absolute; bottom: 6px; left: 10px; font-size: 0.6rem; color: #666; }
 
@@ -141,7 +155,7 @@
     .section-view.active { display: flex; }
     .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
     .field-group label { font-size: 0.85rem; color: var(--text-muted); font-weight: bold; }
-    .field-group select, .field-group input { background: var(--card-bg); color: white; border: 1px solid #30363d; padding: 10px; border-radius: 8px; font-size: 0.95rem; }
+    .field-group select, .field-group input, .field-group textarea { background: var(--card-bg); color: white; border: 1px solid #30363d; padding: 10px; border-radius: 8px; font-size: 0.95rem; font-family: inherit; }
 
     input[type="color"] {
       -webkit-appearance: none;
@@ -230,7 +244,10 @@
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
             <select id="cfg-transicion" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
               <option value="fade">Fundido (Fade)</option>
-              <option value="slide">Desplazamiento</option>
+              <option value="slide">Desplazamiento Vertical</option>
+              <option value="slide-horizontal">Desplazamiento Lateral</option>
+              <option value="zoom">Escala (Zoom In)</option>
+              <option value="fade-up">Desvanecer Arriba</option>
               <option value="none">Instantáneo</option>
             </select>
             <select id="cfg-velocidad" style="background:#2A2A2A; color:#FFF; border:1px solid #444; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
@@ -264,8 +281,8 @@
             <div class="palette-colors"><div class="color-dot" style="background:#2E0818"></div><div class="color-dot" style="background:#F48FB1"></div><div class="color-dot" style="background:#FFF"></div></div>
             <span>🌸 Gaudete y Laetare</span>
           </div>
-          <div class="palette-card" onclick="aplicarPaleta('#2B0000', '#888888', '#E57373', '#FFFFFF', '#FFFFFF', 'Serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#2B0000"></div><div class="color-dot" style="background:#E57373"></div><div class="color-dot" style="background:#FFF"></div></div>
+          <div class="palette-card" onclick="aplicarPaleta('#380000', '#888888', '#FF5252', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#380000"></div><div class="color-dot" style="background:#FF5252"></div><div class="color-dot" style="background:#FFF"></div></div>
             <span>🔥 Pentecostés y Mártires</span>
           </div>
           <div class="palette-card" onclick="aplicarPaleta('#0A192F', '#81D4FA', '#4FC3F7', '#FFFFFF', '#FFFFFF', 'Serif')">
@@ -292,13 +309,31 @@
 
         <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos Independientes</h3>
 
-        <!-- 1. NOMBRE PARROQUIA -->
+        <!-- 1. NOMBRE Y SUBTÍTULO PARROQUIA -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre de la Parroquia / Capilla</div>
-          <div class="field-group" style="margin-bottom:8px;">
-            <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Nombre parroquia">
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre y Subtítulo de Parroquia / Capilla</div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Nombre Principal:</label>
+              <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Parroquia Santísima Trinidad">
+            </div>
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Subtítulo / Evento / Ciclo:</label>
+              <input type="text" id="cfg-subtitulo-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Fiestas Patronales 2026 / Domingo XXVIII">
+            </div>
           </div>
-          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+            <div class="field-group" style="margin-bottom:0;">
+              <label>Ubicación:</label>
+              <select id="cfg-posicion-parroquia" onchange="aplicarEstiloPreviewLocal()">
+                <option value="top-left" selected>Arriba Izquierda</option>
+                <option value="top-right">Arriba Derecha</option>
+                <option value="bottom-left">Abajo Izquierda</option>
+                <option value="bottom-right">Abajo Derecha</option>
+                <option value="bottom-center">Abajo Centro</option>
+                <option value="hidden">Ocultar</option>
+              </select>
+            </div>
             <div class="field-group" style="margin-bottom:0;">
               <label>Tamaño:</label>
               <select id="cfg-tamano-parroquia" onchange="aplicarEstiloPreviewLocal()">
@@ -316,9 +351,14 @@
             <div class="field-group" style="margin-bottom:0;">
               <label>Tipografía:</label>
               <select id="cfg-fuente-parroquia" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', 'Georgia', serif">Serif Litúrgica</option>
-                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', serif">Serif Litúrgica</option>
+                <option value="'Montserrat', sans-serif">Redondeada</option>
+                <option value="'Cinzel', serif">Cinzel Romana</option>
+                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                <option value="'Caveat', cursive">Caveat Cursiva</option>
               </select>
             </div>
           </div>
@@ -345,9 +385,14 @@
             <div class="field-group" style="margin-bottom:0;">
               <label>Tipografía:</label>
               <select id="cfg-fuente-titulo" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', 'Georgia', serif" selected>Serif Litúrgica</option>
-                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
+                <option value="'Montserrat', sans-serif">Redondeada</option>
+                <option value="'Cinzel', serif">Cinzel Romana</option>
+                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                <option value="'Caveat', cursive">Caveat Cursiva</option>
               </select>
             </div>
           </div>
@@ -375,19 +420,24 @@
             <div class="field-group" style="margin-bottom:0;">
               <label>Tipografía:</label>
               <select id="cfg-fuente-texto" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif" selected>Sans-Serif (Roboto)</option>
-                <option value="'Playfair Display', 'Georgia', serif">Serif Litúrgica</option>
-                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+                <option value="'Roboto', sans-serif" selected>Sans-Serif (Roboto)</option>
+                <option value="'Playfair Display', serif">Serif Litúrgica</option>
+                <option value="'Montserrat', sans-serif">Redondeada</option>
+                <option value="'Cinzel', serif">Cinzel Romana</option>
+                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                <option value="'Caveat', cursive">Caveat Cursiva</option>
               </select>
             </div>
           </div>
         </div>
 
-        <!-- 4. MENSAJE DE BIENVENIDA -->
+        <!-- 4. MENSAJE DE BIENVENIDA (MULTILÍNEA CON RENGLONES) -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida</div>
+          <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida (Permite Renglones / Multilínea)</div>
           <div class="field-group" style="margin-bottom:8px;">
-            <input type="text" id="cfg-bienvenida-msg" value="Bienvenidos a la Santa Misa 🕊️" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida">
+            <textarea id="cfg-bienvenida-msg" rows="3" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida (Podés presionar Enter para escribir renglones abajo)">Bienvenidos a la Santa Misa 🕊️</textarea>
           </div>
           <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
             <div class="field-group" style="margin-bottom:0;">
@@ -408,9 +458,14 @@
             <div class="field-group" style="margin-bottom:0;">
               <label>Tipografía:</label>
               <select id="cfg-fuente-bienvenida" onchange="aplicarEstiloPreviewLocal()">
-                <option value="'Playfair Display', 'Georgia', serif" selected>Serif Litúrgica</option>
-                <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif (Roboto)</option>
-                <option value="'Montserrat', 'Poppins', sans-serif">Redondeada</option>
+                <option value="'Playfair Display', serif" selected>Serif Litúrgica</option>
+                <option value="'Roboto', sans-serif">Sans-Serif (Roboto)</option>
+                <option value="'Montserrat', sans-serif">Redondeada</option>
+                <option value="'Cinzel', serif">Cinzel Romana</option>
+                <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                <option value="'Caveat', cursive">Caveat Cursiva</option>
               </select>
             </div>
           </div>
@@ -447,10 +502,10 @@
           <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
         </div>
 
-        <!-- CREADOR DE FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS) -->
+        <!-- CREADOR DE FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS CON MUESTRA EN VIVO) -->
         <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px;">
           <h4 style="color: var(--accent-light); margin:0 0 10px 0;">🎨 Creador de Fondos Fijos Propio</h4>
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+          <div style="display:grid; grid-template-columns: 1fr 1.3fr; gap:12px;">
             <!-- SÓLIDO -->
             <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
               <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Fondo Sólido Propio:</div>
@@ -460,19 +515,21 @@
                 <button class="btn btn-mini" onclick="agregarSwatchSolido()">➕ Guardar</button>
               </div>
             </div>
-            <!-- DEGRADADO -->
+            <!-- DEGRADADO CON VISTA PREVIA EN VIVO -->
             <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
-              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Degradado Propio:</div>
+              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Degradado Propio (Con Muestra en Vivo):</div>
               <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-                <input type="color" id="input-swatch-grad1" value="#0D1B2A" title="Color Inicial">
-                <input type="color" id="input-swatch-grad2" value="#1B0024" title="Color Final">
-                <select id="select-swatch-angle" style="background:#21262d; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.8rem;">
-                  <option value="135deg">135° Diagonal</option>
-                  <option value="90deg">90° Vertical</option>
-                  <option value="180deg">180° Horizontal</option>
-                  <option value="45deg">45° Diagonal Inv</option>
+                <input type="color" id="input-swatch-grad1" value="#0D1B2A" title="Color Inicial" onchange="actualizarDegradadoLivePreview()">
+                <input type="color" id="input-swatch-grad2" value="#1B0024" title="Color Final" onchange="actualizarDegradadoLivePreview()">
+                <select id="select-swatch-angle" style="background:#21262d; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.8rem;" onchange="actualizarDegradadoLivePreview()">
+                  <option value="135deg">135° Diag</option>
+                  <option value="90deg">90° Vert</option>
+                  <option value="180deg">180° Horiz</option>
+                  <option value="45deg">45° Diag Inv</option>
                 </select>
-                <input type="text" id="input-swatch-grad-name" placeholder="Nombre" style="width:70px; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
+                <!-- MUESTRA VISUAL EN VIVO -->
+                <div id="grad-live-preview" style="width:45px; height:32px; border-radius:6px; border:1px solid #555; background: linear-gradient(135deg, #0D1B2A 0%, #1B0024 100%);" title="Muestra de Degradado"></div>
+                <input type="text" id="input-swatch-grad-name" placeholder="Nombre" style="width:65px; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
                 <button class="btn btn-mini" onclick="agregarSwatchDegradado()">➕ Guardar</button>
               </div>
             </div>
@@ -546,10 +603,13 @@
       <div style="width: 100%;">
         <div class="monitor-label" style="color: var(--accent-light);">👁️ 1. Vista Previa (Preparando)</div>
         <div id="preview-box" class="monitor-box" style="position:relative; overflow:hidden;">
-          <div id="preview-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+          <div id="preview-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
           <div id="preview-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
 
-          <div id="prev-parroquia" class="mon-parroquia" style="z-index:3;">Parroquia</div>
+          <div id="prev-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
+            <div id="prev-parroquia-text">Parroquia</div>
+            <div id="prev-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+          </div>
           <div id="prev-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
           <div id="prev-texto" class="mon-texto" style="z-index:3;">Seleccioná una estrofa...</div>
           <div id="prev-counter" class="mon-counter" style="z-index:3;"></div>
@@ -561,10 +621,13 @@
       <div style="width: 100%; margin-top: 10px;">
         <div class="monitor-label" style="color: var(--gold);">📡 2. En Vivo (En el Cañón)</div>
         <div id="live-box" class="monitor-box" style="position:relative; overflow:hidden;">
-          <div id="live-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+          <div id="live-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; background-repeat:no-repeat; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
           <div id="live-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
 
-          <div id="live-parroquia" class="mon-parroquia" style="z-index:3;">Parroquia</div>
+          <div id="live-parroquia" class="mon-parroquia-box mon-pos-top-left" style="z-index:3;">
+            <div id="live-parroquia-text">Parroquia</div>
+            <div id="live-parroquia-subtext" class="mon-parroquia-subtext" style="display:none;"></div>
+          </div>
           <div id="live-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
           <div id="live-texto" class="mon-texto" style="z-index:3;">En espera...</div>
           <div id="live-counter" class="mon-counter" style="z-index:3;"></div>
@@ -590,6 +653,7 @@
     let estrofasList = [];
     let previewIdx = 0;
     let baseParroquiaNombre = "Parroquia";
+    let baseParroquiaSubtitulo = "";
     let galeriaFotos = [];
     let swatchesCustom = [];
     let fotoActivaIdx = 0;
@@ -644,7 +708,16 @@
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
-        .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
+        .replace(/_([\s\S]*?)_/g, "<i>$1</i>")
+        .replace(/\n/g, "<br>");
+    }
+
+    function actualizarDegradadoLivePreview() {
+      const c1 = document.getElementById('input-swatch-grad1').value;
+      const c2 = document.getElementById('input-swatch-grad2').value;
+      const angle = document.getElementById('select-swatch-angle').value;
+      const box = document.getElementById('grad-live-preview');
+      box.style.background = `linear-gradient(${angle}, ${c1} 0%, ${c2} 100%)`;
     }
 
     // Cargar galería y foto activa guardadas localmente
@@ -741,6 +814,9 @@
         if (cfg.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = cfg.tamanoParroquia;
         if (cfg.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = cfg.tamanoBienvenida;
 
+        if (cfg.posicionParroquia) document.getElementById('cfg-posicion-parroquia').value = cfg.posicionParroquia;
+        if (cfg.subtituloParroquia !== undefined) document.getElementById('cfg-subtitulo-parroquia').value = cfg.subtituloParroquia;
+
         if (cfg.imagenFit) document.getElementById('cfg-img-fit').value = cfg.imagenFit;
         if (cfg.imagenPosition) document.getElementById('cfg-img-position').value = cfg.imagenPosition;
         if (cfg.imagenOverlay) document.getElementById('cfg-img-overlay').value = cfg.imagenOverlay;
@@ -801,6 +877,9 @@
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
 
+        posicionParroquia: document.getElementById('cfg-posicion-parroquia').value,
+        subtituloParroquia: document.getElementById('cfg-subtitulo-parroquia').value.trim(),
+
         imagenFit: document.getElementById('cfg-img-fit').value,
         imagenPosition: document.getElementById('cfg-img-position').value,
         imagenOverlay: document.getElementById('cfg-img-overlay').value,
@@ -831,12 +910,22 @@
         });
     }
 
+    function aplicarPosicionParroquiaMonitor(elId, pos) {
+      const box = document.getElementById(elId);
+      if (!box) return;
+      box.className = 'mon-parroquia-box';
+      const posClass = 'mon-pos-' + (pos || 'top-left');
+      box.classList.add(posClass);
+    }
+
     // APLICAR ESTILO LOCALMENTE EN LA VISTA PREVIA (MONITOR 1)
     function aplicarEstiloPreviewLocal() {
       const box = document.getElementById('preview-box');
       const text = document.getElementById('prev-texto');
       const title = document.getElementById('prev-titulo');
-      const par = document.getElementById('prev-parroquia');
+      const parBox = document.getElementById('prev-parroquia');
+      const parName = document.getElementById('prev-parroquia-text');
+      const parSub = document.getElementById('prev-parroquia-subtext');
 
       const blurBox = document.getElementById('preview-bg-blur');
       const overlayBox = document.getElementById('preview-bg-overlay');
@@ -856,6 +945,9 @@
       const tamTitVal = document.getElementById('cfg-tamano-titulo').value;
       const tamParVal = document.getElementById('cfg-tamano-parroquia').value;
       const tamBvnVal = document.getElementById('cfg-tamano-bienvenida').value;
+
+      const posPar = document.getElementById('cfg-posicion-parroquia').value;
+      const subParText = document.getElementById('cfg-subtitulo-parroquia').value.trim();
 
       const imgFit = document.getElementById('cfg-img-fit').value;
       const imgPos = document.getElementById('cfg-img-position').value;
@@ -890,10 +982,20 @@
         }
       }
 
-      par.style.fontFamily = fuenteParVal;
+      aplicarPosicionParroquiaMonitor('prev-parroquia', posPar);
+
+      parBox.style.fontFamily = fuenteParVal;
       title.style.fontFamily = fuenteTitVal;
-      par.style.color = colorParVal;
+      parBox.style.color = colorParVal;
       title.style.color = colorTitVal;
+
+      parName.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+      if (subParText) {
+        parSub.style.display = 'block';
+        parSub.innerText = subParText;
+      } else {
+        parSub.style.display = 'none';
+      }
 
       if (previewState.modo === 'BIENVENIDA') {
         text.style.fontFamily = fuenteBvnVal;
@@ -920,8 +1022,7 @@
       }
 
       if (tamTitVal) title.style.fontSize = (tamTitVal === '1.8rem') ? '0.65rem' : ((tamTitVal === '2.2rem') ? '0.75rem' : '0.9rem');
-      if (tamParVal) par.style.fontSize = (tamParVal === '0.9rem') ? '0.55rem' : ((tamParVal === '1.1rem') ? '0.65rem' : '0.8rem');
-      par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+      if (tamParVal) parBox.style.fontSize = (tamParVal === '0.9rem') ? '0.55rem' : ((tamParVal === '1.1rem') ? '0.65rem' : '0.8rem');
     }
 
     function guardarPerfilCustom() {
@@ -942,6 +1043,9 @@
         tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
+
+        posicionParroquia: document.getElementById('cfg-posicion-parroquia').value,
+        subtituloParroquia: document.getElementById('cfg-subtitulo-parroquia').value.trim(),
 
         imagenFit: document.getElementById('cfg-img-fit').value,
         imagenPosition: document.getElementById('cfg-img-position').value,
@@ -985,6 +1089,9 @@
       if (p.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = p.tamanoTitulo;
       if (p.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = p.tamanoParroquia;
       if (p.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = p.tamanoBienvenida;
+
+      if (p.posicionParroquia) document.getElementById('cfg-posicion-parroquia').value = p.posicionParroquia;
+      if (p.subtituloParroquia !== undefined) document.getElementById('cfg-subtitulo-parroquia').value = p.subtituloParroquia;
 
       if (p.imagenFit) document.getElementById('cfg-img-fit').value = p.imagenFit;
       if (p.imagenPosition) document.getElementById('cfg-img-position').value = p.imagenPosition;
@@ -1034,7 +1141,10 @@
       document.getElementById('cfg-color-texto').value = colorTxtHex;
       document.getElementById('cfg-color-bienvenida').value = colorBvnHex;
 
-      const font = (fuenteTipo === 'Serif') ? "'Playfair Display', 'Georgia', serif" : "'Roboto', 'Helvetica Neue', Arial, sans-serif";
+      let font = "'Roboto', sans-serif";
+      if (fuenteTipo === 'Serif') font = "'Playfair Display', serif";
+      else if (fuenteTipo === 'Cinzel') font = "'Cinzel', serif";
+
       document.getElementById('cfg-fuente-parroquia').value = font;
       document.getElementById('cfg-fuente-titulo').value = font;
       document.getElementById('cfg-fuente-texto').value = font;
@@ -1115,12 +1225,20 @@
 
     // ACTUALIZAR PREVIEW UI (SOLO EN MONITOR 1 - VISTA PREVIA)
     function actualizarPreviewUI() {
-      const par = document.getElementById('prev-parroquia');
+      const parName = document.getElementById('prev-parroquia-text');
+      const parSub = document.getElementById('prev-parroquia-subtext');
       const tit = document.getElementById('prev-titulo');
       const txt = document.getElementById('prev-texto');
       const cnt = document.getElementById('prev-counter');
 
-      par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+      parName.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+      const subText = document.getElementById('cfg-subtitulo-parroquia').value.trim();
+      if (subText) {
+        parSub.style.display = 'block';
+        parSub.innerText = subText;
+      } else {
+        parSub.style.display = 'none';
+      }
 
       if (previewState.modo === 'NEGRA') {
         tit.style.display = 'none';
@@ -1148,7 +1266,9 @@
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', s => {
       const data = s.val();
       const box = document.getElementById('live-box');
-      const par = document.getElementById('live-parroquia');
+      const parBox = document.getElementById('live-parroquia');
+      const parName = document.getElementById('live-parroquia-text');
+      const parSub = document.getElementById('live-parroquia-subtext');
       const tit = document.getElementById('live-titulo');
       const txt = document.getElementById('live-texto');
       const cnt = document.getElementById('live-counter');
@@ -1157,19 +1277,27 @@
       const overlayBox = document.getElementById('live-bg-overlay');
 
       if (!data) {
-        par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
+        parName.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
         tit.style.display = 'none';
         txt.innerHTML = "En espera...";
         cnt.innerText = "";
         return;
       }
 
-      par.innerText = data.comunidadNombre || 'Parroquia';
+      parName.innerText = data.comunidadNombre || 'Parroquia';
+      if (data.subtituloParroquia) {
+        parSub.style.display = 'block';
+        parSub.innerText = data.subtituloParroquia;
+      } else {
+        parSub.style.display = 'none';
+      }
+
+      aplicarPosicionParroquiaMonitor('live-parroquia', data.posicionParroquia);
 
       // Aplicar fuentes y colores independientes
-      if (data.fuenteParroquia) par.style.fontFamily = data.fuenteParroquia;
+      if (data.fuenteParroquia) parBox.style.fontFamily = data.fuenteParroquia;
       if (data.fuenteTitulo) tit.style.fontFamily = data.fuenteTitulo;
-      if (data.colorParroquia) par.style.color = data.colorParroquia;
+      if (data.colorParroquia) parBox.style.color = data.colorParroquia;
       if (data.colorTitulo) tit.style.color = data.colorTitulo;
 
       const imgOverlay = parseFloat(data.imagenOverlay) || 0;
@@ -1305,6 +1433,9 @@
     // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE) CON PROMESAS
     function enviarAlCañon() {
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
+      const subtituloParroquia = document.getElementById('cfg-subtitulo-parroquia').value.trim();
+      const posicionParroquia = document.getElementById('cfg-posicion-parroquia').value;
+
       const baseRem = parseFloat(document.getElementById('cfg-tamano').value) || 3.8;
       const fontSizeLive = (baseRem * previewScale).toFixed(2) + "rem";
 
@@ -1341,7 +1472,10 @@
         bloqueTexto: previewState.bloqueTexto,
         bloqueIndex: previewState.bloqueIndex,
         totalBloques: previewState.totalBloques,
+
         comunidadNombre: nombreParroquia,
+        subtituloParroquia: subtituloParroquia,
+        posicionParroquia: posicionParroquia,
 
         tamano: fontSizeLive,
         tamanoTitulo: fontTitLive,

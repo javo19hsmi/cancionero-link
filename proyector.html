@@ -7,7 +7,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700&family=Montserrat:wght@400;600;700&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Quicksand:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -28,7 +28,7 @@
     /* FONDO BLUR DESENFOCADO DE DETRÁS (Efecto TV Blur) */
     #bg-blur-container {
       position: absolute; top: -5%; left: -5%; width: 110%; height: 110%;
-      background-size: cover; background-position: center;
+      background-size: cover; background-position: center; background-repeat: no-repeat;
       filter: blur(28px) brightness(0.5);
       z-index: 1; display: none; opacity: 0.9;
     }
@@ -50,12 +50,26 @@
       display: none !important;
     }
 
-    .top-left-parroquia {
-      position: absolute; top: 25px; left: 35px;
+    /* POSICIONAMIENTO DINÁMICO DEL NOMBRE DE PARROQUIA */
+    .parroquia-box {
+      position: absolute;
       font-size: 1.1rem; color: #888888; font-weight: bold;
       text-transform: uppercase; letter-spacing: 1px;
-      transition: opacity 0.3s ease; z-index: 10;
+      transition: all 0.3s ease; z-index: 10;
+      line-height: 1.25; text-align: left;
     }
+    .parroquia-subtext {
+      font-size: 0.78em; color: rgba(255,255,255,0.85); font-weight: normal;
+      text-transform: none; letter-spacing: 0px; margin-top: 2px;
+    }
+
+    /* POSICIONES DE PARROQUIA */
+    .pos-top-left { top: 25px; left: 35px; right: auto; bottom: auto; text-align: left; }
+    .pos-top-right { top: 25px; right: 35px; left: auto; bottom: auto; text-align: right; }
+    .pos-bottom-left { bottom: 25px; left: 35px; right: auto; top: auto; text-align: left; }
+    .pos-bottom-right { bottom: 25px; right: 35px; left: auto; top: auto; text-align: right; }
+    .pos-bottom-center { bottom: 25px; left: 50%; transform: translateX(-50%); right: auto; top: auto; text-align: center; }
+    .pos-hidden { display: none !important; }
 
     .cancion-title {
       position: absolute; top: 35px;
@@ -75,6 +89,7 @@
     .bloque-texto {
       font-size: 3.8rem; line-height: 1.35; font-weight: bold;
       max-width: 88%; margin: 0 auto; padding-top: 40px;
+      white-space: pre-wrap;
     }
     .bloque-texto b { color: inherit; }
     .bloque-texto i { font-style: italic; opacity: 0.9; }
@@ -91,9 +106,12 @@
     }
     .btn-fs:hover { opacity: 1; background: rgba(255,255,255,0.25); }
 
-    /* Clases para animación de transición */
+    /* ANIMACIONES DE TRANSICIÓN EXTENDIDAS */
     .fade-out { opacity: 0 !important; }
-    .slide-out { transform: translateY(-20px); opacity: 0 !important; }
+    .slide-out { transform: translateY(-30px); opacity: 0 !important; }
+    .slide-horizontal-out { transform: translateX(-40px); opacity: 0 !important; }
+    .zoom-out { transform: scale(0.85); opacity: 0 !important; }
+    .fade-up-out { transform: translateY(20px); opacity: 0 !important; }
   </style>
 </head>
 <body id="cuerpo" onclick="toggleFS()">
@@ -101,7 +119,10 @@
   <div id="bg-overlay-div"></div>
 
   <button id="btnFS" class="btn-fs" onclick="toggleFS(); event.stopPropagation();">⛶ Pantalla Completa (F11)</button>
-  <div id="header-parroquia" class="top-left-parroquia">Parroquia</div>
+  <div id="header-parroquia" class="parroquia-box pos-top-left">
+    <div id="parroquia-nombre-text">Parroquia</div>
+    <div id="parroquia-subtext-text" class="parroquia-subtext" style="display:none;"></div>
+  </div>
   <div id="cancion-header" class="cancion-title" style="display:none;"></div>
 
   <div id="contenido">
@@ -158,6 +179,7 @@
     }
 
     let customParroquiaNombre = "";
+    let customParroquiaSubtitulo = "";
     let currentTransicion = "fade";
     let currentVelocidad = "0.5s";
 
@@ -198,13 +220,23 @@
       }
     }
 
+    function aplicarPosicionParroquia(pos) {
+      const box = document.getElementById('header-parroquia');
+      box.className = 'parroquia-box';
+      const posClass = 'pos-' + (pos || 'top-left');
+      box.classList.add(posClass);
+    }
+
     function aplicarEstilosBase(cfg) {
       if (!cfg) return;
       const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
       const headerParroquia = document.getElementById('header-parroquia');
+      const parName = document.getElementById('parroquia-nombre-text');
+      const parSub = document.getElementById('parroquia-subtext-text');
 
       aplicarFondoCompleto(cfg.fondo, cfg.imagenBg, cfg.imagenFit, cfg.imagenPosition, cfg.imagenOverlay);
+      aplicarPosicionParroquia(cfg.posicionParroquia);
 
       if (cfg.fuenteParroquia) headerParroquia.style.fontFamily = cfg.fuenteParroquia;
       else if (cfg.fuente) headerParroquia.style.fontFamily = cfg.fuente;
@@ -228,7 +260,16 @@
 
       if (cfg.nombreParroquia) {
         customParroquiaNombre = cfg.nombreParroquia;
-        headerParroquia.innerText = cfg.nombreParroquia;
+        parName.innerText = cfg.nombreParroquia;
+      }
+      if (cfg.subtituloParroquia !== undefined) {
+        customParroquiaSubtitulo = cfg.subtituloParroquia || "";
+        if (customParroquiaSubtitulo) {
+          parSub.style.display = 'block';
+          parSub.innerText = customParroquiaSubtitulo;
+        } else {
+          parSub.style.display = 'none';
+        }
       }
     }
 
@@ -237,7 +278,7 @@
       aplicarEstilosBase(s.val());
     });
 
-    // Transición suave al actualizar diapositiva
+    // Transición suave al actualizar diapositiva con 6 animaciones
     function actualizarContenidoConTransicion(updateFn, trans, vel) {
       const contenido = document.getElementById('contenido');
       const durMs = parseFloat(vel || "0.5s") * 1000 || 500;
@@ -247,7 +288,12 @@
         return;
       }
 
-      const outClass = (trans === 'slide') ? 'slide-out' : 'fade-out';
+      let outClass = 'fade-out';
+      if (trans === 'slide') outClass = 'slide-out';
+      else if (trans === 'slide-horizontal') outClass = 'slide-horizontal-out';
+      else if (trans === 'zoom') outClass = 'zoom-out';
+      else if (trans === 'fade-up') outClass = 'fade-up-out';
+
       contenido.style.transition = `opacity ${durMs / 2}ms ease, transform ${durMs / 2}ms ease`;
       contenido.classList.add(outClass);
 
@@ -257,18 +303,20 @@
       }, durMs / 2);
     }
 
-    // Escuchar la transmisión EN VIVO (lo que envía el operador al pulsar "Enviar al Cañón")
+    // Escuchar la transmisión EN VIVO
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', snapshot => {
       const data = snapshot.val();
       const cuerpo = document.getElementById('cuerpo');
       const headerParroquia = document.getElementById('header-parroquia');
+      const parName = document.getElementById('parroquia-nombre-text');
+      const parSub = document.getElementById('parroquia-subtext-text');
       const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
       const footerPage = document.getElementById('footer-page');
 
       if (!data) {
         cuerpo.className = '';
-        headerParroquia.innerText = customParroquiaNombre || "Comunidad Sintonizada";
+        parName.innerText = customParroquiaNombre || "Comunidad Sintonizada";
         texto.innerHTML = "Bienvenidos a la Santa Misa 🕊️";
         return;
       }
@@ -283,13 +331,14 @@
 
       // Aplicar fondo completo con encuadre, blur y filtro
       aplicarFondoCompleto(data.fondo, data.imagenBg, data.imagenFit, data.imagenPosition, data.imagenOverlay);
+      aplicarPosicionParroquia(data.posicionParroquia);
 
       // Tipografías, Tamaños y Colores Independientes
       if (data.fuenteParroquia) headerParroquia.style.fontFamily = data.fuenteParroquia;
       else if (data.fuente) headerParroquia.style.fontFamily = data.fuente;
 
       if (data.fuenteTitulo) cancionHeader.style.fontFamily = data.fuenteTitulo;
-      else if (data.fuente) data.fuente;
+      else if (data.fuente) cancionHeader.style.fontFamily = data.fuente;
 
       if (data.tamanoTitulo) cancionHeader.style.fontSize = data.tamanoTitulo;
       if (data.tamanoParroquia) headerParroquia.style.fontSize = data.tamanoParroquia;
@@ -301,7 +350,13 @@
       const vel = data.velocidad || currentVelocidad;
 
       actualizarContenidoConTransicion(() => {
-        headerParroquia.innerText = customParroquiaNombre || data.comunidadNombre || 'Parroquia';
+        parName.innerText = customParroquiaNombre || data.comunidadNombre || 'Parroquia';
+        if (data.subtituloParroquia || customParroquiaSubtitulo) {
+          parSub.style.display = 'block';
+          parSub.innerText = data.subtituloParroquia || customParroquiaSubtitulo;
+        } else {
+          parSub.style.display = 'none';
+        }
 
         if (data.modo === 'BIENVENIDA') {
           cancionHeader.style.display = 'none';
