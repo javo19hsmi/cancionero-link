@@ -1748,7 +1748,8 @@
         .replace(/\[.*?\]/g, "")
         .trim();
 
-      estrofasList = textClean.split(/\n\s*\n/).map(x => x.trim()).filter(x => x.length > 0 && !x.startsWith('http'));
+      // Dividir estrictamente por doble salto de línea (\n\n) para obtener las 3 a 5 lecturas reales del día
+      estrofasList = textClean.split(/\n\s*\n+/).map(x => x.trim()).filter(x => x.length > 0 && !x.startsWith('http'));
       if (estrofasList.length === 0 && textClean) estrofasList = [textClean];
 
       if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
@@ -1757,7 +1758,7 @@
         previewIdx = 0;
       }
 
-      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " bloques";
+      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
       document.getElementById('chip-tipo-content').innerText = tipo || "Lectura";
 
       previewState = {
