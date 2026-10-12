@@ -5,10 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Consola del Operador 🎛️</title>
 
-  <!-- Google Fonts -->
+  <!-- Google Fonts & Material Symbols -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;700&family=Montserrat:wght@400;600;700&family=Oswald:wght@500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Quicksand:wght@500;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" rel="stylesheet" />
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -33,6 +34,11 @@
       margin: 0; padding: 0; display: flex; flex-direction: column; height: 100vh; overflow: hidden; box-sizing: border-box;
     }
 
+    .material-symbols-outlined {
+      vertical-align: middle;
+      font-size: 20px;
+    }
+
     /* TOP HEADER SUPERIOR COMPLETO */
     .header-bar {
       height: 60px; background: #0F172A; border-bottom: 1px solid var(--card-border);
@@ -40,7 +46,7 @@
       padding: 0 20px; box-sizing: border-box; flex-shrink: 0;
     }
     .header-left { display: flex; align-items: center; gap: 12px; }
-    .header-title { font-size: 1.15rem; font-weight: bold; color: #FFF; display: flex; align-items: center; gap: 8px; }
+    .header-title { font-size: 1.15rem; font-weight: bold; color: #FFF; display: flex; align-items: center; gap: 10px; }
     .header-subtitle { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; letter-spacing: 0.5px; }
 
     .header-right { display: flex; align-items: center; gap: 16px; }
@@ -93,23 +99,23 @@
     /* TARJETA PRINCIPAL DE TRANSMISIÓN (PROJECTION CONTROLS) */
     .control-card-main {
       background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 16px;
-      padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;
+      padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap; gap: 15px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.4);
     }
     .community-info { display: flex; align-items: center; gap: 14px; }
     .community-icon-badge {
-      width: 48px; height: 48px; border-radius: 50%; background: rgba(34, 211, 238, 0.1); border: 1px solid var(--accent);
-      display: flex; justify-content: center; align-items: center; font-size: 1.4rem; color: var(--accent-light);
+      width: 52px; height: 52px; border-radius: 50%; background: rgba(34, 211, 238, 0.1); border: 1px solid var(--accent);
+      display: flex; justify-content: center; align-items: center; font-size: 1.4rem; color: var(--accent-light); overflow: hidden; flex-shrink: 0;
     }
     .community-title { font-size: 1.25rem; font-weight: bold; color: #FFF; margin-top: 2px; }
     .community-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
     .chip { background: #1E293B; border: 1px solid #334155; padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; color: var(--text-muted); font-weight: 600; }
 
-    /* TRES BOTONES DE MANDO PRINCIPALES ALINEADOS */
-    .main-command-group { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    /* TRES BOTONES PRINCIPALES DE COMMANDO ALINEADOS EN UNA SOLA FILA */
+    .main-command-group { display: flex; gap: 10px; align-items: center; flex-wrap: nowrap; flex-shrink: 0; }
     .btn-command {
       height: 42px; border: none; padding: 0 18px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9rem;
-      display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap;
     }
     .btn-command:hover { transform: translateY(-1px); filter: brightness(1.1); }
     .btn-transmit { background: linear-gradient(135deg, #0891B2 0%, #0284C7 100%); color: white; border: 1px solid #22D3EE; box-shadow: 0 0 16px rgba(34, 211, 238, 0.35); }
@@ -231,7 +237,10 @@
   <!-- ENCABEZADO SUPERIOR COMPLETO (TOP HEADER) -->
   <header class="header-bar">
     <div class="header-left">
-      <div class="header-title"><span>🕊️</span> Centro de Proyección</div>
+      <div class="header-title">
+        <img src="assets/images/Logo_Ministerio_Musica.png" style="height:28px; width:28px; object-fit:contain; border-radius:6px;" onerror="this.style.display='none'">
+        <span>Centro de Proyección</span>
+      </div>
       <div class="header-subtitle">CANCIONERO PARROQUIAL • <span id="header-community-name">PARROQUIA SANTÍSIMA TRINIDAD</span></div>
     </div>
     <div class="header-right">
@@ -271,7 +280,9 @@
         <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS) -->
         <div class="control-card-main">
           <div class="community-info">
-            <div class="community-icon-badge">🎵</div>
+            <div class="community-icon-badge" id="community-icon-badge">
+              <img src="assets/images/Logo_Ministerio_Musica.png" style="width:28px; height:28px; object-fit:contain;" onerror="this.outerHTML='🎵'">
+            </div>
             <div>
               <div style="font-size: 0.72rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
               <div id="parroquia-nombre" class="community-title">Cargando...</div>
@@ -283,11 +294,11 @@
             </div>
           </div>
 
-          <!-- TRES BOTONES PRINCIPALES DE COMMANDO ALINEADOS -->
+          <!-- TRES BOTONES PRINCIPALES DE MANDO ALINEADOS EN HORIZONTAL -->
           <div class="main-command-group">
-            <button class="btn-command btn-transmit" onclick="enviarAlCañon()">((e)) Transmitir</button>
-            <button class="btn-command btn-canon" onclick="abrirProyectorCañon()">🖥️ Abrir Proyector</button>
-            <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida</button>
+            <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined">sensors</span> Transmitir</button>
+            <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined">desktop_windows</span> Abrir Cañón</button>
+            <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined">church</span> Bienvenida</button>
           </div>
         </div>
 
@@ -1395,6 +1406,15 @@
       const nombreInput = document.getElementById('cfg-nombre-parroquia');
       if (!nombreInput.value) {
         nombreInput.value = baseParroquiaNombre;
+      }
+
+      // Cargar foto de la comunidad desde Firebase (foto_url)
+      const badge = document.getElementById('community-icon-badge');
+      const photoUrl = d.foto_url || d.foto || d.imagenUrl;
+      if (photoUrl) {
+        badge.innerHTML = `<img src="${photoUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+      } else {
+        badge.innerHTML = `<img src="assets/images/Logo_Ministerio_Musica.png" style="width:28px; height:28px; object-fit:contain;" onerror="this.outerHTML='🎵'">`;
       }
 
       if (d.cancion_actual !== undefined) {
