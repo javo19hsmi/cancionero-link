@@ -182,7 +182,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-brand">
-      <span>🕊️</span> Cancionero Pro
+      <span>🕊️</span> Cancionero P
     </div>
     <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
     <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
@@ -252,21 +252,41 @@
       <div id="tab-apariencia" class="section-view">
         <h3 style="color: var(--accent-light); margin:0;">Paletas Litúrgicas Rápidas</h3>
         <div class="palettes-grid">
-          <div class="palette-card" onclick="aplicarPaleta('#0D1B2A', '#4DB6AC', '#FFFFFF', 'Sans-serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#0D1B2A"></div><div class="color-dot" style="background:#4DB6AC"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>Azul Noche y Oro</span>
-          </div>
-          <div class="palette-card" onclick="aplicarPaleta('#002411', '#81C784', '#FFFFFF', 'Serif')">
+          <div class="palette-card" onclick="aplicarPaleta('#002411', '#888888', '#81C784', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
             <div class="palette-colors"><div class="color-dot" style="background:#002411"></div><div class="color-dot" style="background:#81C784"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>Verde Litúrgico</span>
+            <span>🌿 Tiempo Ordinario</span>
           </div>
-          <div class="palette-card" onclick="aplicarPaleta('#1B0024', '#BA68C8', '#FFFFFF', 'Sans-serif')">
-            <div class="palette-colors"><div class="color-dot" style="background:#1B0024"></div><div class="color-dot" style="background:#BA68C8"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>Cuaresma Violeta</span>
+          <div class="palette-card" onclick="aplicarPaleta('#1A002C', '#888888', '#CE93D8', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#1A002C"></div><div class="color-dot" style="background:#CE93D8"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>💜 Cuaresma y Adviento</span>
           </div>
-          <div class="palette-card" onclick="aplicarPaleta('#050505', '#FFD700', '#FFFFFF', 'Serif')">
+          <div class="palette-card" onclick="aplicarPaleta('#2E0818', '#888888', '#F48FB1', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#2E0818"></div><div class="color-dot" style="background:#F48FB1"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>🌸 Gaudete y Laetare</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#2B0000', '#888888', '#E57373', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#2B0000"></div><div class="color-dot" style="background:#E57373"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>🔥 Pentecostés y Mártires</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#0A192F', '#81D4FA', '#4FC3F7', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#0A192F"></div><div class="color-dot" style="background:#4FC3F7"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>🕊️ Fiestas Marianas</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#121212', '#B0BEC5', '#E0E0E0', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#121212"></div><div class="color-dot" style="background:#E0E0E0"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>🤍 Fiestas del Señor</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#050505', '#888888', '#FFD700', '#FFFFFF', '#FFD700', 'Serif')">
             <div class="palette-colors"><div class="color-dot" style="background:#050505"></div><div class="color-dot" style="background:#FFD700"></div><div class="color-dot" style="background:#FFF"></div></div>
-            <span>Negro y Dorado Solemne</span>
+            <span>✨ Pascua y Navidad</span>
+          </div>
+          <div class="palette-card" onclick="aplicarPaleta('#0A0A0A', '#888888', '#B39DDB', '#FFFFFF', '#FFFFFF', 'Serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#0A0A0A"></div><div class="color-dot" style="background:#B39DDB"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>✝️ Exequias y Difuntos</span>
+          </div>
+          <div class="palette-card" style="grid-column: 1 / -1;" onclick="aplicarPaleta('#00FF00', '#000000', '#000000', '#FFFFFF', '#FFFFFF', 'Sans-serif')">
+            <div class="palette-colors"><div class="color-dot" style="background:#00FF00"></div><div class="color-dot" style="background:#000000"></div><div class="color-dot" style="background:#FFF"></div></div>
+            <span>🎥 Streaming (Chroma Key Verde)</span>
           </div>
         </div>
 
@@ -818,16 +838,22 @@
       aplicarEstiloPreviewLocal();
     }
 
-    function aplicarPaleta(fondoHex, tituloHex, textoHex, fuenteTipo) {
+    function aplicarPaleta(fondoHex, colorParHex, colorTitHex, colorTxtHex, colorBvnHex, fuenteTipo) {
       document.getElementById('cfg-fondo').value = fondoHex;
-      document.getElementById('cfg-color-titulo').value = tituloHex;
-      document.getElementById('cfg-color-texto').value = textoHex;
+      marcarSwatchActivo(fondoHex);
+      document.getElementById('cfg-color-parroquia').value = colorParHex;
+      document.getElementById('cfg-color-titulo').value = colorTitHex;
+      document.getElementById('cfg-color-texto').value = colorTxtHex;
+      document.getElementById('cfg-color-bienvenida').value = colorBvnHex;
+
       const font = (fuenteTipo === 'Serif') ? "'Playfair Display', 'Georgia', serif" : "'Roboto', 'Helvetica Neue', Arial, sans-serif";
       document.getElementById('cfg-fuente-parroquia').value = font;
       document.getElementById('cfg-fuente-titulo').value = font;
       document.getElementById('cfg-fuente-texto').value = font;
       document.getElementById('cfg-fuente-bienvenida').value = font;
+
       aplicarEstiloPreviewLocal();
+      mostrarToast("🎨 Paleta Litúrgica aplicada en la Vista Previa");
     }
 
     function cargarGaleriaFotos(event) {
