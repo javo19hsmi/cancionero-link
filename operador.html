@@ -277,28 +277,33 @@
       <!-- PANEL CENTRAL DE CONTROL -->
       <div class="control-panel">
 
-        <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS) -->
-        <div class="control-card-main">
-          <div class="community-info">
-            <div class="community-icon-badge" id="community-icon-badge">
-              <img src="assets/images/Logo_Ministerio_Musica.png" style="width:28px; height:28px; object-fit:contain;" onerror="this.outerHTML='🎵'">
-            </div>
-            <div>
-              <div style="font-size: 0.72rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
-              <div id="parroquia-nombre" class="community-title">Cargando...</div>
-              <div class="community-chips">
-                <span class="chip">● Proyector Activo</span>
-                <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
-                <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
+        <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS COMPACTA) -->
+        <div class="control-card-main" style="padding: 12px 18px; flex-direction: column; align-items: stretch; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <!-- IZQUIERDA: FOTO + COMUNIDAD -->
+            <div class="community-info" style="align-items: center; gap: 12px;">
+              <div class="community-icon-badge" id="community-icon-badge" style="width: 44px; height: 44px;">
+                <img src="assets/images/Logo_Ministerio_Musica.png" style="width:26px; height:26px; object-fit:contain;" onerror="this.outerHTML='🎵'">
               </div>
+              <div>
+                <div style="font-size: 0.68rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
+                <div id="parroquia-nombre" class="community-title" style="font-size: 1.15rem; margin-top: 1px;">Cargando...</div>
+              </div>
+            </div>
+
+            <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
+            <div class="main-command-group" style="gap: 8px;">
+              <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
+              <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
+              <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
             </div>
           </div>
 
-          <!-- TRES BOTONES PRINCIPALES DE MANDO ALINEADOS EN HORIZONTAL -->
-          <div class="main-command-group">
-            <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined">sensors</span> Transmitir</button>
-            <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined">desktop_windows</span> Abrir Cañón</button>
-            <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined">church</span> Bienvenida</button>
+          <!-- FILA INFERIOR DE CHIPS (BAJO EL NOMBRE Y FOTO) -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="chip">● Proyector Activo</span>
+            <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
+            <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
           </div>
         </div>
 
