@@ -204,8 +204,8 @@
         </div>
         <div class="action-buttons">
           <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Cañón</button>
-          <button class="btn btn-amber" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida (Previa)</button>
-          <button class="btn btn-red" onclick="mostrarNegraPreview()">⬛ Apagón (Previa)</button>
+          <button class="btn btn-amber" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida</button>
+          <button class="btn btn-red" onclick="mostrarNegraPreview()">⬛ Pantalla Negra</button>
         </div>
       </div>
 
@@ -853,7 +853,10 @@
       par.innerText = data.comunidadNombre || 'Parroquia';
 
       // Aplicar estilos del Vivo enviados al presionar Enviar al Cañón
-      if (data.tamano) txt.style.fontSize = (data.tamano === '3.0rem' ? '0.8rem' : (data.tamano === '3.8rem' ? '1.0rem' : '1.2rem'));
+      if (data.tamano) {
+        const remVal = parseFloat(data.tamano) || 3.8;
+        txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
+      }
       if (data.colorTexto) txt.style.color = data.colorTexto;
       if (data.colorTitulo) tit.style.color = data.colorTitulo;
       if (data.colorParroquia) par.style.color = data.colorParroquia;
@@ -959,7 +962,8 @@
     // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE) CON PROMESAS
     function enviarAlCañon() {
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
-      const fontSizeLive = document.getElementById('cfg-tamano').value || "3.8rem";
+      const baseRem = parseFloat(document.getElementById('cfg-tamano').value) || 3.8;
+      const fontSizeLive = (baseRem * previewScale).toFixed(2) + "rem";
       const fontTitLive = document.getElementById('cfg-tamano-titulo').value || "2.2rem";
       const fontParLive = document.getElementById('cfg-tamano-parroquia').value || "1.1rem";
       const transicionLive = document.getElementById('cfg-transicion').value || "fade";
