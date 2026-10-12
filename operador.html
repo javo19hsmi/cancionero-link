@@ -277,70 +277,84 @@
       <!-- PANEL CENTRAL DE CONTROL -->
       <div class="control-panel">
 
-        <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS COMPACTA) -->
-        <div class="control-card-main" style="padding: 12px 18px; flex-direction: column; align-items: stretch; gap: 8px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <!-- IZQUIERDA: FOTO + COMUNIDAD -->
-            <div class="community-info" style="align-items: center; gap: 12px;">
-              <div class="community-icon-badge" id="community-icon-badge" style="width: 44px; height: 44px;">
-                <img src="assets/images/Logo_Ministerio_Musica.png" style="width:26px; height:26px; object-fit:contain;" onerror="this.outerHTML='🎵'">
+        <!-- BLOQUE FIJO SUPERIOR (STICKY CONTROLS) -->
+        <div style="position: sticky; top: -20px; z-index: 100; background: var(--bg); padding-top: 5px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;">
+
+          <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS COMPACTA) -->
+          <div class="control-card-main" style="padding: 12px 18px; flex-direction: column; align-items: stretch; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <!-- IZQUIERDA: FOTO + COMUNIDAD -->
+              <div class="community-info" style="align-items: center; gap: 12px;">
+                <div class="community-icon-badge" id="community-icon-badge" style="width: 44px; height: 44px;">
+                  <img src="assets/images/Logo_Ministerio_Musica.png" style="width:26px; height:26px; object-fit:contain;" onerror="this.outerHTML='🎵'">
+                </div>
+                <div>
+                  <div style="font-size: 0.68rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
+                  <div id="parroquia-nombre" class="community-title" style="font-size: 1.15rem; margin-top: 1px;">Cargando...</div>
+                </div>
               </div>
-              <div>
-                <div style="font-size: 0.68rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
-                <div id="parroquia-nombre" class="community-title" style="font-size: 1.15rem; margin-top: 1px;">Cargando...</div>
+
+              <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
+              <div class="main-command-group" style="gap: 8px;">
+                <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
+                <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
+                <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
               </div>
             </div>
 
-            <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
-            <div class="main-command-group" style="gap: 8px;">
-              <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
-              <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
-              <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
+            <!-- FILA INFERIOR DE CHIPS (BAJO EL NOMBRE Y FOTO) -->
+            <div style="display: flex; gap: 8px; align-items: center;">
+              <span class="chip">● Proyector Activo</span>
+              <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
+              <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
             </div>
           </div>
 
-          <!-- FILA INFERIOR DE CHIPS (BAJO EL NOMBRE Y FOTO) -->
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span class="chip">● Proyector Activo</span>
-            <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
-            <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
+          <!-- BARRA DE CONTROLES DE NAVEGACIÓN Y AJUSTES (REORGANIZADA SEGÚN PAINT) -->
+          <div class="sub-controls-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 0;">
+
+            <!-- BLOQUE IZQUIERDO: ESCALA Y TRANSICIÓN EN 2 FILAS COMPACTAS -->
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+              <!-- FILA 1: ESCALA DE VISTA -->
+              <div class="font-size-group" style="align-items: center; gap: 8px;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala de Vista:</span>
+                <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
+                <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light); cursor:pointer;" onclick="previewScale=1.0; cambiarTamanoPreview(0);" title="Haz clic para reiniciar a 1.0x">1.0x</span>
+                <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
+              </div>
+
+              <!-- FILA 2: TRANSICIÓN Y TIEMPO -->
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
+                <select id="cfg-transicion" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="fade">Fundido (Fade)</option>
+                  <option value="slide">Desplazamiento Vertical</option>
+                  <option value="slide-horizontal">Desplazamiento Lateral</option>
+                  <option value="zoom">Escala (Zoom In)</option>
+                  <option value="fade-up">Desvanecer Arriba</option>
+                  <option value="none">Instantáneo</option>
+                </select>
+                <select id="cfg-velocidad" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="0.2s">Rápido (0.2s)</option>
+                  <option value="0.5s" selected>Normal (0.5s)</option>
+                  <option value="1.0s">Lento (1.0s)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- BLOQUE DERECHO: BOTONES DE NAVEGACIÓN -->
+            <div class="nav-arrows" style="gap: 8px;">
+              <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
+              <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
+              <button class="btn-black-nav" onclick="mostrarNegraPreview()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Pantalla Negra</button>
+            </div>
+
           </div>
+
         </div>
 
         <!-- VISTA TAB: CONTROL -->
         <div id="tab-control" class="section-view active">
-          <!-- FLECHAS Y BOTÓN TRANSMITIR ABAJO -->
-          <div class="nav-arrows">
-            <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
-            <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
-            <button class="btn-black-nav" onclick="mostrarNegraPreview()">🖥️ Pantalla Negra</button>
-          </div>
-
-          <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
-          <div class="sub-controls-bar">
-            <div class="font-size-group">
-              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala de Vista:</span>
-              <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
-              <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light); cursor:pointer;" onclick="previewScale=1.0; cambiarTamanoPreview(0);" title="Haz clic para reiniciar a 1.0x">1.0x</span>
-              <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
-              <select id="cfg-transicion" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
-                <option value="fade">Fundido (Fade)</option>
-                <option value="slide">Desplazamiento Vertical</option>
-                <option value="slide-horizontal">Desplazamiento Lateral</option>
-                <option value="zoom">Escala (Zoom In)</option>
-                <option value="fade-up">Desvanecer Arriba</option>
-                <option value="none">Instantáneo</option>
-              </select>
-              <select id="cfg-velocidad" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
-                <option value="0.2s">Rápido (0.2s)</option>
-                <option value="0.5s" selected>Normal (0.5s)</option>
-                <option value="1.0s">Lento (1.0s)</option>
-              </select>
-            </div>
-          </div>
 
           <!-- TÍTULO DE CONTENIDO Y CHIPS -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
