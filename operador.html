@@ -321,23 +321,23 @@
         <!-- VISTA TAB: CONTROL -->
         <div id="tab-control" class="section-view active">
 
-          <!-- BARRA DE CONTROLES DE NAVEGACIÓN Y AJUSTES (REORGANIZADA SEGÚN PAINT - NO STICKY) -->
-          <div class="sub-controls-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
+          <!-- BARRA DE CONTROLES DE NAVEGACIÓN Y AJUSTES (UNA SOLA FILA HORIZONTAL) -->
+          <div class="sub-controls-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 10px; flex-wrap: nowrap; gap: 10px; padding: 8px 12px;">
 
-            <!-- BLOQUE IZQUIERDO: ESCALA Y TRANSICIÓN EN 2 FILAS COMPACTAS -->
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-              <!-- FILA 1: ESCALA DE VISTA -->
-              <div class="font-size-group" style="align-items: center; gap: 8px;">
-                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala de Vista:</span>
-                <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
-                <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light); cursor:pointer;" onclick="previewScale=1.0; cambiarTamanoPreview(0);" title="Haz clic para reiniciar a 1.0x">1.0x</span>
-                <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
+            <!-- BLOQUE IZQUIERDO: ESCALA Y TRANSICIÓN DE CORRIDO EN UNA FILA -->
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;">
+              <!-- ESCALA DE VISTA -->
+              <div class="font-size-group" style="align-items: center; gap: 6px;">
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-weight:bold;">Escala:</span>
+                <button class="btn-mini" style="padding: 4px 8px; font-size: 0.75rem;" onclick="cambiarTamanoPreview(-0.1)">A-</button>
+                <span id="lbl-tamano" style="font-size: 0.82rem; font-weight:bold; color:var(--accent-light); cursor:pointer;" onclick="previewScale=1.0; cambiarTamanoPreview(0);" title="Haz clic para reiniciar a 1.0x">1.0x</span>
+                <button class="btn-mini" style="padding: 4px 8px; font-size: 0.75rem;" onclick="cambiarTamanoPreview(0.1)">A+</button>
               </div>
 
-              <!-- FILA 2: TRANSICIÓN Y TIEMPO -->
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
-                <select id="cfg-transicion" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+              <!-- TRANSICIÓN Y TIEMPO -->
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 0.78rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
+                <select id="cfg-transicion" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:3px 6px; border-radius:6px; font-size:0.75rem; max-width: 120px;" onchange="aplicarEstiloPreviewLocal()">
                   <option value="fade">Fundido (Fade)</option>
                   <option value="slide">Desplazamiento Vertical</option>
                   <option value="slide-horizontal">Desplazamiento Lateral</option>
@@ -345,7 +345,7 @@
                   <option value="fade-up">Desvanecer Arriba</option>
                   <option value="none">Instantáneo</option>
                 </select>
-                <select id="cfg-velocidad" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:4px 8px; border-radius:6px; font-size:0.8rem;" onchange="aplicarEstiloPreviewLocal()">
+                <select id="cfg-velocidad" style="background:#1E293B; color:#FFF; border:1px solid #334155; padding:3px 6px; border-radius:6px; font-size:0.75rem;" onchange="aplicarEstiloPreviewLocal()">
                   <option value="0.2s">Rápido (0.2s)</option>
                   <option value="0.5s" selected>Normal (0.5s)</option>
                   <option value="1.0s">Lento (1.0s)</option>
@@ -353,11 +353,11 @@
               </div>
             </div>
 
-            <!-- BLOQUE DERECHO: BOTONES DE NAVEGACIÓN -->
-            <div class="nav-arrows" style="gap: 8px;">
-              <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
-              <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
-              <button class="btn-black-nav" onclick="mostrarNegraPreview()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Pantalla Negra</button>
+            <!-- BLOQUE DERECHO: BOTONES DE NAVEGACIÓN EN LA MISMA FILA -->
+            <div class="nav-arrows" style="gap: 6px; flex-wrap: nowrap;">
+              <button class="btn-arrow" style="padding: 6px 12px; font-size: 0.82rem;" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
+              <button class="btn-arrow" style="padding: 6px 12px; font-size: 0.82rem;" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
+              <button class="btn-black-nav" style="padding: 6px 12px; font-size: 0.82rem;" onclick="mostrarNegraPreview()"><span class="material-symbols-outlined" style="font-size:16px;">desktop_windows</span> Pantalla Negra</button>
             </div>
 
           </div>
