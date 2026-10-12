@@ -222,6 +222,17 @@
     /* BARRA DE ESTADO / TOAST */
     #status-toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 18px; border-radius: 10px; font-size: 0.85rem; font-weight: bold; color: white; background: #1F2937; border: 1px solid #374151; box-shadow: 0 4px 14px rgba(0,0,0,0.5); display: none; z-index: 9999; transition: opacity 0.3s; }
 
+    @media (max-width: 1400px) {
+      .sidebar { width: 190px; }
+      .sidebar-footer-quote img { width: 85px !important; height: 85px !important; }
+      .main-layout { grid-template-columns: 1fr 370px; }
+      .control-card-main { padding: 10px 14px !important; }
+      .btn-command { height: 36px; padding: 0 12px; font-size: 0.82rem; gap: 6px; }
+      .community-title { font-size: 1.05rem !important; }
+      .community-icon-badge { width: 38px !important; height: 38px !important; }
+      .chip { font-size: 0.68rem; padding: 2px 8px; }
+    }
+
     @media (max-width: 1100px) {
       .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
       body { overflow-y: auto; }
@@ -277,41 +288,41 @@
       <!-- PANEL CENTRAL DE CONTROL -->
       <div class="control-panel">
 
-        <!-- BLOQUE FIJO SUPERIOR (STICKY CONTROLS) -->
-        <div style="position: sticky; top: -20px; z-index: 100; background: var(--bg); padding-top: 5px; padding-bottom: 10px; border-bottom: 1px solid var(--card-border); margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;">
-
-          <!-- TARJETA PRINCIPAL DE MANDO (PROJECTION CONTROLS COMPACTA) -->
-          <div class="control-card-main" style="padding: 12px 18px; flex-direction: column; align-items: stretch; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <!-- IZQUIERDA: FOTO + COMUNIDAD -->
-              <div class="community-info" style="align-items: center; gap: 12px;">
-                <div class="community-icon-badge" id="community-icon-badge" style="width: 44px; height: 44px;">
-                  <img src="assets/images/Logo_Ministerio_Musica.png" style="width:26px; height:26px; object-fit:contain;" onerror="this.outerHTML='🎵'">
-                </div>
-                <div>
-                  <div style="font-size: 0.68rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
-                  <div id="parroquia-nombre" class="community-title" style="font-size: 1.15rem; margin-top: 1px;">Cargando...</div>
-                </div>
+        <!-- TARJETA PRINCIPAL DE MANDO (ÚNICA FIJA EN TOP) -->
+        <div class="control-card-main" style="position: sticky; top: -20px; z-index: 100; padding: 12px 18px; flex-direction: column; align-items: stretch; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <!-- IZQUIERDA: FOTO + COMUNIDAD -->
+            <div class="community-info" style="align-items: center; gap: 12px;">
+              <div class="community-icon-badge" id="community-icon-badge" style="width: 44px; height: 44px;">
+                <img src="assets/images/Logo_Ministerio_Musica.png" style="width:26px; height:26px; object-fit:contain;" onerror="this.outerHTML='🎵'">
               </div>
-
-              <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
-              <div class="main-command-group" style="gap: 8px;">
-                <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
-                <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
-                <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
+              <div>
+                <div style="font-size: 0.68rem; color: var(--text-muted); font-weight:bold; text-transform:uppercase;">Comunidad Sintonizada</div>
+                <div id="parroquia-nombre" class="community-title" style="font-size: 1.15rem; margin-top: 1px;">Cargando...</div>
               </div>
             </div>
 
-            <!-- FILA INFERIOR DE CHIPS (BAJO EL NOMBRE Y FOTO) -->
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="chip">● Proyector Activo</span>
-              <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
-              <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
+            <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
+            <div class="main-command-group" style="gap: 8px;">
+              <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
+              <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
+              <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
             </div>
           </div>
 
-          <!-- BARRA DE CONTROLES DE NAVEGACIÓN Y AJUSTES (REORGANIZADA SEGÚN PAINT) -->
-          <div class="sub-controls-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 0;">
+          <!-- FILA INFERIOR DE CHIPS (BAJO EL NOMBRE Y FOTO) -->
+          <div style="display: flex; gap: 8px; align-items: center;">
+            <span class="chip">● Proyector Activo</span>
+            <span class="chip">Escala: <b id="chip-escala-val" style="color:var(--accent-light);">1.0x</b></span>
+            <span class="chip">Transición: <b id="chip-trans-val" style="color:var(--gold);">Fundido (0.5s)</b></span>
+          </div>
+        </div>
+
+        <!-- VISTA TAB: CONTROL -->
+        <div id="tab-control" class="section-view active">
+
+          <!-- BARRA DE CONTROLES DE NAVEGACIÓN Y AJUSTES (REORGANIZADA SEGÚN PAINT - NO STICKY) -->
+          <div class="sub-controls-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; box-sizing: border-box; margin-bottom: 10px;">
 
             <!-- BLOQUE IZQUIERDO: ESCALA Y TRANSICIÓN EN 2 FILAS COMPACTAS -->
             <div style="display: flex; flex-direction: column; gap: 6px;">
@@ -350,11 +361,6 @@
             </div>
 
           </div>
-
-        </div>
-
-        <!-- VISTA TAB: CONTROL -->
-        <div id="tab-control" class="section-view active">
 
           <!-- TÍTULO DE CONTENIDO Y CHIPS -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
