@@ -1446,24 +1446,24 @@
       if (d.cancion_actual) {
         if (d.cancion_actual !== cancionActualId) {
           cancionActualId = d.cancion_actual;
-          cargarCancion(cancionActualId);
+          cargarCancion(d.cancion_actual);
         }
       }
       // 2. ORACIÓN ACTUAL
       else if (d.oracion_actual) {
         if (d.oracion_actual !== cancionActualId) {
           cancionActualId = d.oracion_actual;
-          cargarOracion(d.oracion_actual);
+          cargarOracion(d.oracion_actual, d.bloque_actual);
         }
       }
       // 3. LECTURA / EVANGELIO ACTUAL
-      else if (d.lectura_actual_texto) {
-        const lecturaId = (d.lectura_actual_titulo || "lectura") + "_" + d.lectura_actual_texto.length;
-        if (lecturaId !== cancionActualId) {
-          cancionActualId = lecturaId;
-          const tipo = d.lectura_actual_tipo || "Lectura";
-          cargarLecturaEvangelio(d.lectura_actual_titulo || "Lectura del Día", d.lectura_actual_texto, tipo);
-        }
+      else if (d.lectura_actual_titulo || d.lectura_actual_texto) {
+        const lecturaId = (d.lectura_actual_titulo || "lectura") + "_" + (d.lectura_actual_texto ? d.lectura_actual_texto.length : 0);
+        const tipo = d.lectura_actual_tipo || "Lectura";
+        const idxBloque = (d.bloque_actual !== undefined && d.bloque_actual !== null) ? d.bloque_actual : null;
+
+        cargarLecturaEvangelio(d.lectura_actual_titulo || "Lectura del Día", d.lectura_actual_texto || "", tipo, idxBloque);
+        cancionActualId = lecturaId;
       }
       // 4. PANTALLA EN ESPERA
       else {
@@ -1652,18 +1652,18 @@
       });
     }
 
-    function cargarOracion(id) {
+    function cargarOracion(id, bloqueIndex) {
       db.ref(`oraciones_oficiales/${id}`).once('value', s1 => {
         if (s1.exists()) {
-          procesarOracion(s1.val());
+          procesarOracion(s1.val(), bloqueIndex);
         } else {
           db.ref(`oraciones_publicas/${id}`).once('value', s2 => {
             if (s2.exists()) {
-              procesarOracion(s2.val());
+              procesarOracion(s2.val(), bloqueIndex);
             } else {
               db.ref(`${comunidadPath}/oraciones/${id}`).once('value', s3 => {
                 if (s3.exists()) {
-                  procesarOracion(s3.val());
+                  procesarOracion(s3.val(), bloqueIndex);
                 } else {
                   document.getElementById('cancion-titulo').innerText = "⛪ Oración en Vivo";
                   estrofasList = ["(Rezo en vivo enviado desde el celular)"];
@@ -1686,13 +1686,41 @@
       });
     }
 
-    function procesarOracion(o) {
+    function procesarOracion(o, bloqueIndex) {
+      if (!o) return;
       const titleText = o.titulo || "Oración en Vivo";
       document.getElementById('cancion-titulo').innerText = "⛪ " + titleText;
-      const textRaw = (o.contenido || o.texto || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
-      estrofasList = textRaw.split(/\n\s*\n/).filter(x => x.trim().length > 0);
-      if (estrofasList.length === 0 && textRaw) estrofasList = [textRaw];
-      previewIdx = 0;
+
+      estrofasList = [];
+      if (o.contenido && (Array.isArray(o.contenido) || typeof o.contenido === 'object')) {
+        const items = Array.isArray(o.contenido) ? o.contenido : Object.values(o.contenido);
+        items.forEach(b => {
+          if (b && b.texto) {
+            let txt = b.texto.trim();
+            if (b.tipo === 'versiculo') txt = `**V.** ${txt}`;
+            else if (b.tipo === 'respuesta') txt = `**R.** ${txt}`;
+            else if (b.tipo === 'titulo_seccion') txt = `**${txt}**`;
+            else if (b.tipo === 'instruccion') txt = `_${txt}_`;
+            if (txt) estrofasList.push(txt);
+          } else if (typeof b === 'string' && b.trim()) {
+            estrofasList.push(b.trim());
+          }
+        });
+      } else if (typeof o.contenido === 'string') {
+        const textRaw = o.contenido.replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
+        estrofasList = textRaw.split(/\n\s*\n/).filter(x => x.trim().length > 0);
+      } else if (o.texto) {
+        const textRaw = String(o.texto).replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
+        estrofasList = textRaw.split(/\n\s*\n/).filter(x => x.trim().length > 0);
+      }
+
+      if (estrofasList.length === 0) estrofasList = [titleText];
+
+      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
+        previewIdx = parseInt(bloqueIndex, 10);
+      } else {
+        previewIdx = 0;
+      }
 
       document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " bloques";
       document.getElementById('chip-tipo-content').innerText = "Oración";
@@ -1700,22 +1728,34 @@
       previewState = {
         modo: 'CANCCION',
         titulo: titleText,
-        bloqueTexto: estrofasList[0] || '',
-        bloqueIndex: 0,
+        bloqueTexto: estrofasList[previewIdx] || '',
+        bloqueIndex: previewIdx,
         totalBloques: estrofasList.length
       };
       actualizarPreviewUI();
     }
 
-    function cargarLecturaEvangelio(titulo, texto, tipo) {
+    function cargarLecturaEvangelio(titulo, texto, tipo, bloqueIndex) {
       const titleText = titulo || "Lectura del Día";
       const icon = (tipo && tipo.toLowerCase().includes('evangelio')) ? "📖 " : "📜 ";
       document.getElementById('cancion-titulo').innerText = icon + titleText;
 
-      const textRaw = (texto || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
-      estrofasList = textRaw.split(/\n\s*\n/).filter(x => x.trim().length > 0);
-      if (estrofasList.length === 0 && textRaw) estrofasList = [textRaw];
-      previewIdx = 0;
+      let textClean = (texto || "")
+        .replace(/https?:\/\/[^\s]+/g, "") // Remove URLs
+        .replace(/&nbsp;/g, " ")           // Replace &nbsp;
+        .replace(/<[^>]*>/g, "")            // Strip HTML tags
+        .replace(/\{.*?\}/g, "")
+        .replace(/\[.*?\]/g, "")
+        .trim();
+
+      estrofasList = textClean.split(/\n\s*\n/).map(x => x.trim()).filter(x => x.length > 0 && !x.startsWith('http'));
+      if (estrofasList.length === 0 && textClean) estrofasList = [textClean];
+
+      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
+        previewIdx = parseInt(bloqueIndex, 10);
+      } else {
+        previewIdx = 0;
+      }
 
       document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " bloques";
       document.getElementById('chip-tipo-content').innerText = tipo || "Lectura";
@@ -1723,8 +1763,8 @@
       previewState = {
         modo: 'CANCCION',
         titulo: titleText,
-        bloqueTexto: estrofasList[0] || '',
-        bloqueIndex: 0,
+        bloqueTexto: estrofasList[previewIdx] || '',
+        bloqueIndex: previewIdx,
         totalBloques: estrofasList.length
       };
       actualizarPreviewUI();
