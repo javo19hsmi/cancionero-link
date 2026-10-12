@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Pro - Consola de Operador de Proyector 🎛️</title>
+  <title>Consola del Operador 🎛️</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,6 +54,8 @@
     .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
     .btn:hover { opacity: 0.9; }
+    .btn-send-top { background: #004D40; color: #80CBC4; border: 1px solid var(--accent-light); font-weight: bold; font-size: 0.9rem; }
+    .btn-send-top:hover { background: var(--accent); color: white; }
     .btn-red { background: #C62828; }
     .btn-red:hover { background: #E53935; }
     .btn-amber { background: #FF8F00; color: #000; }
@@ -106,7 +108,7 @@
     .mon-pos-top-left { top: 8px; left: 10px; right: auto; bottom: auto; text-align: left; }
     .mon-pos-top-right { top: 8px; right: 10px; left: auto; bottom: auto; text-align: right; }
     .mon-pos-bottom-left { bottom: 8px; left: 10px; right: auto; top: auto; text-align: left; }
-    .mon-pos-bottom-right { bottom: 8px; right: 10px; left: auto; top: auto; text-align: right; }
+    .mon-pos-bottom-right { bottom: 24px; right: 10px; left: auto; top: auto; text-align: right; }
     .mon-pos-bottom-center { bottom: 8px; left: 50%; transform: translateX(-50%); right: auto; top: auto; text-align: center; }
     .mon-pos-hidden { display: none !important; }
 
@@ -196,7 +198,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-brand">
-      <span>🕊️</span> Cancionero Pro
+      <span>🕊️</span> Centro de Proyección
     </div>
     <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
     <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
@@ -210,13 +212,14 @@
     <!-- PANEL CENTRAL DE CONTROL -->
     <div class="control-panel">
 
-      <!-- TOP BAR -->
+      <!-- TOP BAR CON BOTÓN TRANSMITIR SIEMPRE VISIBLE -->
       <div class="top-bar">
         <div>
           <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada</div>
           <div id="parroquia-nombre" class="parroquia-title">Cargando...</div>
         </div>
         <div class="action-buttons">
+          <button class="btn btn-send-top" onclick="enviarAlCañon()">📡 Transmitir</button>
           <button class="btn btn-blue" onclick="abrirProyectorCañon()">📽️ Abrir Cañón</button>
           <button class="btn btn-amber" onclick="mostrarBienvenidaPreview()">⛪ Bienvenida</button>
           <button class="btn btn-red" onclick="mostrarNegraPreview()">⬛ Pantalla Negra</button>
@@ -225,11 +228,11 @@
 
       <!-- VISTA TAB: CONTROL -->
       <div id="tab-control" class="section-view active">
-        <!-- FLECHAS Y BOTÓN ENVIAR AL CAÑÓN -->
+        <!-- FLECHAS Y BOTÓN TRANSMITIR -->
         <div class="nav-arrows">
           <button class="btn-arrow" onclick="moverEstrofaPreview(-1)">◀ Anterior</button>
           <button class="btn-arrow" onclick="moverEstrofaPreview(1)">Siguiente ▶</button>
-          <button class="btn-send" onclick="enviarAlCañon()">📡 ENVIAR AL CAÑON ➔</button>
+          <button class="btn-send" onclick="enviarAlCañon()">📡 Transmitir ➔</button>
         </div>
 
         <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->

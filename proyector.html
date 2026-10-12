@@ -67,7 +67,7 @@
     .pos-top-left { top: 25px; left: 35px; right: auto; bottom: auto; text-align: left; }
     .pos-top-right { top: 25px; right: 35px; left: auto; bottom: auto; text-align: right; }
     .pos-bottom-left { bottom: 25px; left: 35px; right: auto; top: auto; text-align: left; }
-    .pos-bottom-right { bottom: 25px; right: 35px; left: auto; top: auto; text-align: right; }
+    .pos-bottom-right { bottom: 55px; right: 35px; left: auto; top: auto; text-align: right; }
     .pos-bottom-center { bottom: 25px; left: 50%; transform: translateX(-50%); right: auto; top: auto; text-align: center; }
     .pos-hidden { display: none !important; }
 
@@ -94,7 +94,7 @@
     .bloque-texto b { color: inherit; }
     .bloque-texto i { font-style: italic; opacity: 0.9; }
 
-    .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; z-index: 10; }
+    .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; z-index: 10; display: none; }
     .footer-right { position: absolute; bottom: 25px; right: 35px; font-size: 1.1rem; color: #FFD700; font-weight: bold; opacity: 0.85; z-index: 10; }
 
     .btn-fs {
@@ -318,6 +318,7 @@
         cuerpo.className = '';
         parName.innerText = customParroquiaNombre || "Comunidad Sintonizada";
         texto.innerHTML = "Bienvenidos a la Santa Misa 🕊️";
+        footerPage.innerText = '';
         return;
       }
 
@@ -358,13 +359,14 @@
           parSub.style.display = 'none';
         }
 
+        footerPage.innerText = ''; // Ocultar contador 1/6 en el Cañón
+
         if (data.modo === 'BIENVENIDA') {
           cancionHeader.style.display = 'none';
           texto.style.fontFamily = data.fuenteBienvenida || data.fuenteTexto || data.fuente || 'sans-serif';
           texto.style.fontSize = data.tamanoBienvenida || data.tamano || '3.8rem';
           texto.style.color = data.colorBienvenida || data.colorTexto || '#FFFFFF';
           texto.innerHTML = darFormato(data.titulo || 'Bienvenidos a la Santa Misa 🕊️');
-          footerPage.innerText = '';
         } else {
           cancionHeader.style.display = 'block';
           cancionHeader.innerText = data.titulo || '';
@@ -372,11 +374,6 @@
           texto.style.fontSize = data.tamano || '3.8rem';
           texto.style.color = data.colorTexto || '#FFFFFF';
           texto.innerHTML = darFormato(data.bloqueTexto || '');
-          if (data.totalBloques > 0) {
-            footerPage.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
-          } else {
-            footerPage.innerText = '';
-          }
         }
       }, trans, vel);
     });
