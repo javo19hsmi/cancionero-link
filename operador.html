@@ -8,7 +8,7 @@
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
@@ -109,7 +109,7 @@
       margin-top: 8px;
     }
     .bg-swatch-card {
-      height: 80px; border-radius: 10px; border: 2px solid #444; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; box-sizing: border-box; font-size: 0.75rem; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: transform 0.2s, border-color 0.2s; background-size: cover; background-position: center;
+      height: 80px; border-radius: 10px; border: 2px solid #444; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 8px; box-sizing: border-box; font-size: 0.75rem; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.9); transition: transform 0.2s, border-color 0.2s; background-size: cover; background-position: center; position: relative; overflow: hidden;
     }
     .bg-swatch-card:hover { transform: scale(1.04); border-color: var(--accent-light); }
     .bg-swatch-card.active { border-color: var(--gold); box-shadow: 0 0 12px rgba(255,215,0,0.5); }
@@ -182,7 +182,7 @@
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sidebar-brand">
-      <span>🕊️</span> Cancionero P
+      <span>🕊️</span> Cancionero Pro
     </div>
     <div class="nav-item active" onclick="switchTab('control', this)">🎛️ Control Principal</div>
     <div class="nav-item" onclick="switchTab('apariencia', this)">🎨 Apariencia & Tipografía</div>
@@ -437,7 +437,7 @@
         <input type="hidden" id="cfg-fondo" value="#050505">
 
         <!-- GRILLA DE TARJETAS DE FONDOS -->
-        <div class="bg-swatches-grid">
+        <div id="bg-swatches-container" class="bg-swatches-grid">
           <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#050505', this)" data-val="#050505" style="background: #050505;">Negro Absoluto</div>
           <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#0D1B2A', this)" data-val="#0D1B2A" style="background: #0D1B2A;">Azul Noche</div>
           <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#1B0024', this)" data-val="#1B0024" style="background: #1B0024;">Cuaresma Violeta</div>
@@ -447,11 +447,79 @@
           <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
         </div>
 
-        <div class="field-group" style="margin-top: 15px;">
-          <label>Cargar Imágenes de Fondo Propia (Galería):</label>
+        <!-- CREADOR DE FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS) -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px;">
+          <h4 style="color: var(--accent-light); margin:0 0 10px 0;">🎨 Creador de Fondos Fijos Propio</h4>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+            <!-- SÓLIDO -->
+            <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
+              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Fondo Sólido Propio:</div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <input type="color" id="input-swatch-solid" value="#121212">
+                <input type="text" id="input-swatch-solid-name" placeholder="Nombre (ej: Azul Rey)" style="flex:1; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
+                <button class="btn btn-mini" onclick="agregarSwatchSolido()">➕ Guardar</button>
+              </div>
+            </div>
+            <!-- DEGRADADO -->
+            <div style="background:#161b22; padding:10px; border-radius:8px; border:1px solid #30363d;">
+              <div style="font-size:0.8rem; font-weight:bold; margin-bottom:6px;">Degradado Propio:</div>
+              <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <input type="color" id="input-swatch-grad1" value="#0D1B2A" title="Color Inicial">
+                <input type="color" id="input-swatch-grad2" value="#1B0024" title="Color Final">
+                <select id="select-swatch-angle" style="background:#21262d; color:white; border:1px solid #444; padding:6px; border-radius:6px; font-size:0.8rem;">
+                  <option value="135deg">135° Diagonal</option>
+                  <option value="90deg">90° Vertical</option>
+                  <option value="180deg">180° Horizontal</option>
+                  <option value="45deg">45° Diagonal Inv</option>
+                </select>
+                <input type="text" id="input-swatch-grad-name" placeholder="Nombre" style="width:70px; font-size:0.8rem; padding:6px; background:#21262d; border:1px solid #444; color:white; border-radius:6px;">
+                <button class="btn btn-mini" onclick="agregarSwatchDegradado()">➕ Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- GALERÍA DE IMÁGENES DE FONDO -->
+        <div style="background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px;">
+          <h4 style="color: var(--accent-light); margin:0 0 8px 0;">🖼️ Galería de Imágenes Propias</h4>
           <input type="file" id="cfg-imagenes-multiples" accept="image/*" multiple onchange="cargarGaleriaFotos(event)">
           <div id="galeria-preview" class="galeria-thumbs"></div>
+
+          <!-- AJUSTES INTELIGENTES DE FOTO (VERTICAL, CUADRADA, BLUR, ENCUADRE, OSCURECIMIENTO) -->
+          <div style="margin-top: 15px; background: #161b22; padding: 12px; border-radius: 10px; border: 1px solid #30363d;">
+            <div style="font-weight:bold; font-size:0.85rem; color:var(--gold); margin-bottom:10px;">📐 Ajustes de Foto (Vertical / Cuadrada / Encuadre)</div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Modo de Ajuste:</label>
+                <select id="cfg-img-fit" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="cover" selected>Rellenar Pantalla (Cover)</option>
+                  <option value="contain">Imagen Completa (Contain)</option>
+                  <option value="blur">Efecto TV Blur (Fondo Desenfocado)</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Alineación / Posición:</label>
+                <select id="cfg-img-position" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="center center" selected>Centro</option>
+                  <option value="top center">Arriba</option>
+                  <option value="bottom center">Abajo</option>
+                  <option value="center left">Izquierda</option>
+                  <option value="center right">Derecha</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Filtro de Oscurecimiento:</label>
+                <select id="cfg-img-overlay" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="0">Sin Filtro (0%)</option>
+                  <option value="0.25" selected>Oscurecer Suave (25%)</option>
+                  <option value="0.5">Oscurecer Medio (50%)</option>
+                  <option value="0.75">Oscurecer Intenso (75%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
         </div>
+
       </div>
 
       <!-- VISTA TAB: ATAJOS -->
@@ -477,24 +545,30 @@
       <!-- MONITOR 1: VISTA PREVIA (LO QUE VOY A PASAR) -->
       <div style="width: 100%;">
         <div class="monitor-label" style="color: var(--accent-light);">👁️ 1. Vista Previa (Preparando)</div>
-        <div id="preview-box" class="monitor-box">
-          <div id="prev-parroquia" class="mon-parroquia">Parroquia</div>
-          <div id="prev-titulo" class="mon-titulo" style="display:none;">Título</div>
-          <div id="prev-texto" class="mon-texto">Seleccioná una estrofa...</div>
-          <div id="prev-counter" class="mon-counter"></div>
-          <div class="mon-footer">Vista Previa 🕊️</div>
+        <div id="preview-box" class="monitor-box" style="position:relative; overflow:hidden;">
+          <div id="preview-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+          <div id="preview-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
+
+          <div id="prev-parroquia" class="mon-parroquia" style="z-index:3;">Parroquia</div>
+          <div id="prev-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
+          <div id="prev-texto" class="mon-texto" style="z-index:3;">Seleccioná una estrofa...</div>
+          <div id="prev-counter" class="mon-counter" style="z-index:3;"></div>
+          <div class="mon-footer" style="z-index:3;">Vista Previa 🕊️</div>
         </div>
       </div>
 
       <!-- MONITOR 2: EN VIVO (LO QUE VE LA GENTE EN EL CAÑÓN) -->
       <div style="width: 100%; margin-top: 10px;">
         <div class="monitor-label" style="color: var(--gold);">📡 2. En Vivo (En el Cañón)</div>
-        <div id="live-box" class="monitor-box">
-          <div id="live-parroquia" class="mon-parroquia">Parroquia</div>
-          <div id="live-titulo" class="mon-titulo" style="display:none;">Título</div>
-          <div id="live-texto" class="mon-texto">En espera...</div>
-          <div id="live-counter" class="mon-counter"></div>
-          <div class="mon-footer">En Vivo 🕊️</div>
+        <div id="live-box" class="monitor-box" style="position:relative; overflow:hidden;">
+          <div id="live-bg-blur" style="position:absolute; top:-10%; left:-10%; width:120%; height:120%; background-size:cover; background-position:center; filter:blur(15px) brightness(0.5); z-index:1; display:none;"></div>
+          <div id="live-bg-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:2; pointer-events:none; background:rgba(0,0,0,0);"></div>
+
+          <div id="live-parroquia" class="mon-parroquia" style="z-index:3;">Parroquia</div>
+          <div id="live-titulo" class="mon-titulo" style="display:none; z-index:3;">Título</div>
+          <div id="live-texto" class="mon-texto" style="z-index:3;">En espera...</div>
+          <div id="live-counter" class="mon-counter" style="z-index:3;"></div>
+          <div class="mon-footer" style="z-index:3;">En Vivo 🕊️</div>
         </div>
       </div>
 
@@ -517,6 +591,7 @@
     let previewIdx = 0;
     let baseParroquiaNombre = "Parroquia";
     let galeriaFotos = [];
+    let swatchesCustom = [];
     let fotoActivaIdx = 0;
     let previewScale = 1.0;
     let perfilesCustom = {};
@@ -580,8 +655,73 @@
       const savedIdx = localStorage.getItem('proyector_foto_idx_' + comunidadPath);
       if (savedIdx !== null) fotoActivaIdx = parseInt(savedIdx, 10) || 0;
 
+      const savedSwatches = localStorage.getItem('proyector_swatches_' + comunidadPath);
+      if (savedSwatches) swatchesCustom = JSON.parse(savedSwatches);
+
       if (galeriaFotos.length > 0) renderGaleriaThumbs();
+      renderCustomSwatches();
     } catch(e) {}
+
+    // FONDOS PROPIOS (SÓLIDOS Y DEGRADADOS)
+    function agregarSwatchSolido() {
+      const hex = document.getElementById('input-swatch-solid').value;
+      const name = document.getElementById('input-swatch-solid-name').value.trim() || 'Fondo Propio';
+      swatchesCustom.push({ val: hex, name: name });
+      document.getElementById('input-swatch-solid-name').value = '';
+      guardarSwatchesLocalAndNube();
+      renderCustomSwatches();
+      mostrarToast(`Fondo "${name}" guardado`);
+    }
+
+    function agregarSwatchDegradado() {
+      const c1 = document.getElementById('input-swatch-grad1').value;
+      const c2 = document.getElementById('input-swatch-grad2').value;
+      const angle = document.getElementById('select-swatch-angle').value;
+      const name = document.getElementById('input-swatch-grad-name').value.trim() || 'Degradado Propio';
+      const gradVal = `linear-gradient(${angle}, ${c1} 0%, ${c2} 100%)`;
+      swatchesCustom.push({ val: gradVal, name: name });
+      document.getElementById('input-swatch-grad-name').value = '';
+      guardarSwatchesLocalAndNube();
+      renderCustomSwatches();
+      mostrarToast(`Degradado "${name}" guardado`);
+    }
+
+    function borrarSwatchCustom(idx, e) {
+      if (e) e.stopPropagation();
+      swatchesCustom.splice(idx, 1);
+      guardarSwatchesLocalAndNube();
+      renderCustomSwatches();
+      mostrarToast("Fondo eliminado");
+    }
+
+    function guardarSwatchesLocalAndNube() {
+      try {
+        localStorage.setItem('proyector_swatches_' + comunidadPath, JSON.stringify(swatchesCustom));
+      } catch(e) {}
+    }
+
+    function renderCustomSwatches() {
+      const container = document.getElementById('bg-swatches-container');
+      const baseSwatchesHTML = `
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#050505', this)" data-val="#050505" style="background: #050505;">Negro Absoluto</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#0D1B2A', this)" data-val="#0D1B2A" style="background: #0D1B2A;">Azul Noche</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#1B0024', this)" data-val="#1B0024" style="background: #1B0024;">Cuaresma Violeta</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#002411', this)" data-val="#002411" style="background: #002411;">Verde Litúrgico</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('#00FF00', this)" data-val="#00FF00" style="background: #00FF00; color:#000;">Chroma Key (Verde)</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #0D1B2A 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #0D1B2A 0%, #000000 100%)" style="background: linear-gradient(135deg, #0D1B2A 0%, #000000 100%);">Degradado Azul</div>
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('linear-gradient(135deg, #1B0024 0%, #000000 100%)', this)" data-val="linear-gradient(135deg, #1B0024 0%, #000000 100%)" style="background: linear-gradient(135deg, #1B0024 0%, #000000 100%);">Degradado Borgoña</div>
+      `;
+
+      const customHTML = swatchesCustom.map((s, idx) => `
+        <div class="bg-swatch-card" onclick="seleccionarFondoSwatch('${escapeHtml(s.val)}', this)" data-val="${escapeHtml(s.val)}" style="background: ${s.val}; border-color: var(--accent-light);">
+          <span>${escapeHtml(s.name)}</span>
+          <span style="position:absolute; top:4px; right:6px; color:#FF6B6B; font-weight:bold; cursor:pointer;" onclick="borrarSwatchCustom(${idx}, event)">✕</span>
+        </div>
+      `).join('');
+
+      container.innerHTML = baseSwatchesHTML + customHTML;
+      marcarSwatchActivo(document.getElementById('cfg-fondo').value);
+    }
 
     // Cargar config y perfiles desde Firebase
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
@@ -601,6 +741,10 @@
         if (cfg.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = cfg.tamanoParroquia;
         if (cfg.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = cfg.tamanoBienvenida;
 
+        if (cfg.imagenFit) document.getElementById('cfg-img-fit').value = cfg.imagenFit;
+        if (cfg.imagenPosition) document.getElementById('cfg-img-position').value = cfg.imagenPosition;
+        if (cfg.imagenOverlay) document.getElementById('cfg-img-overlay').value = cfg.imagenOverlay;
+
         if (cfg.transicion) document.getElementById('cfg-transicion').value = cfg.transicion;
         if (cfg.velocidad) document.getElementById('cfg-velocidad').value = cfg.velocidad;
         if (cfg.nombreParroquia) document.getElementById('cfg-nombre-parroquia').value = cfg.nombreParroquia;
@@ -611,6 +755,10 @@
         if (cfg.colorParroquia) document.getElementById('cfg-color-parroquia').value = cfg.colorParroquia;
         if (cfg.colorBienvenida) document.getElementById('cfg-color-bienvenida').value = cfg.colorBienvenida;
 
+        if (cfg.swatchesCustom) {
+          swatchesCustom = cfg.swatchesCustom;
+          renderCustomSwatches();
+        }
         if (cfg.perfiles) {
           perfilesCustom = cfg.perfiles;
           renderPerfilesList();
@@ -647,18 +795,27 @@
         fuenteTitulo: document.getElementById('cfg-fuente-titulo').value,
         fuenteTexto: document.getElementById('cfg-fuente-texto').value,
         fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
+
         tamano: document.getElementById('cfg-tamano').value,
         tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
+
+        imagenFit: document.getElementById('cfg-img-fit').value,
+        imagenPosition: document.getElementById('cfg-img-position').value,
+        imagenOverlay: document.getElementById('cfg-img-overlay').value,
+
         transicion: document.getElementById('cfg-transicion').value,
         velocidad: document.getElementById('cfg-velocidad').value,
         nombreParroquia: document.getElementById('cfg-nombre-parroquia').value,
         bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
+
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
         colorParroquia: document.getElementById('cfg-color-parroquia').value,
         colorBienvenida: document.getElementById('cfg-color-bienvenida').value,
+
+        swatchesCustom: swatchesCustom,
         perfiles: perfilesCustom,
         imagenBg: activeImg || ""
       };
@@ -681,6 +838,9 @@
       const title = document.getElementById('prev-titulo');
       const par = document.getElementById('prev-parroquia');
 
+      const blurBox = document.getElementById('preview-bg-blur');
+      const overlayBox = document.getElementById('preview-bg-overlay');
+
       const fondoVal = document.getElementById('cfg-fondo').value;
       const fuenteParVal = document.getElementById('cfg-fuente-parroquia').value;
       const fuenteTitVal = document.getElementById('cfg-fuente-titulo').value;
@@ -697,17 +857,37 @@
       const tamParVal = document.getElementById('cfg-tamano-parroquia').value;
       const tamBvnVal = document.getElementById('cfg-tamano-bienvenida').value;
 
+      const imgFit = document.getElementById('cfg-img-fit').value;
+      const imgPos = document.getElementById('cfg-img-position').value;
+      const imgOverlay = parseFloat(document.getElementById('cfg-img-overlay').value) || 0;
+
+      overlayBox.style.backgroundColor = `rgba(0,0,0, ${imgOverlay})`;
+
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
       if (fondoVal === 'custom' && activeImg) {
-        box.style.backgroundImage = `url("${activeImg}")`;
-        box.style.backgroundColor = 'transparent';
-      } else if (fondoVal.startsWith('linear-gradient')) {
-        box.style.background = fondoVal;
-        box.style.backgroundImage = fondoVal;
+        if (imgFit === 'blur') {
+          blurBox.style.display = 'block';
+          blurBox.style.backgroundImage = `url("${activeImg}")`;
+          box.style.backgroundImage = `url("${activeImg}")`;
+          box.style.backgroundSize = 'contain';
+          box.style.backgroundPosition = imgPos;
+          box.style.backgroundColor = 'transparent';
+        } else {
+          blurBox.style.display = 'none';
+          box.style.backgroundImage = `url("${activeImg}")`;
+          box.style.backgroundSize = imgFit;
+          box.style.backgroundPosition = imgPos;
+          box.style.backgroundColor = 'transparent';
+        }
       } else {
-        box.style.backgroundColor = fondoVal;
-        box.style.backgroundImage = 'none';
+        blurBox.style.display = 'none';
+        if (fondoVal.startsWith('linear-gradient')) {
+          box.style.background = fondoVal;
+        } else {
+          box.style.backgroundColor = fondoVal;
+          box.style.backgroundImage = 'none';
+        }
       }
 
       par.style.fontFamily = fuenteParVal;
@@ -763,6 +943,10 @@
         tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
         tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
 
+        imagenFit: document.getElementById('cfg-img-fit').value,
+        imagenPosition: document.getElementById('cfg-img-position').value,
+        imagenOverlay: document.getElementById('cfg-img-overlay').value,
+
         transicion: document.getElementById('cfg-transicion').value,
         velocidad: document.getElementById('cfg-velocidad').value,
 
@@ -801,6 +985,10 @@
       if (p.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = p.tamanoTitulo;
       if (p.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = p.tamanoParroquia;
       if (p.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = p.tamanoBienvenida;
+
+      if (p.imagenFit) document.getElementById('cfg-img-fit').value = p.imagenFit;
+      if (p.imagenPosition) document.getElementById('cfg-img-position').value = p.imagenPosition;
+      if (p.imagenOverlay) document.getElementById('cfg-img-overlay').value = p.imagenOverlay;
 
       if (p.transicion) document.getElementById('cfg-transicion').value = p.transicion;
       if (p.velocidad) document.getElementById('cfg-velocidad').value = p.velocidad;
@@ -965,6 +1153,9 @@
       const txt = document.getElementById('live-texto');
       const cnt = document.getElementById('live-counter');
 
+      const blurBox = document.getElementById('live-bg-blur');
+      const overlayBox = document.getElementById('live-bg-overlay');
+
       if (!data) {
         par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
         tit.style.display = 'none';
@@ -981,14 +1172,35 @@
       if (data.colorParroquia) par.style.color = data.colorParroquia;
       if (data.colorTitulo) tit.style.color = data.colorTitulo;
 
+      const imgOverlay = parseFloat(data.imagenOverlay) || 0;
+      overlayBox.style.backgroundColor = `rgba(0,0,0, ${imgOverlay})`;
+
       if (data.fondo === 'custom' && data.imagenBg) {
-        box.style.backgroundImage = `url("${data.imagenBg}")`;
-        box.style.backgroundColor = 'transparent';
-      } else if (data.fondo && data.fondo.startsWith('linear-gradient')) {
-        box.style.background = data.fondo;
-      } else if (data.fondo) {
-        box.style.backgroundColor = data.fondo;
-        box.style.backgroundImage = 'none';
+        const fitVal = data.imagenFit || 'cover';
+        const posVal = data.imagenPosition || 'center center';
+
+        if (fitVal === 'blur') {
+          blurBox.style.display = 'block';
+          blurBox.style.backgroundImage = `url("${data.imagenBg}")`;
+          box.style.backgroundImage = `url("${data.imagenBg}")`;
+          box.style.backgroundSize = 'contain';
+          box.style.backgroundPosition = posVal;
+          box.style.backgroundColor = 'transparent';
+        } else {
+          blurBox.style.display = 'none';
+          box.style.backgroundImage = `url("${data.imagenBg}")`;
+          box.style.backgroundSize = fitVal;
+          box.style.backgroundPosition = posVal;
+          box.style.backgroundColor = 'transparent';
+        }
+      } else {
+        blurBox.style.display = 'none';
+        if (data.fondo && data.fondo.startsWith('linear-gradient')) {
+          box.style.background = data.fondo;
+        } else if (data.fondo) {
+          box.style.backgroundColor = data.fondo;
+          box.style.backgroundImage = 'none';
+        }
       }
 
       if (data.modo === 'NEGRA') {
@@ -1107,6 +1319,10 @@
       const fuenteTxtLive = document.getElementById('cfg-fuente-texto').value;
       const fuenteBvnLive = document.getElementById('cfg-fuente-bienvenida').value;
 
+      const imgFitLive = document.getElementById('cfg-img-fit').value;
+      const imgPosLive = document.getElementById('cfg-img-position').value;
+      const imgOverlayLive = document.getElementById('cfg-img-overlay').value;
+
       const transicionLive = document.getElementById('cfg-transicion').value || "fade";
       const velocidadLive = document.getElementById('cfg-velocidad').value || "0.5s";
       const fondoLive = document.getElementById('cfg-fondo').value;
@@ -1136,6 +1352,10 @@
         fuenteTitulo: fuenteTitLive,
         fuenteTexto: fuenteTxtLive,
         fuenteBienvenida: fuenteBvnLive,
+
+        imagenFit: imgFitLive,
+        imagenPosition: imgPosLive,
+        imagenOverlay: imgOverlayLive,
 
         transicion: transicionLive,
         velocidad: velocidadLive,

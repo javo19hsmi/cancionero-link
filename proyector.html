@@ -21,7 +21,24 @@
       min-height: 100vh; text-align: center;
       overflow: hidden; position: relative;
       background-size: cover; background-position: center;
+      background-repeat: no-repeat;
       transition: background 0.4s ease-in-out, background-color 0.4s ease-in-out;
+    }
+
+    /* FONDO BLUR DESENFOCADO DE DETRÁS (Efecto TV Blur) */
+    #bg-blur-container {
+      position: absolute; top: -5%; left: -5%; width: 110%; height: 110%;
+      background-size: cover; background-position: center;
+      filter: blur(28px) brightness(0.5);
+      z-index: 1; display: none; opacity: 0.9;
+    }
+
+    /* VELO DE OSCURECIMIENTO SOBRE EL FONDO */
+    #bg-overlay-div {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0);
+      z-index: 2; pointer-events: none;
+      transition: background-color 0.3s ease;
     }
 
     /* PANTALLA NEGRA TOTAL (Apagón) */
@@ -37,14 +54,14 @@
       position: absolute; top: 25px; left: 35px;
       font-size: 1.1rem; color: #888888; font-weight: bold;
       text-transform: uppercase; letter-spacing: 1px;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease; z-index: 10;
     }
 
     .cancion-title {
       position: absolute; top: 35px;
       font-size: 2.2rem; color: #4DB6AC; font-weight: bold;
       letter-spacing: 1px; width: 80%; margin: 0 auto;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease; z-index: 10;
     }
 
     #contenido {
@@ -52,6 +69,7 @@
       max-width: 90%;
       margin: 0 auto;
       transition: opacity 0.4s ease, transform 0.4s ease;
+      z-index: 10;
     }
 
     .bloque-texto {
@@ -61,8 +79,8 @@
     .bloque-texto b { color: inherit; }
     .bloque-texto i { font-style: italic; opacity: 0.9; }
 
-    .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; }
-    .footer-right { position: absolute; bottom: 25px; right: 35px; font-size: 1.1rem; color: #FFD700; font-weight: bold; opacity: 0.85; }
+    .footer-left { position: absolute; bottom: 25px; left: 35px; font-size: 1.2rem; color: #888; font-weight: bold; z-index: 10; }
+    .footer-right { position: absolute; bottom: 25px; right: 35px; font-size: 1.1rem; color: #FFD700; font-weight: bold; opacity: 0.85; z-index: 10; }
 
     .btn-fs {
       position: absolute; top: 20px; right: 25px;
@@ -79,6 +97,9 @@
   </style>
 </head>
 <body id="cuerpo" onclick="toggleFS()">
+  <div id="bg-blur-container"></div>
+  <div id="bg-overlay-div"></div>
+
   <button id="btnFS" class="btn-fs" onclick="toggleFS(); event.stopPropagation();">⛶ Pantalla Completa (F11)</button>
   <div id="header-parroquia" class="top-left-parroquia">Parroquia</div>
   <div id="cancion-header" class="cancion-title" style="display:none;"></div>
@@ -91,7 +112,6 @@
   <div id="footer-app" class="footer-right">Cancionero Parroquial 🕊️</div>
 
   <script>
-    // Escapar HTML para prevenir inyecciones y dar formato seguro
     function escapeHtml(t) {
       if (!t) return "";
       return t
@@ -141,28 +161,51 @@
     let currentTransicion = "fade";
     let currentVelocidad = "0.5s";
 
+    function aplicarFondoCompleto(fondo, imagenBg, fit, pos, overlay) {
+      const cuerpo = document.getElementById('cuerpo');
+      const blurBox = document.getElementById('bg-blur-container');
+      const overlayBox = document.getElementById('bg-overlay-div');
+
+      const overlayAlpha = parseFloat(overlay) || 0;
+      overlayBox.style.backgroundColor = `rgba(0,0,0, ${overlayAlpha})`;
+
+      if (fondo === 'custom' && imagenBg) {
+        const fitVal = fit || 'cover';
+        const posVal = pos || 'center center';
+
+        if (fitVal === 'blur') {
+          blurBox.style.display = 'block';
+          blurBox.style.backgroundImage = `url("${imagenBg}")`;
+          cuerpo.style.backgroundImage = `url("${imagenBg}")`;
+          cuerpo.style.backgroundSize = 'contain';
+          cuerpo.style.backgroundPosition = posVal;
+          cuerpo.style.backgroundColor = 'transparent';
+        } else {
+          blurBox.style.display = 'none';
+          cuerpo.style.backgroundImage = `url("${imagenBg}")`;
+          cuerpo.style.backgroundSize = fitVal;
+          cuerpo.style.backgroundPosition = posVal;
+          cuerpo.style.backgroundColor = 'transparent';
+        }
+      } else {
+        blurBox.style.display = 'none';
+        if (fondo && fondo.startsWith('linear-gradient')) {
+          cuerpo.style.background = fondo;
+        } else if (fondo) {
+          cuerpo.style.backgroundColor = fondo;
+          cuerpo.style.backgroundImage = 'none';
+        }
+      }
+    }
+
     function aplicarEstilosBase(cfg) {
       if (!cfg) return;
-      const cuerpo = document.getElementById('cuerpo');
       const cancionHeader = document.getElementById('cancion-header');
       const texto = document.getElementById('texto-principal');
       const headerParroquia = document.getElementById('header-parroquia');
 
-      if (cfg.fondo) {
-        if (cfg.fondo === 'custom' && cfg.imagenBg) {
-          cuerpo.style.backgroundImage = `url("${cfg.imagenBg}")`;
-          cuerpo.style.backgroundSize = 'cover';
-          cuerpo.style.backgroundPosition = 'center';
-          cuerpo.style.backgroundColor = 'transparent';
-        } else if (cfg.fondo.startsWith('linear-gradient')) {
-          cuerpo.style.background = cfg.fondo;
-        } else {
-          cuerpo.style.backgroundColor = cfg.fondo;
-          cuerpo.style.backgroundImage = 'none';
-        }
-      }
+      aplicarFondoCompleto(cfg.fondo, cfg.imagenBg, cfg.imagenFit, cfg.imagenPosition, cfg.imagenOverlay);
 
-      // Tipografías independientes
       if (cfg.fuenteParroquia) headerParroquia.style.fontFamily = cfg.fuenteParroquia;
       else if (cfg.fuente) headerParroquia.style.fontFamily = cfg.fuente;
 
@@ -238,27 +281,15 @@
 
       cuerpo.className = '';
 
-      // Aplicar fondo
-      if (data.fondo) {
-        if (data.fondo === 'custom' && data.imagenBg) {
-          cuerpo.style.backgroundImage = `url("${data.imagenBg}")`;
-          cuerpo.style.backgroundSize = 'cover';
-          cuerpo.style.backgroundPosition = 'center';
-          cuerpo.style.backgroundColor = 'transparent';
-        } else if (data.fondo.startsWith('linear-gradient')) {
-          cuerpo.style.background = data.fondo;
-        } else {
-          cuerpo.style.backgroundColor = data.fondo;
-          cuerpo.style.backgroundImage = 'none';
-        }
-      }
+      // Aplicar fondo completo con encuadre, blur y filtro
+      aplicarFondoCompleto(data.fondo, data.imagenBg, data.imagenFit, data.imagenPosition, data.imagenOverlay);
 
       // Tipografías, Tamaños y Colores Independientes
       if (data.fuenteParroquia) headerParroquia.style.fontFamily = data.fuenteParroquia;
       else if (data.fuente) headerParroquia.style.fontFamily = data.fuente;
 
       if (data.fuenteTitulo) cancionHeader.style.fontFamily = data.fuenteTitulo;
-      else if (data.fuente) cancionHeader.style.fontFamily = data.fuente;
+      else if (data.fuente) data.fuente;
 
       if (data.tamanoTitulo) cancionHeader.style.fontSize = data.tamanoTitulo;
       if (data.tamanoParroquia) headerParroquia.style.fontSize = data.tamanoParroquia;
