@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Pro - Consola de Operador de Proyector 🎛️</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;600&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
   <style>
@@ -28,7 +34,7 @@
     /* SIDEBAR LATERAL */
     .sidebar {
       width: 240px; background: var(--sidebar-bg); border-right: 1px solid #30363d;
-      display: flex; flex-direction: column; padding: 20px 10px; gap: 8px;
+      display: flex; flex-direction: column; padding: 20px 10px; gap: 8px; flex-shrink: 0;
     }
     .sidebar-brand { font-size: 1.1rem; font-weight: bold; color: var(--accent-light); padding: 0 10px 20px 10px; border-bottom: 1px solid #30363d; display: flex; align-items: center; gap: 8px; }
     .nav-item {
@@ -46,10 +52,14 @@
     .parroquia-title { font-size: 1.2rem; font-weight: bold; color: var(--accent-light); }
 
     .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
-    .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; }
+    .btn { background: var(--accent); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+    .btn:hover { opacity: 0.9; }
     .btn-red { background: #C62828; }
+    .btn-red:hover { background: #E53935; }
     .btn-amber { background: #FF8F00; color: #000; }
+    .btn-amber:hover { background: #FFA726; }
     .btn-blue { background: #0288D1; }
+    .btn-blue:hover { background: #039BE5; }
 
     .nav-arrows { display: flex; gap: 12px; margin-bottom: 2px; }
     .btn-arrow { flex: 1; background: #2E2E2E; color: #FFF; border: 1px solid #444; padding: 12px; border-radius: 12px; font-size: 0.95rem; font-weight: bold; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: background 0.2s; }
@@ -66,7 +76,7 @@
     /* GRILLA DE ESTROFAS (ENTRAN 3 POR FILA) */
     .stanzas-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
       gap: 12px;
     }
     .stanza-card {
@@ -82,7 +92,7 @@
 
     /* PANEL DERECHO: DOS MONITORES (PREVIEW & LIVE PROGRAM) */
     .preview-panel { background: #090d12; padding: 15px; display: flex; flex-direction: column; justify-content: flex-start; gap: 15px; overflow-y: auto; }
-    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; }
+    .monitor-box { width: 100%; aspect-ratio: 16/9; background: #050505; border: 2px solid #30363d; border-radius: 12px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 12px; box-sizing: border-box; box-shadow: 0 8px 24px rgba(0,0,0,0.6); background-size: cover; background-position: center; transition: all 0.3s; }
     .monitor-label { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
 
     .mon-parroquia { position: absolute; top: 8px; left: 10px; font-size: 0.65rem; color: #888; font-weight: bold; text-transform: uppercase; }
@@ -119,6 +129,12 @@
 
     /* PERFILES GUARDADOS */
     .perfiles-box { background: var(--card-bg); border: 1px solid #30363d; padding: 15px; border-radius: 12px; margin-top: 15px; }
+    .profile-chip {
+      background: #30363d; color: var(--text); border: 1px solid #444; padding: 6px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+    }
+    .profile-chip:hover { border-color: var(--accent-light); background: #3e444c; }
+    .profile-delete-btn { color: #ff6b6b; margin-left: 4px; font-weight: bold; padding: 0 4px; border-radius: 50%; cursor: pointer; }
+    .profile-delete-btn:hover { background: rgba(255,107,107,0.2); }
 
     /* SECCIONES DINÁMICAS */
     .section-view { display: none; flex-direction: column; gap: 20px; }
@@ -139,9 +155,29 @@
     }
     input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
     input[type="color"]::-webkit-color-swatch { border: none; border-radius: 6px; }
+
+    /* BARRA DE ESTADO / TOAST */
+    #status-toast {
+      position: fixed; bottom: 20px; right: 20px;
+      padding: 10px 18px; border-radius: 10px;
+      font-size: 0.85rem; font-weight: bold; color: white;
+      background: #1f2937; border: 1px solid #374151;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+      display: none; z-index: 9999; transition: opacity 0.3s;
+    }
+
+    /* RESPONSIVIDAD PARA MONITOR MEDIANO/PEQUEÑO */
+    @media (max-width: 1100px) {
+      .main-layout { grid-template-columns: 1fr; overflow-y: auto; }
+      body { overflow-y: auto; }
+      .preview-panel { border-top: 1px solid #30363d; }
+    }
   </style>
 </head>
 <body>
+
+  <!-- BARRA DE ESTADO TOAST -->
+  <div id="status-toast"></div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
@@ -163,7 +199,7 @@
       <!-- TOP BAR -->
       <div class="top-bar">
         <div>
-          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada</div>
+          <div style="font-size: 0.75rem; color: var(--text-muted);">Comunidad Sintonizada (Vía Web)</div>
           <div id="parroquia-nombre" class="parroquia-title">Cargando...</div>
         </div>
         <div class="action-buttons">
@@ -185,10 +221,10 @@
         <!-- CONTROLES EXTRA DEBAJO DE LAS FLECHAS -->
         <div class="sub-controls-bar">
           <div class="font-size-group">
-            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Tamaño Previa:</span>
-            <button class="btn-mini" onclick="cambiarTamanoPreview(-0.3)">A-</button>
-            <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">1.2rem</span>
-            <button class="btn-mini" onclick="cambiarTamanoPreview(0.3)">A+</button>
+            <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Escala Previa:</span>
+            <button class="btn-mini" onclick="cambiarTamanoPreview(-0.1)">A-</button>
+            <span id="lbl-tamano" style="font-size: 0.85rem; font-weight:bold; color:var(--accent-light);">1.0x</span>
+            <button class="btn-mini" onclick="cambiarTamanoPreview(0.1)">A+</button>
           </div>
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size: 0.8rem; color: var(--text-muted); font-weight:bold;">Transición:</span>
@@ -238,8 +274,8 @@
         <div class="field-group">
           <label>Tipografía:</label>
           <select id="cfg-fuente" onchange="aplicarEstiloPreviewLocal()">
-            <option value="'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
-            <option value="'Georgia', 'Playfair Display', serif">Serif Elegante Litúrgica (Georgia/Playfair)</option>
+            <option value="'Roboto', 'Helvetica Neue', Arial, sans-serif">Sans-Serif Limpia (Roboto/Arial)</option>
+            <option value="'Playfair Display', 'Georgia', serif">Serif Elegante Litúrgica (Playfair Display)</option>
             <option value="'Montserrat', 'Poppins', sans-serif">Redondeada Moderna (Montserrat)</option>
           </select>
         </div>
@@ -327,7 +363,7 @@
             <input type="text" id="input-nombre-perfil" placeholder="Ej: Misa de Jóvenes" style="flex:1;">
             <button class="btn" onclick="guardarPerfilCustom()">Guardar Perfil</button>
           </div>
-          <div id="lista-perfiles" style="display:flex; gap:6px; flex-wrap:wrap; margin-top:10px;"></div>
+          <div id="lista-perfiles" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;"></div>
         </div>
       </div>
 
@@ -363,11 +399,11 @@
           Podés usar el teclado de la computadora o un pedal Bluetooth configurado como flechas para pasar estrofas sin usar el mouse:
         </p>
         <ul style="color: var(--text); line-height: 1.8; font-size: 0.95rem;">
-          <li><b>Barra Espaciadora / Enter:</b> Enviar estrofa actual al Cañón</li>
-          <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Preview</li>
-          <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Preview</li>
-          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Previa</li>
-          <li><b>Tecla B:</b> Pantalla de Bienvenida en Previa</li>
+          <li><b>Barra Espaciadora / Enter:</b> Transmitir estrofa actual al Cañón En Vivo</li>
+          <li><b>Flecha Abajo (↓) / Flecha Derecha (→):</b> Siguiente estrofa en Vista Previa</li>
+          <li><b>Flecha Arriba (↑) / Flecha Izquierda (←):</b> Estrofa anterior en Vista Previa</li>
+          <li><b>Tecla N:</b> Pantalla Negra (Apagón) en Vista Previa</li>
+          <li><b>Tecla B:</b> Pantalla de Bienvenida en Vista Previa</li>
         </ul>
       </div>
 
@@ -380,8 +416,8 @@
       <div style="width: 100%;">
         <div class="monitor-label" style="color: var(--accent-light);">👁️ 1. Vista Previa (Preparando)</div>
         <div id="preview-box" class="monitor-box">
-          <div id="prev-parroquia" class="mon-parroquia" style="font-size:0.6rem;">Parroquia</div>
-          <div id="prev-titulo" class="mon-titulo" style="display:none; font-size:0.7rem;">Título</div>
+          <div id="prev-parroquia" class="mon-parroquia">Parroquia</div>
+          <div id="prev-titulo" class="mon-titulo" style="display:none;">Título</div>
           <div id="prev-texto" class="mon-texto">Seleccioná una estrofa...</div>
           <div id="prev-counter" class="mon-counter"></div>
           <div class="mon-footer">Vista Previa 🕊️</div>
@@ -392,8 +428,8 @@
       <div style="width: 100%; margin-top: 10px;">
         <div class="monitor-label" style="color: var(--gold);">📡 2. En Vivo (En el Cañón)</div>
         <div id="live-box" class="monitor-box">
-          <div id="live-parroquia" class="mon-parroquia" style="font-size:0.6rem;">Parroquia</div>
-          <div id="live-titulo" class="mon-titulo" style="display:none; font-size:0.7rem;">Título</div>
+          <div id="live-parroquia" class="mon-parroquia">Parroquia</div>
+          <div id="live-titulo" class="mon-titulo" style="display:none;">Título</div>
           <div id="live-texto" class="mon-texto">En espera...</div>
           <div id="live-counter" class="mon-counter"></div>
           <div class="mon-footer">En Vivo 🕊️</div>
@@ -420,8 +456,9 @@
     let baseParroquiaNombre = "Parroquia";
     let galeriaFotos = [];
     let fotoActivaIdx = 0;
-    let previewFontSize = "1.2rem";
+    let previewScale = 1.0;
     let perfilesCustom = {};
+    let customImageBg = "";
 
     // Estado interno de la Previa
     let previewState = {
@@ -432,6 +469,19 @@
       totalBloques: 1
     };
 
+    function mostrarToast(msg, isError = false) {
+      const toast = document.getElementById('status-toast');
+      toast.innerText = msg;
+      toast.style.background = isError ? '#991B1B' : '#065F46';
+      toast.style.borderColor = isError ? '#EF4444' : '#10B981';
+      toast.style.display = 'block';
+      toast.style.opacity = '1';
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+      }, 3000);
+    }
+
     function switchTab(tabId, el) {
       document.querySelectorAll('.section-view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -439,9 +489,20 @@
       el.classList.add('active');
     }
 
-    function darFormato(t) {
+    function escapeHtml(t) {
       if (!t) return "";
       return t
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function darFormato(t) {
+      if (!t) return "";
+      let safe = escapeHtml(t);
+      return safe
         .replace(/\{.*?\}/g, "")
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
@@ -449,7 +510,18 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
     }
 
-    // Cargar config y perfiles (Aplicar estilos SOLO al preview localmente hasta dar Enviar)
+    // Cargar galería y foto activa guardadas localmente
+    try {
+      const savedGaleria = localStorage.getItem('proyector_galeria_' + comunidadPath);
+      if (savedGaleria) galeriaFotos = JSON.parse(savedGaleria);
+
+      const savedIdx = localStorage.getItem('proyector_foto_idx_' + comunidadPath);
+      if (savedIdx !== null) fotoActivaIdx = parseInt(savedIdx, 10) || 0;
+
+      if (galeriaFotos.length > 0) renderGaleriaThumbs();
+    } catch(e) {}
+
+    // Cargar config y perfiles desde Firebase
     db.ref(comunidadPath + '/proyector_config').on('value', s => {
       const cfg = s.val();
       if (cfg) {
@@ -478,15 +550,6 @@
       }
     });
 
-    let customImageBg = "";
-    try {
-      const savedGaleria = localStorage.getItem('proyector_galeria_' + comunidadPath);
-      if (savedGaleria) {
-        galeriaFotos = JSON.parse(savedGaleria);
-        renderGaleriaThumbs();
-      }
-    } catch(e) {}
-
     function seleccionarFondoSwatch(val, el) {
       document.getElementById('cfg-fondo').value = val;
       document.querySelectorAll('.bg-swatch-card').forEach(c => c.classList.remove('active'));
@@ -504,8 +567,9 @@
       });
     }
 
-    // GUARDAR ESTILOS EN NUBE
+    // GUARDAR ESTILOS EN NUBE CON PROMESAS Y FEEDBACK REAL
     function guardarEstiloConfig() {
+      const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
@@ -520,11 +584,18 @@
         colorTexto: document.getElementById('cfg-color-texto').value,
         colorParroquia: document.getElementById('cfg-color-parroquia').value,
         perfiles: perfilesCustom,
-        imagenBg: galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg
+        imagenBg: activeImg || ""
       };
-      db.ref(comunidadPath + '/proyector_config').set(cfg);
-      aplicarEstiloPreviewLocal();
-      alert("¡Ajustes guardados en la Nube!");
+
+      mostrarToast("💾 Guardando ajustes en la Nube...");
+      db.ref(comunidadPath + '/proyector_config').set(cfg)
+        .then(() => {
+          aplicarEstiloPreviewLocal();
+          mostrarToast("✅ Ajustes guardados correctamente");
+        })
+        .catch((err) => {
+          mostrarToast("❌ Error al guardar en Nube: " + err.message, true);
+        });
     }
 
     // APLICAR ESTILO LOCALMENTE EN LA VISTA PREVIA (MONITOR 1)
@@ -539,12 +610,14 @@
       const colorTitVal = document.getElementById('cfg-color-titulo').value;
       const colorTxtVal = document.getElementById('cfg-color-texto').value;
       const colorParVal = document.getElementById('cfg-color-parroquia').value;
+      const tamCanonVal = document.getElementById('cfg-tamano').value;
       const tamTitVal = document.getElementById('cfg-tamano-titulo').value;
       const tamParVal = document.getElementById('cfg-tamano-parroquia').value;
 
-      if (fondoVal === 'custom' && (galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg)) {
-        const img = galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg;
-        box.style.backgroundImage = `url(${img})`;
+      const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
+
+      if (fondoVal === 'custom' && activeImg) {
+        box.style.backgroundImage = `url("${activeImg}")`;
         box.style.backgroundColor = 'transparent';
       } else if (fondoVal.startsWith('linear-gradient')) {
         box.style.background = fondoVal;
@@ -558,17 +631,28 @@
       if (colorTxtVal) text.style.color = colorTxtVal;
       if (colorTitVal) title.style.color = colorTitVal;
       if (colorParVal) par.style.color = colorParVal;
-      if (tamTitVal) title.style.fontSize = tamTitVal == '1.8rem' ? '0.6rem' : (tamTitVal == '2.2rem' ? '0.75rem' : '0.9rem');
-      if (tamParVal) par.style.fontSize = tamParVal == '0.9rem' ? '0.5rem' : (tamParVal == '1.1rem' ? '0.65rem' : '0.8rem');
+
+      // Escalar fuente del preview proporcionalmente
+      let basePx = 18;
+      if (tamCanonVal === '3.0rem') basePx = 15;
+      else if (tamCanonVal === '3.8rem') basePx = 18;
+      else if (tamCanonVal === '4.5rem') basePx = 22;
+      else if (tamCanonVal === '5.2rem') basePx = 26;
+
+      text.style.fontSize = (basePx * previewScale) + 'px';
+
+      if (tamTitVal) title.style.fontSize = (tamTitVal === '1.8rem') ? '0.65rem' : ((tamTitVal === '2.2rem') ? '0.75rem' : '0.9rem');
+      if (tamParVal) par.style.fontSize = (tamParVal === '0.9rem') ? '0.55rem' : ((tamParVal === '1.1rem') ? '0.65rem' : '0.8rem');
       par.innerText = document.getElementById('cfg-nombre-parroquia').value || 'Parroquia';
     }
 
     function guardarPerfilCustom() {
       const nombre = document.getElementById('input-nombre-perfil').value.trim();
       if (!nombre) {
-        alert("Escribí un nombre para el perfil (ej: Misa de Jóvenes)");
+        mostrarToast("Escribí un nombre para el perfil", true);
         return;
       }
+      const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
       perfilesCustom[nombre] = {
         fondo: document.getElementById('cfg-fondo').value,
         fuente: document.getElementById('cfg-fuente').value,
@@ -579,12 +663,21 @@
         velocidad: document.getElementById('cfg-velocidad').value,
         colorTitulo: document.getElementById('cfg-color-titulo').value,
         colorTexto: document.getElementById('cfg-color-texto').value,
-        colorParroquia: document.getElementById('cfg-color-parroquia').value
+        colorParroquia: document.getElementById('cfg-color-parroquia').value,
+        bienvenidaMsg: document.getElementById('cfg-bienvenida-msg').value,
+        imagenBg: activeImg || ""
       };
       document.getElementById('input-nombre-perfil').value = "";
       guardarEstiloConfig();
       renderPerfilesList();
-      alert(`¡Perfil "${nombre}" guardado con éxito!`);
+    }
+
+    function borrarPerfilCustom(nombre, e) {
+      if (e) e.stopPropagation();
+      delete perfilesCustom[nombre];
+      guardarEstiloConfig();
+      renderPerfilesList();
+      mostrarToast(`Perfil "${nombre}" eliminado`);
     }
 
     function cargarPerfilCustom(nombre) {
@@ -600,8 +693,11 @@
       if (p.colorTitulo) document.getElementById('cfg-color-titulo').value = p.colorTitulo;
       if (p.colorTexto) document.getElementById('cfg-color-texto').value = p.colorTexto;
       if (p.colorParroquia) document.getElementById('cfg-color-parroquia').value = p.colorParroquia;
+      if (p.bienvenidaMsg) document.getElementById('cfg-bienvenida-msg').value = p.bienvenidaMsg;
+      if (p.imagenBg) customImageBg = p.imagenBg;
+
       aplicarEstiloPreviewLocal();
-      alert(`¡Perfil "${nombre}" aplicado!`);
+      mostrarToast(`¡Perfil "${nombre}" cargado!`);
     }
 
     function renderPerfilesList() {
@@ -612,18 +708,17 @@
         return;
       }
       container.innerHTML = keys.map(k => `
-        <button class="btn" style="background:#30363d; font-size:0.75rem; padding:6px 10px;" onclick="cargarPerfilCustom('${k}')">📂 ${k}</button>
+        <div class="profile-chip" onclick="cargarPerfilCustom('${escapeHtml(k)}')">
+          <span>📂 ${escapeHtml(k)}</span>
+          <span class="profile-delete-btn" onclick="borrarPerfilCustom('${escapeHtml(k)}', event)">✕</span>
+        </div>
       `).join('');
     }
 
     function cambiarTamanoPreview(delta) {
-      let sizes = ["0.9rem", "1.1rem", "1.3rem", "1.5rem", "1.8rem"];
-      let idx = sizes.indexOf(previewFontSize);
-      if (idx === -1) idx = 2;
-      idx = (idx + (delta > 0 ? 1 : -1)).clamp(0, sizes.length - 1);
-      previewFontSize = sizes[idx];
-      document.getElementById('lbl-tamano').innerText = previewFontSize;
-      document.getElementById('prev-texto').style.fontSize = previewFontSize;
+      previewScale = (previewScale + delta).clamp(0.6, 2.0);
+      document.getElementById('lbl-tamano').innerText = previewScale.toFixed(1) + 'x';
+      aplicarEstiloPreviewLocal();
     }
 
     function aplicarPaleta(fondoHex, tituloHex, textoHex, fuenteTipo) {
@@ -631,9 +726,9 @@
       document.getElementById('cfg-color-titulo').value = tituloHex;
       document.getElementById('cfg-color-texto').value = textoHex;
       if (fuenteTipo === 'Serif') {
-        document.getElementById('cfg-fuente').value = "'Georgia', 'Playfair Display', serif";
+        document.getElementById('cfg-fuente').value = "'Playfair Display', 'Georgia', serif";
       } else {
-        document.getElementById('cfg-fuente').value = "'Helvetica Neue', Arial, sans-serif";
+        document.getElementById('cfg-fuente').value = "'Roboto', 'Helvetica Neue', Arial, sans-serif";
       }
       aplicarEstiloPreviewLocal();
     }
@@ -651,9 +746,12 @@
             try {
               localStorage.setItem('proyector_galeria_' + comunidadPath, JSON.stringify(galeriaFotos));
             } catch(err) {}
+            fotoActivaIdx = galeriaFotos.length - 1;
+            try {
+              localStorage.setItem('proyector_foto_idx_' + comunidadPath, fotoActivaIdx.toString());
+            } catch(err) {}
             renderGaleriaThumbs();
             document.getElementById('cfg-fondo').value = 'custom';
-            fotoActivaIdx = galeriaFotos.length - 1;
             aplicarEstiloPreviewLocal();
           }
         };
@@ -670,11 +768,15 @@
 
     function seleccionarFoto(idx) {
       fotoActivaIdx = idx;
+      try {
+        localStorage.setItem('proyector_foto_idx_' + comunidadPath, fotoActivaIdx.toString());
+      } catch(err) {}
       renderGaleriaThumbs();
       document.getElementById('cfg-fondo').value = 'custom';
       aplicarEstiloPreviewLocal();
     }
 
+    // Escuchar el estado de la comunidad (Canción actual seleccionada por la App)
     db.ref(comunidadPath).on('value', snapshot => {
       const d = snapshot.val();
       if (!d) return;
@@ -686,13 +788,21 @@
         nombreInput.value = baseParroquiaNombre;
       }
 
-      if (d.cancion_actual && d.cancion_actual !== cancionActualId) {
-        cancionActualId = d.cancion_actual;
-        cargarCancion(cancionActualId);
+      if (d.cancion_actual !== undefined) {
+        if (d.cancion_actual && d.cancion_actual !== cancionActualId) {
+          cancionActualId = d.cancion_actual;
+          cargarCancion(cancionActualId);
+        } else if (!d.cancion_actual) {
+          cancionActualId = "";
+          estrofasList = [];
+          document.getElementById('cancion-titulo').innerText = "🎶 Esperando canción en la App...";
+          document.getElementById('estrofas-container').innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:30px; color:#888;'>Abrí cualquier canción en tu celular y el proyector la sintonizará al instante.</div>";
+          actualizarPreviewUI();
+        }
       }
     });
 
-    // 1. ACTUALIZAR PREVIEW UI (SOLO EN MONITOR 1)
+    // ACTUALIZAR PREVIEW UI (SOLO EN MONITOR 1 - VISTA PREVIA)
     function actualizarPreviewUI() {
       const par = document.getElementById('prev-parroquia');
       const tit = document.getElementById('prev-titulo');
@@ -712,7 +822,7 @@
       } else if (estrofasList.length > 0) {
         tit.style.display = 'block';
         tit.innerText = document.getElementById('cancion-titulo').innerText.replace("🎶 ", "");
-        txt.innerHTML = darFormato(estrofasList[previewIdx].trim());
+        txt.innerHTML = darFormato(estrofasList[previewIdx] ? estrofasList[previewIdx].trim() : '');
         cnt.innerText = (previewIdx + 1) + ' / ' + estrofasList.length;
       } else {
         tit.style.display = 'none';
@@ -723,7 +833,7 @@
       aplicarEstiloPreviewLocal();
     }
 
-    // 2. ESCUCHAR LIVE PROGRAM (Lo que ve el cañón en vivo)
+    // ESCUCHAR LIVE PROGRAM (Lo que se proyecta actualmente en vivo)
     db.ref(comunidadPath + '/proyeccion_vivo').on('value', s => {
       const data = s.val();
       const box = document.getElementById('live-box');
@@ -743,21 +853,14 @@
       par.innerText = data.comunidadNombre || 'Parroquia';
 
       // Aplicar estilos del Vivo enviados al presionar Enviar al Cañón
-      if (data.tamano) {
-        txt.style.fontSize = data.tamano;
-      }
-      if (data.tamanoTitulo) {
-        tit.style.fontSize = data.tamanoTitulo == '1.8rem' ? '0.6rem' : (data.tamanoTitulo == '2.2rem' ? '0.75rem' : '0.9rem');
-      }
-      if (data.tamanoParroquia) {
-        par.style.fontSize = data.tamanoParroquia == '0.9rem' ? '0.5rem' : (data.tamanoParroquia == '1.1rem' ? '0.65rem' : '0.8rem');
-      }
+      if (data.tamano) txt.style.fontSize = (data.tamano === '3.0rem' ? '0.8rem' : (data.tamano === '3.8rem' ? '1.0rem' : '1.2rem'));
       if (data.colorTexto) txt.style.color = data.colorTexto;
       if (data.colorTitulo) tit.style.color = data.colorTitulo;
       if (data.colorParroquia) par.style.color = data.colorParroquia;
       if (data.fuente) box.style.fontFamily = data.fuente;
+
       if (data.fondo === 'custom' && data.imagenBg) {
-        box.style.backgroundImage = `url(${data.imagenBg})`;
+        box.style.backgroundImage = `url("${data.imagenBg}")`;
         box.style.backgroundColor = 'transparent';
       } else if (data.fondo && data.fondo.startsWith('linear-gradient')) {
         box.style.background = data.fondo;
@@ -787,7 +890,12 @@
 
     function cargarCancion(id) {
       db.ref(`canciones_base/${id}`).once('value', s => {
-        if (!s.exists()) return;
+        if (!s.exists()) {
+          document.getElementById('cancion-titulo').innerText = "🎶 Canción no encontrada en la base de datos";
+          estrofasList = [];
+          renderEstrofas();
+          return;
+        }
         const c = s.val();
         document.getElementById('cancion-titulo').innerText = "🎶 " + (c.title || "Canción en Vivo");
         const lyrics = (c.lyrics || "").replace(/\{.*?\}/g, "").replace(/\[.*?\]/g, "").trim();
@@ -801,6 +909,8 @@
           totalBloques: estrofasList.length
         };
         actualizarPreviewUI();
+      }).catch(err => {
+        mostrarToast("Error al cargar canción desde Firebase", true);
       });
     }
 
@@ -833,7 +943,7 @@
       actualizarPreviewUI();
     }
 
-    function moverEstrofa(delta) {
+    function moverEstrofaPreview(delta) {
       if (estrofasList.length === 0) return;
       previewIdx = (previewIdx + delta).clamp(0, estrofasList.length - 1);
       previewState = {
@@ -846,7 +956,7 @@
       actualizarPreviewUI();
     }
 
-    // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE) CON TODOS LOS AJUSTES DE ESTILO Y COLOR
+    // BOTÓN DE ENVÍO AL CAÑÓN (PROGRAM / LIVE) CON PROMESAS
     function enviarAlCañon() {
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       const fontSizeLive = document.getElementById('cfg-tamano').value || "3.8rem";
@@ -859,8 +969,9 @@
       const colorTitLive = document.getElementById('cfg-color-titulo').value;
       const colorTxtLive = document.getElementById('cfg-color-texto').value;
       const colorParLive = document.getElementById('cfg-color-parroquia').value;
-      const imagenBgLive = galeriaFotos.length > 0 ? galeriaFotos[fotoActivaIdx] : customImageBg;
+      const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
+      mostrarToast("📡 Transmitiendo al Cañón...");
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: previewState.modo,
         titulo: previewState.titulo,
@@ -878,15 +989,17 @@
         colorTitulo: colorTitLive,
         colorTexto: colorTxtLive,
         colorParroquia: colorParLive,
-        imagenBg: imagenBgLive
+        imagenBg: activeImg || ""
+      })
+      .then(() => {
+        mostrarToast("📡 Transmitido En Vivo al Cañón");
+      })
+      .catch(err => {
+        mostrarToast("❌ Error al transmitir: " + err.message, true);
       });
     }
 
-    function moverEstrofaPreview(delta) {
-      moverEstrofa(delta);
-    }
-
-    function mostrarBienvenidosPreview() {
+    function mostrarBienvenidaPreview() {
       const nombreParroquia = document.getElementById('cfg-nombre-parroquia').value.trim();
       const bienvenidaMsg = document.getElementById('cfg-bienvenida-msg').value.trim() || 'Bienvenidos a la Santa Misa 🕊️';
       previewState = {
@@ -917,19 +1030,19 @@
     // ATAJOS DE TECLADO / PEDAL BLUETOOTH
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
-      if (e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+      if (e.key === 'ArrowDown' || e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
-        moverEstrofa(1);
-      } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+        moverEstrofaPreview(1);
+      } else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'PageUp') {
         e.preventDefault();
-        moverEstrofa(-1);
-      } else if (e.key === 'Enter') {
+        moverEstrofaPreview(-1);
+      } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         enviarAlCañon();
       } else if (e.key.toLowerCase() === 'n') {
         mostrarNegraPreview();
       } else if (e.key.toLowerCase() === 'b') {
-        mostrarBienvenidosPreview();
+        mostrarBienvenidaPreview();
       }
     });
 
