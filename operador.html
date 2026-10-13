@@ -1810,14 +1810,19 @@
         }
       }
 
-      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI verSoloLecturaSeleccionada ES TRUE Y SE INDICÓ BLOQUE
-      if (verSoloLecturaSeleccionada && bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) {
-        estrofasList = [ cleanBlocks[bloqueIndex] ];
+      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI verSoloLecturaSeleccionada ES TRUE
+      let idxActivo = (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) ? parseInt(bloqueIndex, 10) : previewIdx;
+      if (idxActivo < 0 || idxActivo >= cleanBlocks.length) idxActivo = 0;
+
+      if (verSoloLecturaSeleccionada && cleanBlocks.length > 0) {
+        estrofasList = [ cleanBlocks[idxActivo] ];
         previewIdx = 0;
-        document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa";
+        document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
       } else {
         estrofasList = cleanBlocks;
-        previewIdx = (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) ? parseInt(bloqueIndex, 10) : 0;
+        previewIdx = idxActivo;
+        document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
+      }
         document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
       }
 
