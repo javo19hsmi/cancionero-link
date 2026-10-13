@@ -1471,7 +1471,7 @@
         }
       }
       // 3. LECTURA / EVANGELIO ACTUAL
-      else if (d.lectura_actual_titulo || d.lectura_actual_texto) {
+      else if (d.lectura_actual_titulo) {
         const lecturaId = (d.lectura_actual_titulo || "lectura") + "_" + (d.lectura_actual_texto ? d.lectura_actual_texto.length : 0);
         const tipo = d.lectura_actual_tipo || "Lectura";
         const idxBloque = (d.bloque_actual !== undefined && d.bloque_actual !== null) ? d.bloque_actual : null;

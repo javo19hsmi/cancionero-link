@@ -157,7 +157,7 @@
               if (sl.exists()) mostrarContenido(sl.val(), blockIdx, waitingDiv, lyricsDiv);
             });
           });
-        } else if (d.lectura_actual_titulo || d.lectura_actual_texto) {
+        } else if (d.lectura_actual_titulo) {
           const tipoTexto = d.lectura_actual_tipo ? ` (${d.lectura_actual_tipo})` : '';
           const titulo = d.lectura_actual_titulo || "Lectura de la Misa";
           const cuerpoTexto = d.lectura_actual_texto || "";
