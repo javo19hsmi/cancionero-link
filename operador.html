@@ -1805,30 +1805,6 @@
       };
       actualizarPreviewUI();
     }
-      });
-
-      if (estrofasList.length === 0 && rawText) {
-        estrofasList = [rawText];
-      }
-
-      // 3. Focalizar en el bloque_actual enviado desde la App móvil
-      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
-        previewIdx = parseInt(bloqueIndex, 10);
-      } else {
-        previewIdx = 0;
-      }
-
-      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " tarjetas";
-
-      previewState = {
-        modo: 'CANCCION',
-        titulo: titleText,
-        bloqueTexto: estrofasList[previewIdx] || '',
-        bloqueIndex: previewIdx,
-        totalBloques: estrofasList.length
-      };
-      actualizarPreviewUI();
-    }
 
     function renderEstrofas() {
       const container = document.getElementById('estrofas-container');
