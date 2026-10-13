@@ -1745,7 +1745,7 @@
 
       let rawText = (texto || "");
 
-      // 1. Desempaquetar bloques por la URL de referencia de curas.com.ar
+      // 1. Desempaquetar bloques principales por la URL de referencia de curas.com.ar
       let rawBlocks = rawText.split(/https?:\/\/[^\s]+/g);
 
       let cleanBlocks = [];
@@ -1760,10 +1760,19 @@
           .replace(/\[.*?\]/g, "")
           .trim();
 
+        // Limpiar cabeceras web repetitivas
+        clean = clean
+          .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
+          .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
+          .replace(/^Año par\s*/gi, "")
+          .replace(/^Año impar\s*/gi, "")
+          .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
+          .trim();
+
         if (clean.length > 5) cleanBlocks.push(clean);
       });
 
-      // Descartar bloque duplicado "Contenido Completo" del final
+      // 2. Descartar bloque duplicado "Contenido Completo" del final
       if (cleanBlocks.length > 1) {
         const lastBlock = cleanBlocks[cleanBlocks.length - 1];
         const firstExcerpt = cleanBlocks[0].substring(0, 30);
@@ -1772,72 +1781,30 @@
         }
       }
 
-      // 2. SEGMENTAR CADA BLOQUE EN TARJETAS COMPACTAS Y PROYECTABLES (10 A 12 TARJETAS)
-      estrofasList = [];
+      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI SE INDICÓ bloque_actual
+      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) {
+        estrofasList = [ cleanBlocks[bloqueIndex] ];
+        previewIdx = 0;
+        document.getElementById('chip-bloques-cnt').innerText = "1 lectura seleccionada";
+      } else {
+        estrofasList = cleanBlocks;
+        previewIdx = 0;
+        document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
+      }
 
-      cleanBlocks.forEach((block, bIdx) => {
-        // A. Tarjeta de Calendario / Tiempo Litúrgico (Si aparece en el primer bloque)
-        if (bIdx === 0 && (block.includes("TIEMPO DURANTE EL AÑO") || block.includes("VIGESIMOCTAVA") || block.includes("MARTES") || block.includes("DOMINGO") || block.includes("LUNES"))) {
-          const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-          const calLines = lines.filter(l => l.includes("TIEMPO") || l.includes("SEMANA") || l.includes("MARTES") || l.includes("DOMINGO") || l.includes("LUNES") || l.includes("MIÉRCOLES") || l.includes("JUEVES") || l.includes("VIERNES") || l.includes("SÁBADO") || l.includes("Año"));
-          const restLines = lines.filter(l => !calLines.includes(l));
+      if (estrofasList.length === 0 && rawText) {
+        estrofasList = [rawText];
+      }
 
-          if (calLines.length > 0) {
-            estrofasList.push(`**${calLines.join(' • ')}**`);
-          }
-          block = restLines.join('\n');
-        }
-
-        if (!block.trim()) return;
-
-        // B. Extraer Frases de Reflexión (Marcadas con '>' o '> _') limpiando el carácter '>'
-        const reflMatches = block.match(/^\s*>\s*(_.*?_|[^\n]+)/gm);
-        if (reflMatches) {
-          reflMatches.forEach(rm => {
-            const cleanRefl = rm.replace(/^\s*>\s*/, '').trim();
-            if (cleanRefl) {
-              estrofasList.push(`_${cleanRefl.replace(/^_|_$/g, '')}_`);
-            }
-            block = block.replace(rm, '');
-          });
-        }
-
-        // C. Salmos Responsoriales (Dividir estrofa por estrofa)
-        if (block.includes("SALMO") || block.includes("Sal ")) {
-          const salmoStanzas = block.split(/\n\s*\n+/).map(s => s.trim()).filter(s => s.length > 0);
-          salmoStanzas.forEach(st => {
-            if (st) estrofasList.push(st);
-          });
-        }
-        // D. Lecturas y Evangelio (Dividir por párrafos legibles de max 300 caracteres)
-        else {
-          const paragraphs = block.split(/\n\s*\n+/).map(p => p.trim()).filter(p => p.length > 0);
-
-          let currentCitation = "";
-          paragraphs.forEach(p => {
-            if (p.startsWith("Lectura de") || p.startsWith("Evangelio de") || p.startsWith("Primera Lectura") || p.startsWith("EVANGELIO") || p.startsWith("Segunda Lectura")) {
-              currentCitation = p.split('\n')[0];
-            }
-
-            if (p.length > 350) {
-              const sentences = p.split(/(?<=\.)\s+/);
-              let tempChunk = "";
-              sentences.forEach(s => {
-                if ((tempChunk + " " + s).length > 300) {
-                  estrofasList.push(currentCitation && !tempChunk.startsWith(currentCitation) ? `**${currentCitation}**\n\n${tempChunk.trim()}` : tempChunk.trim());
-                  tempChunk = s;
-                } else {
-                  tempChunk += (tempChunk ? " " : "") + s;
-                }
-              });
-              if (tempChunk.trim()) {
-                estrofasList.push(currentCitation && !tempChunk.startsWith(currentCitation) ? `**${currentCitation}**\n\n${tempChunk.trim()}` : tempChunk.trim());
-              }
-            } else {
-              estrofasList.push(p);
-            }
-          });
-        }
+      previewState = {
+        modo: 'CANCCION',
+        titulo: titleText,
+        bloqueTexto: estrofasList[previewIdx] || '',
+        bloqueIndex: previewIdx,
+        totalBloques: estrofasList.length
+      };
+      actualizarPreviewUI();
+    }
       });
 
       if (estrofasList.length === 0 && rawText) {
