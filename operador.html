@@ -365,7 +365,8 @@
           <!-- TÍTULO DE CONTENIDO Y CHIPS -->
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:5px;">
             <div id="cancion-titulo" style="font-size: 1.15rem; color: var(--gold); font-weight: bold;">🎶 Esperando canción en la App...</div>
-            <div style="display:flex; gap:6px;">
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button id="btn-toggle-filter-lecturas" class="btn-mini" style="display:none; background:#1E293B; border:1px solid var(--accent-light); color:var(--accent-light);" onclick="toggleFiltroLecturas()">👁️ Ver todas las lecturas</button>
               <span id="chip-bloques-cnt" class="stanza-badge">0 bloques</span>
               <span id="chip-tipo-content" class="stanza-badge" style="background:var(--accent-light); color:#000;">Canción</span>
             </div>
@@ -1619,7 +1620,25 @@
       }
     });
 
+    let verSoloLecturaSeleccionada = true;
+    let ultimaLecturaParametros = null;
+
+    function toggleFiltroLecturas() {
+      verSoloLecturaSeleccionada = !verSoloLecturaSeleccionada;
+      if (ultimaLecturaParametros) {
+        cargarLecturaEvangelio(
+          ultimaLecturaParametros.titulo,
+          ultimaLecturaParametros.texto,
+          ultimaLecturaParametros.tipo,
+          ultimaLecturaParametros.bloqueIndex
+        );
+      }
+    }
+
     function cargarCancion(id) {
+      const btnToggle = document.getElementById('btn-toggle-filter-lecturas');
+      if (btnToggle) btnToggle.style.display = 'none';
+
       db.ref(`canciones_base/${id}`).once('value', s => {
         if (!s.exists()) {
           document.getElementById('cancion-titulo').innerText = "🎶 Canción no encontrada en la base de datos";
@@ -1653,6 +1672,9 @@
     }
 
     function cargarOracion(id, bloqueIndex) {
+      const btnToggle = document.getElementById('btn-toggle-filter-lecturas');
+      if (btnToggle) btnToggle.style.display = 'none';
+
       db.ref(`oraciones_oficiales/${id}`).once('value', s1 => {
         if (s1.exists()) {
           procesarOracion(s1.val(), bloqueIndex);
@@ -1736,12 +1758,19 @@
     }
 
     function cargarLecturaEvangelio(titulo, texto, tipo, bloqueIndex) {
+      ultimaLecturaParametros = { titulo, texto, tipo, bloqueIndex };
       const titleText = titulo || "Lectura del Día";
       const tipoText = tipo || "Lectura";
       const icon = (tipoText.toLowerCase().includes('evangelio')) ? "📖 " : "📜 ";
 
       document.getElementById('cancion-titulo').innerText = icon + titleText;
       document.getElementById('chip-tipo-content').innerText = tipoText;
+
+      const btnToggle = document.getElementById('btn-toggle-filter-lecturas');
+      if (btnToggle) {
+        btnToggle.style.display = 'inline-block';
+        btnToggle.innerText = verSoloLecturaSeleccionada ? "👁️ Ver todas las lecturas" : "👁️ Ver solo seleccionada";
+      }
 
       let rawText = (texto || "");
 
@@ -1781,14 +1810,14 @@
         }
       }
 
-      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI SE INDICÓ bloque_actual
-      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) {
+      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI verSoloLecturaSeleccionada ES TRUE Y SE INDICÓ BLOQUE
+      if (verSoloLecturaSeleccionada && bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) {
         estrofasList = [ cleanBlocks[bloqueIndex] ];
         previewIdx = 0;
-        document.getElementById('chip-bloques-cnt').innerText = "1 lectura seleccionada";
+        document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa";
       } else {
         estrofasList = cleanBlocks;
-        previewIdx = 0;
+        previewIdx = (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) ? parseInt(bloqueIndex, 10) : 0;
         document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
       }
 
