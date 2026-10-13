@@ -1745,14 +1745,13 @@
 
       let rawText = (texto || "");
 
-      // 1. Desempaquetar las tarjetas creadas por html_lectura_parser.dart en la App móvil
-      let rawBlocks = rawText.split(/(?=https?:\/\/|\n\s*\n(?=\*\*))/g);
+      // 1. Corte dinámico por la URL de referencia de curas.com.ar que antecede a CADA lectura
+      let rawBlocks = rawText.split(/https?:\/\/[^\s]+/g);
 
       let cleanBlocks = [];
 
       rawBlocks.forEach(block => {
         let clean = block
-          .replace(/https?:\/\/[^\s]+/g, "") // Quitar URL de referencia de la App
           .replace(/##P_END##/g, "\n\n")       // Traducir fin de párrafo del parser de Flutter
           .replace(/##BR##/g, "\n")            // Traducir salto de línea del parser de Flutter
           .replace(/##PLUS##/g, "+ ")          // Traducir cruz del parser de Flutter
@@ -1762,7 +1761,7 @@
           .replace(/\[.*?\]/g, "")
           .trim();
 
-        // Filtrar cabeceras web repetitivas si quedan al inicio
+        // Limpiar cabeceras web repetitivas si quedan al inicio
         clean = clean
           .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
           .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
@@ -1776,11 +1775,11 @@
         }
       });
 
-      // 2. Descarte de la copia "Contenido Completo" que la App agrega al final
+      // 2. Descarte inteligente del bloque duplicado "Contenido Completo" que la App agrega al final
       if (cleanBlocks.length > 1) {
         const lastBlock = cleanBlocks[cleanBlocks.length - 1];
         const firstExcerpt = cleanBlocks[0].substring(0, 30);
-        if (firstExcerpt.length > 10 && lastBlock.includes(firstExcerpt)) {
+        if (firstExcerpt.length > 8 && lastBlock.includes(firstExcerpt)) {
           cleanBlocks.pop(); // Eliminar bloque duplicado del final
         }
       }
