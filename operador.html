@@ -1745,64 +1745,50 @@
 
       let rawText = (texto || "");
 
-      // 1. Limpieza de URLs de curas.com.ar y etiquetas HTML/Web
-      let cleanText = rawText
-        .replace(/https?:\/\/[^\s]+/g, "")
-        .replace(/&nbsp;/g, " ")
-        .replace(/<[^>]*>/g, "")
-        .replace(/\{.*?\}/g, "")
-        .replace(/\[.*?\]/g, "")
-        .trim();
-
-      // 2. Títulos/Secciones litúrgicas para dividir en tarjetas individuales (igual que Flutter)
-      const sectionRegex = /(Primera Lectura|Segunda Lectura|Tercera Lectura|Salmo Responsorial|Salmo|Aleluya|Aclamación antes del Evangelio|Evangelio|Antífona de entrada|Oración colecta|Oración sobre las ofrendas|Antífona de comunión|Oración después de la comunión|Oración sobre el pueblo|Secuencia)/gi;
+      // 1. Desempaquetar las tarjetas creadas por html_lectura_parser.dart en la App móvil
+      // La App une cada Lectura separándolas por la URL de referencia (https://...) o por doble salto antes de **
+      let rawBlocks = rawText.split(/(?=https?:\/\/|\n\s*\n(?=\*\*))/g);
 
       estrofasList = [];
 
-      const matches = [...cleanText.matchAll(sectionRegex)];
+      rawBlocks.forEach(block => {
+        let clean = block
+          .replace(/https?:\/\/[^\s]+/g, "") // Quitar URL de referencia de la App
+          .replace(/##P_END##/g, "\n\n")       // Traducir fin de párrafo del parser de Flutter
+          .replace(/##BR##/g, "\n")            // Traducir salto de línea del parser de Flutter
+          .replace(/##PLUS##/g, "+ ")          // Traducir cruz del parser de Flutter
+          .replace(/&nbsp;/g, " ")             // Limpiar espacios web
+          .replace(/<[^>]*>/g, "")              // Limpiar HTML
+          .replace(/\{.*?\}/g, "")
+          .replace(/\[.*?\]/g, "")
+          .trim();
 
-      if (matches.length > 0) {
-        for (let i = 0; i < matches.length; i++) {
-          const match = matches[i];
-          const sectionTitle = match[0].trim();
-          const startIndex = match.index + match[0].length;
-          const endIndex = (i === matches.length - 1) ? cleanText.length : matches[i + 1].index;
+        // Filtrar cabeceras web repetitivas si quedan al inicio
+        clean = clean
+          .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
+          .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
+          .replace(/^Año par\s*/gi, "")
+          .replace(/^Año impar\s*/gi, "")
+          .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
+          .trim();
 
-          let bodyText = cleanText.substring(startIndex, endIndex).trim();
-          bodyText = bodyText
-            .replace(/TIEMPO DURANTE EL AÑO/gi, "")
-            .replace(/VIGESIMOCTAVA SEMANA/gi, "")
-            .replace(/Año par/gi, "")
-            .replace(/Año impar/gi, "")
-            .replace(/LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO/gi, "")
-            .trim();
-
-          if (bodyText) {
-            estrofasList.push(`**${sectionTitle}**\n\n${bodyText}`);
-          }
+        if (clean.length > 5) {
+          estrofasList.push(clean);
         }
+      });
+
+      if (estrofasList.length === 0 && rawText) {
+        estrofasList = [rawText];
       }
 
-      // Si no hubo coincidencias por encabezado, dividir por doble salto \n\n
-      if (estrofasList.length === 0) {
-        estrofasList = cleanText
-          .split(/\n\s*\n+/)
-          .map(x => x.trim())
-          .filter(x => x.length > 10 && !x.startsWith('http'));
-      }
-
-      if (estrofasList.length === 0 && cleanText) {
-        estrofasList = [cleanText];
-      }
-
-      // Seleccionar el bloque activo indicado por la App móvil en bloque_actual
+      // 2. Seleccionar el bloque activo indicado por la App móvil en bloque_actual
       if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
         previewIdx = parseInt(bloqueIndex, 10);
       } else {
         previewIdx = 0;
       }
 
-      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
+      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " tarjetas";
 
       previewState = {
         modo: 'CANCCION',
