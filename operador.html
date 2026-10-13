@@ -1743,20 +1743,73 @@
       document.getElementById('cancion-titulo').innerText = icon + titleText;
       document.getElementById('chip-tipo-content').innerText = tipoText;
 
-      // Placa limpia, distinguida e idéntica a index.html y main.dart
-      const cardTexto = `📖 **PROCLAMACIÓN EN VIVO (${tipoText.toUpperCase()})**\n\n**${titleText}**\n\n_Proclamación de la Palabra de Dios en la Misa_`;
+      let rawText = (texto || "");
 
-      estrofasList = [cardTexto];
-      previewIdx = 0;
+      // 1. Limpieza de URLs de curas.com.ar y etiquetas HTML/Web
+      let cleanText = rawText
+        .replace(/https?:\/\/[^\s]+/g, "")
+        .replace(/&nbsp;/g, " ")
+        .replace(/<[^>]*>/g, "")
+        .replace(/\{.*?\}/g, "")
+        .replace(/\[.*?\]/g, "")
+        .trim();
 
-      document.getElementById('chip-bloques-cnt').innerText = "1 placa";
+      // 2. Títulos/Secciones litúrgicas para dividir en tarjetas individuales (igual que Flutter)
+      const sectionRegex = /(Primera Lectura|Segunda Lectura|Tercera Lectura|Salmo Responsorial|Salmo|Aleluya|Aclamación antes del Evangelio|Evangelio|Antífona de entrada|Oración colecta|Oración sobre las ofrendas|Antífona de comunión|Oración después de la comunión|Oración sobre el pueblo|Secuencia)/gi;
+
+      estrofasList = [];
+
+      const matches = [...cleanText.matchAll(sectionRegex)];
+
+      if (matches.length > 0) {
+        for (let i = 0; i < matches.length; i++) {
+          const match = matches[i];
+          const sectionTitle = match[0].trim();
+          const startIndex = match.index + match[0].length;
+          const endIndex = (i === matches.length - 1) ? cleanText.length : matches[i + 1].index;
+
+          let bodyText = cleanText.substring(startIndex, endIndex).trim();
+          bodyText = bodyText
+            .replace(/TIEMPO DURANTE EL AÑO/gi, "")
+            .replace(/VIGESIMOCTAVA SEMANA/gi, "")
+            .replace(/Año par/gi, "")
+            .replace(/Año impar/gi, "")
+            .replace(/LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO/gi, "")
+            .trim();
+
+          if (bodyText) {
+            estrofasList.push(`**${sectionTitle}**\n\n${bodyText}`);
+          }
+        }
+      }
+
+      // Si no hubo coincidencias por encabezado, dividir por doble salto \n\n
+      if (estrofasList.length === 0) {
+        estrofasList = cleanText
+          .split(/\n\s*\n+/)
+          .map(x => x.trim())
+          .filter(x => x.length > 10 && !x.startsWith('http'));
+      }
+
+      if (estrofasList.length === 0 && cleanText) {
+        estrofasList = [cleanText];
+      }
+
+      // Seleccionar el bloque activo indicado por la App móvil en bloque_actual
+      if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
+        previewIdx = parseInt(bloqueIndex, 10);
+      } else {
+        previewIdx = 0;
+      }
+
+      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
 
       previewState = {
         modo: 'CANCCION',
         titulo: titleText,
-        bloqueTexto: estrofasList[0],
-        bloqueIndex: 0,
-        totalBloques: 1
+        bloqueTexto: estrofasList[previewIdx] || '',
+        bloqueIndex: previewIdx,
+        totalBloques: estrofasList.length
       };
       actualizarPreviewUI();
     }
