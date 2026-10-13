@@ -163,7 +163,46 @@
           const cuerpoTexto = d.lectura_actual_texto || "";
 
           if (cuerpoTexto) {
-            const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0; font-size:1.3rem;">${titulo}</h2><br><div style="font-size:1.05rem; line-height:1.6;">${darFormato(cuerpoTexto)}</div>`;
+            // 1. Desempaquetar bloques principales por URL de referencia de curas.com.ar
+            let rawBlocks = cuerpoTexto.split(/https?:\/\/[^\s]+/g);
+            let cleanBlocks = [];
+
+            rawBlocks.forEach(block => {
+              let clean = block
+                .replace(/##P_END##/g, "\n\n")
+                .replace(/##BR##/g, "\n")
+                .replace(/##PLUS##/g, "+ ")
+                .replace(/&nbsp;/g, " ")
+                .replace(/<[^>]*>/g, "")
+                .replace(/\{.*?\}/g, "")
+                .replace(/\[.*?\]/g, "")
+                .trim();
+
+              clean = clean
+                .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
+                .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
+                .replace(/^Año par\s*/gi, "")
+                .replace(/^Año impar\s*/gi, "")
+                .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
+                .trim();
+
+              if (clean.length > 5) cleanBlocks.push(clean);
+            });
+
+            // 2. Descartar la copia duplicada "Contenido Completo" del final
+            if (cleanBlocks.length > 1) {
+              const lastBlock = cleanBlocks[cleanBlocks.length - 1];
+              const firstExcerpt = cleanBlocks[0].substring(0, 30);
+              if (firstExcerpt.length > 8 && lastBlock.includes(firstExcerpt)) {
+                cleanBlocks.pop();
+              }
+            }
+
+            // 3. Mostrar ÚNICAMENTE la tarjeta seleccionada por bloque_actual
+            let idxActivo = (blockIdx >= 0 && blockIdx < cleanBlocks.length) ? blockIdx : 0;
+            const lecturaSeleccionada = cleanBlocks[idxActivo] || cleanBlocks[0] || titulo;
+
+            const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0 0 10px 0; font-size:1.3rem;">${titulo}</h2><div style="font-size:1.05rem; line-height:1.6; font-family:sans-serif;">${darFormato(lecturaSeleccionada)}</div>`;
             mostrarContenido(htmlLectura, -1, waitingDiv, lyricsDiv);
           } else {
             const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0; font-size:1.3rem;">${titulo}</h2><br><p style="font-size:0.95rem; opacity:0.85; line-height:1.5;">Proclamación de la Palabra de Dios en la Misa.</p>`;
