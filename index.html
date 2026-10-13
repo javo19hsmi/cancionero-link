@@ -237,7 +237,22 @@
       if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    function darFormato(t) { return t.replace(/\[.*?\]/g, "").replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>").replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>").replace(/_([\s\S]*?)_/g, "<i>$1</i>"); }
+    function darFormato(t) {
+      if (!t) return "";
+      return t
+        .replace(/^>\s*(_.*?_|[^\n]+)/gm, (match, content) => {
+          const cleanContent = content.replace(/^_+|_+$/g, '').trim();
+          return `<div style="background: rgba(77, 182, 172, 0.12); border-left: 4px solid var(--primary-light, #4DB6AC); padding: 8px 12px; margin: 10px 0; border-radius: 0 8px 8px 0; font-style: italic; color: var(--primary-light, #4DB6AC);">${cleanContent}</div>`;
+        })
+        .replace(/^R\.\s*(.*)/gm, '<b><i style="color:var(--primary-light, #4DB6AC);">R. $1</i></b>')
+        .replace(/^V\.\s*(.*)/gm, '<b><i style="color:var(--primary-light, #4DB6AC);">V. $1</i></b>')
+        .replace(/\{.*?\}/g, "")
+        .replace(/\[.*?\]/g, "")
+        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
+        .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
+        .replace(/_([\s\S]*?)_/g, "<i>$1</i>")
+        .replace(/\n/g, "<br>");
+    }
     let zoom = 1.25;
     function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
   </script>
