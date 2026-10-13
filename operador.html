@@ -1745,11 +1745,10 @@
 
       let rawText = (texto || "");
 
-      // 1. Corte dinámico por la URL de referencia de curas.com.ar que antecede a CADA lectura
+      // 1. Desempaquetar bloques por la URL de referencia de curas.com.ar
       let rawBlocks = rawText.split(/https?:\/\/[^\s]+/g);
 
       let cleanBlocks = [];
-
       rawBlocks.forEach(block => {
         let clean = block
           .replace(/##P_END##/g, "\n\n")       // Traducir fin de párrafo del parser de Flutter
@@ -1761,43 +1760,98 @@
           .replace(/\[.*?\]/g, "")
           .trim();
 
-        // Limpiar cabeceras web repetitivas si quedan al inicio
-        clean = clean
-          .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
-          .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
-          .replace(/^Año par\s*/gi, "")
-          .replace(/^Año impar\s*/gi, "")
-          .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
-          .trim();
-
-        if (clean.length > 5) {
-          cleanBlocks.push(clean);
-        }
+        if (clean.length > 5) cleanBlocks.push(clean);
       });
 
-      // 2. Descarte inteligente del bloque duplicado "Contenido Completo" que la App agrega al final
+      // Descartar bloque duplicado "Contenido Completo" del final
       if (cleanBlocks.length > 1) {
         const lastBlock = cleanBlocks[cleanBlocks.length - 1];
         const firstExcerpt = cleanBlocks[0].substring(0, 30);
         if (firstExcerpt.length > 8 && lastBlock.includes(firstExcerpt)) {
-          cleanBlocks.pop(); // Eliminar bloque duplicado del final
+          cleanBlocks.pop();
         }
       }
 
-      estrofasList = cleanBlocks;
+      // 2. SEGMENTAR CADA BLOQUE EN TARJETAS COMPACTAS Y PROYECTABLES (10 A 12 TARJETAS)
+      estrofasList = [];
+
+      cleanBlocks.forEach((block, bIdx) => {
+        // A. Tarjeta de Calendario / Tiempo Litúrgico (Si aparece en el primer bloque)
+        if (bIdx === 0 && (block.includes("TIEMPO DURANTE EL AÑO") || block.includes("VIGESIMOCTAVA") || block.includes("MARTES") || block.includes("DOMINGO") || block.includes("LUNES"))) {
+          const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+          const calLines = lines.filter(l => l.includes("TIEMPO") || l.includes("SEMANA") || l.includes("MARTES") || l.includes("DOMINGO") || l.includes("LUNES") || l.includes("MIÉRCOLES") || l.includes("JUEVES") || l.includes("VIERNES") || l.includes("SÁBADO") || l.includes("Año"));
+          const restLines = lines.filter(l => !calLines.includes(l));
+
+          if (calLines.length > 0) {
+            estrofasList.push(`**${calLines.join(' • ')}**`);
+          }
+          block = restLines.join('\n');
+        }
+
+        if (!block.trim()) return;
+
+        // B. Extraer Frases de Reflexión (Marcadas con '>' o '> _') limpiando el carácter '>'
+        const reflMatches = block.match(/^\s*>\s*(_.*?_|[^\n]+)/gm);
+        if (reflMatches) {
+          reflMatches.forEach(rm => {
+            const cleanRefl = rm.replace(/^\s*>\s*/, '').trim();
+            if (cleanRefl) {
+              estrofasList.push(`_${cleanRefl.replace(/^_|_$/g, '')}_`);
+            }
+            block = block.replace(rm, '');
+          });
+        }
+
+        // C. Salmos Responsoriales (Dividir estrofa por estrofa)
+        if (block.includes("SALMO") || block.includes("Sal ")) {
+          const salmoStanzas = block.split(/\n\s*\n+/).map(s => s.trim()).filter(s => s.length > 0);
+          salmoStanzas.forEach(st => {
+            if (st) estrofasList.push(st);
+          });
+        }
+        // D. Lecturas y Evangelio (Dividir por párrafos legibles de max 300 caracteres)
+        else {
+          const paragraphs = block.split(/\n\s*\n+/).map(p => p.trim()).filter(p => p.length > 0);
+
+          let currentCitation = "";
+          paragraphs.forEach(p => {
+            if (p.startsWith("Lectura de") || p.startsWith("Evangelio de") || p.startsWith("Primera Lectura") || p.startsWith("EVANGELIO") || p.startsWith("Segunda Lectura")) {
+              currentCitation = p.split('\n')[0];
+            }
+
+            if (p.length > 350) {
+              const sentences = p.split(/(?<=\.)\s+/);
+              let tempChunk = "";
+              sentences.forEach(s => {
+                if ((tempChunk + " " + s).length > 300) {
+                  estrofasList.push(currentCitation && !tempChunk.startsWith(currentCitation) ? `**${currentCitation}**\n\n${tempChunk.trim()}` : tempChunk.trim());
+                  tempChunk = s;
+                } else {
+                  tempChunk += (tempChunk ? " " : "") + s;
+                }
+              });
+              if (tempChunk.trim()) {
+                estrofasList.push(currentCitation && !tempChunk.startsWith(currentCitation) ? `**${currentCitation}**\n\n${tempChunk.trim()}` : tempChunk.trim());
+              }
+            } else {
+              estrofasList.push(p);
+            }
+          });
+        }
+      });
 
       if (estrofasList.length === 0 && rawText) {
         estrofasList = [rawText];
       }
 
-      // 3. Focalizar la lectura seleccionada en la App móvil (bloque_actual)
+      // 3. Focalizar en el bloque_actual enviado desde la App móvil
       if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
         previewIdx = parseInt(bloqueIndex, 10);
       } else {
         previewIdx = 0;
       }
 
-      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
+      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " tarjetas";
 
       previewState = {
         modo: 'CANCCION',
