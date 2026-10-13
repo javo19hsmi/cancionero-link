@@ -883,7 +883,13 @@
     function darFormato(t) {
       if (!t) return "";
       let safe = escapeHtml(t);
-      return safe
+      let clean = safe
+        .replace(/&nbsp;/g, " ")
+        .replace(/&amp;nbsp;/g, " ")
+        .replace(/\n\s*&nbsp;\s*\n/g, "\n\n")
+        .trim();
+
+      return clean
         .replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
           const cleanContent = content.replace(/^_+|_+$/g, '').trim();
           return `<div style="background: rgba(34, 211, 238, 0.12); border-left: 4px solid var(--accent-light, #22D3EE); padding: 8px 12px; margin: 8px 0; border-radius: 0 8px 8px 0; font-style: italic; color: var(--accent-light, #22D3EE);">${cleanContent}</div>`;
@@ -895,7 +901,8 @@
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>")
-        .replace(/\n/g, "<br>");
+        .replace(/\n\s*\n+/g, '<div style="height:10px;"></div>')
+        .replace(/\n/g, '<br style="line-height:1.35;">');
     }
 
     function actualizarDegradadoLivePreview() {
