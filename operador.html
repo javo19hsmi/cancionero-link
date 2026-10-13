@@ -1746,10 +1746,9 @@
       let rawText = (texto || "");
 
       // 1. Desempaquetar las tarjetas creadas por html_lectura_parser.dart en la App móvil
-      // La App une cada Lectura separándolas por la URL de referencia (https://...) o por doble salto antes de **
       let rawBlocks = rawText.split(/(?=https?:\/\/|\n\s*\n(?=\*\*))/g);
 
-      estrofasList = [];
+      let cleanBlocks = [];
 
       rawBlocks.forEach(block => {
         let clean = block
@@ -1773,22 +1772,33 @@
           .trim();
 
         if (clean.length > 5) {
-          estrofasList.push(clean);
+          cleanBlocks.push(clean);
         }
       });
+
+      // 2. Descarte de la copia "Contenido Completo" que la App agrega al final
+      if (cleanBlocks.length > 1) {
+        const lastBlock = cleanBlocks[cleanBlocks.length - 1];
+        const firstExcerpt = cleanBlocks[0].substring(0, 30);
+        if (firstExcerpt.length > 10 && lastBlock.includes(firstExcerpt)) {
+          cleanBlocks.pop(); // Eliminar bloque duplicado del final
+        }
+      }
+
+      estrofasList = cleanBlocks;
 
       if (estrofasList.length === 0 && rawText) {
         estrofasList = [rawText];
       }
 
-      // 2. Seleccionar el bloque activo indicado por la App móvil en bloque_actual
+      // 3. Focalizar la lectura seleccionada en la App móvil (bloque_actual)
       if (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < estrofasList.length) {
         previewIdx = parseInt(bloqueIndex, 10);
       } else {
         previewIdx = 0;
       }
 
-      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " tarjetas";
+      document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " lecturas";
 
       previewState = {
         modo: 'CANCCION',
