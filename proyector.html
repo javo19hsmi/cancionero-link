@@ -157,7 +157,7 @@
       str = str
         .replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
           const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="background: rgba(255, 255, 255, 0.1); border-left: 5px solid #FFD700; padding: 10px 18px; margin: 12px 0; border-radius: 0 10px 10px 0; font-style: italic; color: #FFD700;">${cleanContent}</div>`;
+          return `<div style="font-style: italic; font-size: 0.8em; color: #FFD700; margin: 8px 0 14px 0; opacity: 0.85;">${cleanContent}</div>`;
         })
         .replace(/^R\.\s*(.*)/gm, '<b><i style="color:#FFD700;">R. $1</i></b>')
         .replace(/^V\.\s*(.*)/gm, '<b><i style="color:#4DB6AC;">V. $1</i></b>')
@@ -169,8 +169,9 @@
 
       const paragraphs = str.split(/\n\s*\n+/);
       return paragraphs.map(p => {
-        let cleanP = p.trim().replace(/\n/g, '<br style="line-height:1.35;">');
-        if (cleanP.startsWith('<div style="background:')) return cleanP;
+        let cleanP = p.trim();
+        if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.8em;')) return cleanP;
+        let formattedLines = cleanP.replace(/\n/g, '<br style="line-height:1.35;">');
         return `<div style="margin-bottom: 14px; line-height: 1.42;">${cleanP}</div>`;
       }).join('');
     }
