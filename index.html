@@ -250,17 +250,17 @@
       str = str
         .replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
           const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="font-style: italic; font-size: 0.85em; color: var(--primary-light, #4DB6AC); margin: 6px 0 10px 0; opacity: 0.88; text-align: left;">${cleanContent}</div>`;
+          return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanContent}</div>`;
         })
         .replace(/^>\s*(_.*?_|[^\n]+)/gm, (match, content) => {
           const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="font-style: italic; font-size: 0.85em; color: var(--primary-light, #4DB6AC); margin: 6px 0 10px 0; opacity: 0.88; text-align: left;">${cleanContent}</div>`;
+          return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanContent}</div>`;
         })
-        .replace(/^R\.\s*(.*)/gm, '<b><i style="color:var(--primary-light, #4DB6AC);">R. $1</i></b>')
-        .replace(/^V\.\s*(.*)/gm, '<b><i style="color:var(--primary-light, #4DB6AC);">V. $1</i></b>')
+        .replace(/^R\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">R. $1</b>')
+        .replace(/^V\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">V. $1</b>')
         .replace(/\{.*?\}/g, "")
         .replace(/\[.*?\]/g, "")
-        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<i><b>$1</b></i>")
+        .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
@@ -269,13 +269,13 @@
       const paragraphs = str.split(/\n\s*\n+/);
       return paragraphs.map(p => {
         let cleanP = p.trim();
-        if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.85em;')) return cleanP;
+        if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
         if (isSalmo) {
-          let formattedLines = cleanP.replace(/\n/g, '<br style="line-height:1.32;">');
-          return `<div style="margin-bottom: 14px; line-height: 1.45; text-align: left;">${formattedLines}</div>`;
+          let formattedLines = cleanP.replace(/\n/g, '<br style="line-height:1.35;">');
+          return `<div style="margin-bottom: 1em; line-height: 1.35; text-align: left;">${formattedLines}</div>`;
         } else {
           let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 14px; line-height: 1.55; text-align: left;">${formattedText}</div>`;
+          return `<div style="margin-bottom: 1em; line-height: 1.5; text-align: left;">${formattedText}</div>`;
         }
       }).join('');
     }
