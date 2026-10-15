@@ -279,7 +279,7 @@
                        str.includes("Aleluia");
 
       if (isPoesia) {
-        let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
+        let salmoStr = str.replace(/(<b[^>]*>R\.<\/b>)/gi, '$1##STANZA_END##');
         let salmoBlocks = salmoStr.split(/##STANZA_END##|\n\s*\n+/);
 
         return salmoBlocks.map(block => {

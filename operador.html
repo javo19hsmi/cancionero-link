@@ -923,7 +923,7 @@
                        str.includes("Aleluia");
 
       if (isPoesia) {
-        let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
+        let salmoStr = str.replace(/(<b[^>]*>R\.<\/b>)/gi, '$1##STANZA_END##');
         let salmoBlocks = salmoStr.split(/##STANZA_END##|\n\s*\n+/);
 
         return salmoBlocks.map(block => {
@@ -1842,7 +1842,8 @@
 
         // Limpiar cabeceras web repetitivas y ciclos dominicales al inicio
         clean = clean
-          .replace(/^(?:-\s*["']?[A-C]["']?|DOMINGO\s+[A-ZÁÉÍÓÚ]+)\s*\n?/gi, "")
+          .replace(/^[\s\-\"\'A-C]*DOMINGO\s+[A-ZÁÉÍÓÚ\s]+/gi, "")
+          .replace(/^-\s*["']?[A-C]["']?\s*/gi, "")
           .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
           .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
           .replace(/^VIGESIMONOVENO\s*/gi, "")

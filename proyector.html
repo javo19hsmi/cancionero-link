@@ -180,8 +180,8 @@
                        str.includes("Aleluia");
 
       // 2. PRIMERO: Reemplazar dobles saltos por un <br class="espacio-estrofa">
-      if (isSalmo) {
-        str = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1\n\n');
+      if (isPoesia) {
+        str = str.replace(/(<b[^>]*>R\.<\/b>)/gi, '$1\n\n');
       }
       str = str.replace(/\n\s*\n+/g, '<br class="espacio-estrofa">');
 
