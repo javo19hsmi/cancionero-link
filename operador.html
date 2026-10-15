@@ -915,12 +915,12 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
       // 4. Detección Estricta de Poesía (Salmo, Secuencia, Aleluya) sin falsos positivos por 'R.'
-      const isPoesia = tipoText.toLowerCase().includes("salmo") ||
-                       tipoText.toLowerCase().includes("secuencia") ||
-                       tipoText.toLowerCase().includes("aleluya") ||
-                       str.includes("SALMO") ||
+      const isPoesia = str.includes("SALMO") ||
+                       str.includes("Sal ") ||
                        str.includes("SECUENCIA") ||
-                       str.includes("ALELUIA");
+                       str.includes("Secuencia") ||
+                       str.includes("ALELUIA") ||
+                       str.includes("Aleluia");
 
       if (isPoesia) {
         let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
@@ -1840,10 +1840,12 @@
           .replace(/\[.*?\]/g, "")
           .trim();
 
-        // Limpiar cabeceras web repetitivas
+        // Limpiar cabeceras web repetitivas y ciclos dominicales al inicio
         clean = clean
+          .replace(/^(?:-\s*["']?[A-C]["']?|DOMINGO\s+[A-ZÁÉÍÓÚ]+)\s*\n?/gi, "")
           .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
           .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
+          .replace(/^VIGESIMONOVENO\s*/gi, "")
           .replace(/^Año par\s*/gi, "")
           .replace(/^Año impar\s*/gi, "")
           .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
