@@ -31,6 +31,7 @@
     .lyrics-view { text-align: left; line-height: 1.7; font-size: 1.25rem; padding: 10px 4px; }
     
     .bloque { padding: 12px; border-radius: 8px; margin-bottom: 8px; transition: all 0.3s ease; border-left: 4px solid transparent; white-space: normal; }
+    br.espacio-estrofa { content: ""; margin-bottom: 14px; display: block; }
     .bloque.active { background: rgba(77, 182, 172, 0.15); border-left-color: var(--primary-light); color: #ffffff; transform: translateX(5px); }
     .bloque b { color: var(--primary-light); font-weight: 700; }
     
@@ -247,17 +248,22 @@
         .replace(/&nbsp;/g, " ")
         .trim();
 
+      // 1. Frases de Reflexión: Cursiva, letra chica (0.82em), alineada a la DERECHA, sin >
+      str = str.replace(/(?:^|\n)(?:&gt;|>)\s*_?([\s\S]*?)_?(?=\n\n|\n[^\&\>]\w|$)/g, (match, content) => {
+        let cleanQuote = content
+          .replace(/(?:&gt;|>)\s*/g, '')
+          .replace(/_/g, '')
+          .replace(/\n/g, ' ')
+          .trim();
+        return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: right;">${cleanQuote}</div>`;
+      });
+
+      // 2. Respuestas R. y Versículos V. en Negrita con color de acento
+      str = str.replace(/(^|\s)R\.(?=\s|$|<)/g, '$1<b style="color:var(--primary-light, #4DB6AC);">R.</b>');
+      str = str.replace(/(^|\s)V\.\s*/g, '$1<b style="color:var(--primary-light, #4DB6AC);">V. </b>');
+
+      // 3. Formatear Negritas (**bold**), Cursivas (_italic_) y Markdown
       str = str
-        .replace(/(?:^|\n)(?:&gt;|>)\s*_?([\s\S]*?)_?(?=\n\n|\n[^\&\>]\w|$)/g, (match, content) => {
-          let cleanQuote = content
-            .replace(/(?:&gt;|>)\s*/g, '')
-            .replace(/_/g, '')
-            .replace(/\n/g, ' ')
-            .trim();
-          return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: right;">${cleanQuote}</div>`;
-        })
-        .replace(/(^|\s)R\.(?=\s|$|<)/g, '$1<b style="color:var(--primary-light, #4DB6AC);">R.</b>')
-        .replace(/(^|\s)V\.\s*/g, '$1<b style="color:var(--primary-light, #4DB6AC);">V. </b>')
         .replace(/\{.*?\}/g, "")
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
@@ -266,25 +272,16 @@
 
       const isSalmo = str.includes("SALMO") || str.includes("Sal ") || str.includes("R.");
 
+      // 4. PRIMERO: Reemplazar dobles saltos por un <br class="espacio-estrofa">
       if (isSalmo) {
-        let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
-        let salmoBlocks = salmoStr.split(/##STANZA_END##|\n\s*\n+/);
-
-        return salmoBlocks.map(block => {
-          let cleanBlock = block.trim();
-          if (!cleanBlock) return '';
-          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.3;">');
-          return `<div style="margin-bottom: 24px; line-height: 1.3; text-align: left;">${formattedLines}</div>`;
-        }).join('');
-      } else {
-        const paragraphs = str.split(/\n\s*\n+/);
-        return paragraphs.map(p => {
-          let cleanP = p.trim();
-          if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
-          let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 24px; line-height: 1.55; text-align: left;">${formattedText}</div>`;
-        }).join('');
+        str = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1\n\n');
       }
+      str = str.replace(/\n\s*\n+/g, '<br class="espacio-estrofa">');
+
+      // 5. DESPUÉS: Reemplazar saltos simples por un <br> comun de verso
+      str = str.replace(/\n/g, '<br>');
+
+      return str;
     }
     let zoom = 1.25;
     function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
