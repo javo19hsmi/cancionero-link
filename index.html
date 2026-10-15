@@ -271,12 +271,12 @@
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
       // 4. Detección Estricta de Poesía (Salmo, Secuencia, Aleluya) sin falsos positivos por 'R.'
-      const isPoesia = tipoTexto.toLowerCase().includes("salmo") ||
-                       tipoTexto.toLowerCase().includes("secuencia") ||
-                       tipoTexto.toLowerCase().includes("aleluya") ||
-                       str.includes("SALMO") ||
+      const isPoesia = str.includes("SALMO") ||
+                       str.includes("Sal ") ||
                        str.includes("SECUENCIA") ||
-                       str.includes("ALELUIA");
+                       str.includes("Secuencia") ||
+                       str.includes("ALELUIA") ||
+                       str.includes("Aleluia");
 
       if (isPoesia) {
         let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
