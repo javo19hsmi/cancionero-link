@@ -253,7 +253,7 @@
           .replace(/_/g, '')
           .replace(/\n/g, ' ')
           .trim();
-        return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanQuote}</div>`;
+        return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: right;">${cleanQuote}</div>`;
       })
         .replace(/^R\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">R. $1</b>')
         .replace(/^V\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">V. $1</b>')
