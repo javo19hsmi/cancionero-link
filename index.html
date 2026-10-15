@@ -286,11 +286,6 @@
         }).join('');
       }
     }
-          let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 1em; line-height: 1.5; text-align: left;">${formattedText}</div>`;
-        }
-      }).join('');
-    }
     let zoom = 1.25;
     function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
   </script>
