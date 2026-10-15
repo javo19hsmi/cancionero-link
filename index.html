@@ -247,15 +247,14 @@
         .replace(/&nbsp;/g, " ")
         .trim();
 
-      str = str
-        .replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
-          const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanContent}</div>`;
-        })
-        .replace(/^>\s*(_.*?_|[^\n]+)/gm, (match, content) => {
-          const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanContent}</div>`;
-        })
+      str = str.replace(/(?:^|\n)(?:&gt;|>)\s*_?([\s\S]*?)_?(?=\n\n|\n[^\&\>]\w|$)/g, (match, content) => {
+        let cleanQuote = content
+          .replace(/(?:&gt;|>)\s*/g, '')
+          .replace(/_/g, '')
+          .replace(/\n/g, ' ')
+          .trim();
+        return `<div style="font-style: italic; font-size: 0.82em; color: var(--primary-light, #4DB6AC); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanQuote}</div>`;
+      });
         .replace(/^R\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">R. $1</b>')
         .replace(/^V\.\s*(.*)/gm, '<b style="color:var(--primary-light, #4DB6AC);">V. $1</b>')
         .replace(/\{.*?\}/g, "")

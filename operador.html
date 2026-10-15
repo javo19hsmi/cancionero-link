@@ -891,10 +891,14 @@
         .replace(/&nbsp;/g, " ")
         .trim();
 
-      // 1. Cita/Reflexión (> _texto_ o > texto): Cursiva, letra 0.82em, alineada a la izquierda, sin >
-      str = str.replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
-        const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-        return `<div style="font-style: italic; font-size: 0.82em; color: var(--accent-light, #22D3EE); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanContent}</div>`;
+      // 1. Cita/Reflexión multilínea (> _texto_ o > texto): Cursiva sutil, letra 0.82em, alineada izquierda, sin >
+      str = str.replace(/(?:^|\n)(?:&gt;|>)\s*_?([\s\S]*?)_?(?=\n\n|\n[^\&\>]\w|$)/g, (match, content) => {
+        let cleanQuote = content
+          .replace(/(?:&gt;|>)\s*/g, '')
+          .replace(/_/g, '')
+          .replace(/\n/g, ' ')
+          .trim();
+        return `<div style="font-style: italic; font-size: 0.82em; color: var(--accent-light, #22D3EE); margin: 6px 0 12px 0; opacity: 0.85; text-align: left;">${cleanQuote}</div>`;
       });
 
       // 2. Respuesta R. y V. en Negrita con color de acento (sin cursiva forzada)

@@ -154,11 +154,14 @@
         .replace(/&nbsp;/g, " ")
         .trim();
 
-      str = str
-        .replace(/^&gt;\s*(_.*?_|[^\n]+)/gm, (match, content) => {
-          const cleanContent = content.replace(/^_+|_+$/g, '').trim();
-          return `<div style="font-style: italic; font-size: 0.8em; color: #FFD700; margin: 8px 0 14px 0; opacity: 0.85;">${cleanContent}</div>`;
-        })
+      str = str.replace(/(?:^|\n)(?:&gt;|>)\s*_?([\s\S]*?)_?(?=\n\n|\n[^\&\>]\w|$)/g, (match, content) => {
+        let cleanQuote = content
+          .replace(/(?:&gt;|>)\s*/g, '')
+          .replace(/_/g, '')
+          .replace(/\n/g, ' ')
+          .trim();
+        return `<div style="font-style: italic; font-size: 0.8em; color: #FFD700; margin: 8px 0 14px 0; opacity: 0.85; text-align: left;">${cleanQuote}</div>`;
+      });
         .replace(/^R\.\s*(.*)/gm, '<b><i style="color:#FFD700;">R. $1</i></b>')
         .replace(/^V\.\s*(.*)/gm, '<b><i style="color:#4DB6AC;">V. $1</i></b>')
         .replace(/\{.*?\}/g, "")
