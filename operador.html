@@ -914,18 +914,34 @@
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
-      const isSalmo = str.includes("SALMO") || str.includes("Sal ") || str.includes("R.");
+      // 4. Detección Universal de Poesía (Salmo, Secuencia, Aleluya, R.)
+      const isPoesia = str.includes("SALMO") ||
+                       str.includes("Sal ") ||
+                       str.includes("SECUENCIA") ||
+                       str.includes("Secuencia") ||
+                       str.includes("ALELUIA") ||
+                       str.includes("Aleluia") ||
+                       str.includes("R.");
 
-      // 4. PRIMERO: Reemplazar dobles saltos por un <br class="espacio-estrofa">
-      if (isSalmo) {
-        str = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1\n\n');
+      if (isPoesia) {
+        let salmoStr = str.replace(/(<b style="color:[^"]+">R\.<\/b>)/g, '$1##STANZA_END##');
+        let salmoBlocks = salmoStr.split(/##STANZA_END##|\n\s*\n+/);
+
+        return salmoBlocks.map(block => {
+          let cleanBlock = block.trim();
+          if (!cleanBlock) return '';
+          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.32;">');
+          return `<div style="margin-bottom: 14px; line-height: 1.35; text-align: left;">${formattedLines}</div>`;
+        }).join('');
+      } else {
+        const paragraphs = str.split(/\n\s*\n+/);
+        return paragraphs.map(p => {
+          let cleanP = p.trim();
+          if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
+          let formattedText = cleanP.replace(/\n/g, ' ');
+          return `<div style="margin-bottom: 14px; line-height: 1.55; text-align: left;">${formattedText}</div>`;
+        }).join('');
       }
-      str = str.replace(/\n\s*\n+/g, '<br class="espacio-estrofa">');
-
-      // 5. DESPUÉS: Reemplazar saltos simples por un <br> comun de verso
-      str = str.replace(/\n/g, '<br>');
-
-      return str;
     }
 
     function actualizarDegradadoLivePreview() {
