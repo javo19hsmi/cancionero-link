@@ -282,22 +282,50 @@
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
-      // 4. Dividir por delimitadores de estrofa (&nbsp; o múltiples saltos de línea)
-      let rawBlocks = [];
-      if (str.includes("&nbsp;") || str.includes("&amp;nbsp;")) {
-        rawBlocks = str.split(/\n\s*(?:&nbsp;|&amp;nbsp;)\s*\n|\n{3,}/);
+      // 4. Detección de Poesía vs Prosa (Salmos, Antífonas, Aleluya, Secuencia, Cánticos)
+      const isPoesia = str.includes("SALMO") ||
+                       str.includes("Sal ") ||
+                       str.includes("SECUENCIA") ||
+                       str.includes("Secuencia") ||
+                       str.includes("ALELUIA") ||
+                       str.includes("Aleluia") ||
+                       str.includes("Ant.") ||
+                       str.includes("Antífona") ||
+                       str.includes("Antifona") ||
+                       str.includes("CÁNTICO") ||
+                       str.includes("Cantico");
+
+      if (isPoesia) {
+        // === POESÍA (Salmos, Antífonas, Aleluya, Secuencia): Dividir por estrofas ===
+        let rawBlocks = [];
+        if (str.includes("&nbsp;") || str.includes("&amp;nbsp;")) {
+          rawBlocks = str.split(/\n\s*(?:&nbsp;|&amp;nbsp;)\s*\n|\n{3,}/);
+        } else {
+          rawBlocks = str.split(/\n\s*\n\s*\n+/);
+        }
+
+        return rawBlocks.map(block => {
+          let cleanBlock = block.replace(/&amp;nbsp;/g, " ").replace(/&nbsp;/g, " ").trim();
+          if (!cleanBlock) return '';
+          if (cleanBlock.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanBlock;
+
+          let formattedLines = cleanBlock.replace(/\n+/g, '<br style="line-height:1.35;">');
+          return `<div style="line-height: 1.45; margin-bottom: 1.25em; text-align: left;">${formattedLines}</div>`;
+        }).join('');
       } else {
-        rawBlocks = str.split(/\n\s*\n\s*\n+/);
+        // === PROSA (Primera Lectura, Segunda Lectura, Evangelio): Dividir por párrafos ===
+        let cleanStr = str.replace(/&amp;nbsp;/g, " ").replace(/&nbsp;/g, " ").trim();
+        let paragraphs = cleanStr.split(/\n\s*\n+/);
+
+        return paragraphs.map(p => {
+          let cleanP = p.trim();
+          if (!cleanP) return '';
+          if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
+
+          let formattedText = cleanP.replace(/\n+/g, ' ');
+          return `<div style="line-height: 1.55; margin-bottom: 1.25em; text-align: left;">${formattedText}</div>`;
+        }).join('');
       }
-
-      return rawBlocks.map(block => {
-        let cleanBlock = block.replace(/&amp;nbsp;/g, " ").replace(/&nbsp;/g, " ").trim();
-        if (!cleanBlock) return '';
-        if (cleanBlock.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanBlock;
-
-        let formattedLines = cleanBlock.replace(/\n+/g, '<br style="line-height:1.35;">');
-        return `<div style="line-height: 1.45; margin-bottom: 1.25em; text-align: left;">${formattedLines}</div>`;
-      }).join('');
     }
     let zoom = 1.25;
     function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
