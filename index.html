@@ -203,11 +203,12 @@
             let idxActivo = (blockIdx >= 0 && blockIdx < cleanBlocks.length) ? blockIdx : 0;
             const lecturaSeleccionada = cleanBlocks[idxActivo] || cleanBlocks[0] || titulo;
 
-            const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0 0 10px 0; font-size:1.3rem;">${titulo}</h2><div style="line-height:1.6; font-family:sans-serif;">${lecturaSeleccionada}</div>`;
-            mostrarContenido(htmlLectura, -1, waitingDiv, lyricsDiv);
+            const cuerpoFormateado = darFormato(lecturaSeleccionada);
+            const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0 0 10px 0; font-size:1.3rem;">${titulo}</h2><div style="line-height:1.6; font-family:sans-serif;">${cuerpoFormateado}</div>`;
+            mostrarHtmlDirecto(htmlLectura, waitingDiv, lyricsDiv);
           } else {
             const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0; font-size:1.3rem;">${titulo}</h2><br><p style="font-size:0.95rem; opacity:0.85; line-height:1.5;">Proclamación de la Palabra de Dios en la Misa.</p>`;
-            mostrarContenido(htmlLectura, -1, waitingDiv, lyricsDiv);
+            mostrarHtmlDirecto(htmlLectura, waitingDiv, lyricsDiv);
           }
         } else {
           waitingDiv.style.display='block'; lyricsDiv.style.display='none';
@@ -215,6 +216,13 @@
           statusText.innerText = "🗣️ En breve iniciará el siguiente canto.";
         }
       });
+    }
+
+    function mostrarHtmlDirecto(html, waitingDiv, lyricsDiv) {
+      waitingDiv.style.display='none'; lyricsDiv.style.display='block';
+      lyricsDiv.innerHTML = `<div class="bloque">${html}</div>`;
+      const activeEl = document.querySelector('.bloque.active');
+      if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
     function mostrarContenido(data, blockIdx, waitingDiv, lyricsDiv) {
