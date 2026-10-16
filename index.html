@@ -288,7 +288,6 @@
           let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.32;">');
           return `<div style="line-height: 1.35; text-align: left;">${formattedLines}</div><div style="height: 16px;"></div>`;
         }).join('');
-        }).join('');
       } else {
         const paragraphs = str.split(/\n\s*\n+/);
         return paragraphs.map(p => {
