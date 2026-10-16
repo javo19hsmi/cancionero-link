@@ -172,10 +172,9 @@
 
             rawBlocks.forEach(block => {
               let clean = block
-                .replace(/##P_END##/g, "\n\n")
+                .replace(/##P_END##/g, "\n\n&nbsp;\n\n")
                 .replace(/##BR##/g, "\n")
                 .replace(/##PLUS##/g, "+ ")
-                .replace(/&nbsp;/g, " ")
                 .replace(/<[^>]*>/g, "")
                 .replace(/\{.*?\}/g, "")
                 .replace(/\[.*?\]/g, "")
@@ -283,20 +282,12 @@
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
-      // 4. Detección de Estrofas (Salmo, Secuencia, Aleluya)
-      const isPoesia = str.includes("SALMO") ||
-                       str.includes("Sal ") ||
-                       str.includes("SECUENCIA") ||
-                       str.includes("Secuencia") ||
-                       str.includes("ALELUIA") ||
-                       str.includes("Aleluia");
-
-      // Dividir por delimitadores de estrofa (&nbsp; o múltiples saltos)
+      // 4. Dividir por delimitadores de estrofa (&nbsp; o múltiples saltos de línea)
       let rawBlocks = [];
       if (str.includes("&nbsp;") || str.includes("&amp;nbsp;")) {
         rawBlocks = str.split(/\n\s*(?:&nbsp;|&amp;nbsp;)\s*\n|\n{3,}/);
       } else {
-        rawBlocks = str.split(/\n\s*\n+/);
+        rawBlocks = str.split(/\n\s*\n\s*\n+/);
       }
 
       return rawBlocks.map(block => {
