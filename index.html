@@ -256,11 +256,9 @@
     function darFormato(t) {
       if (!t) return "";
       let str = t
-        .replace(/##P_END##/g, "\n\n")
+        .replace(/##P_END##/g, "\n\n&nbsp;\n\n")
         .replace(/##BR##/g, "\n")
         .replace(/##PLUS##/g, "+ ")
-        .replace(/&amp;nbsp;/g, " ")
-        .replace(/&nbsp;/g, " ")
         .trim();
 
       // 1. Frases de Reflexión: Cursiva, letra chica (0.82em), alineada a la DERECHA, sin >
@@ -285,7 +283,7 @@
         .replace(/\*\*([\s\S]*?)\*\*/g, "<b>$1</b>")
         .replace(/_([\s\S]*?)_/g, "<i>$1</i>");
 
-      // 4. Detección Estricta de Poesía (Salmo, Secuencia, Aleluya) sin falsos positivos por 'R.'
+      // 4. Detección de Estrofas (Salmo, Secuencia, Aleluya)
       const isPoesia = str.includes("SALMO") ||
                        str.includes("Sal ") ||
                        str.includes("SECUENCIA") ||
@@ -293,24 +291,22 @@
                        str.includes("ALELUIA") ||
                        str.includes("Aleluia");
 
-      if (isPoesia) {
-        let salmoBlocks = str.split(/\n\s*\n+/);
-
-        return salmoBlocks.map(block => {
-          let cleanBlock = block.trim();
-          if (!cleanBlock) return '';
-          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.4;">');
-          return `<div style="line-height: 1.45; margin-bottom: 1.2em; text-align: left;">${formattedLines}</div>`;
-        }).join('');
+      // Dividir por delimitadores de estrofa (&nbsp; o múltiples saltos)
+      let rawBlocks = [];
+      if (str.includes("&nbsp;") || str.includes("&amp;nbsp;")) {
+        rawBlocks = str.split(/\n\s*(?:&nbsp;|&amp;nbsp;)\s*\n|\n{3,}/);
       } else {
-        const paragraphs = str.split(/\n\s*\n+/);
-        return paragraphs.map(p => {
-          let cleanP = p.trim();
-          if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
-          let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 1.2em; line-height: 1.55; text-align: left;">${formattedText}</div>`;
-        }).join('');
+        rawBlocks = str.split(/\n\s*\n+/);
       }
+
+      return rawBlocks.map(block => {
+        let cleanBlock = block.replace(/&amp;nbsp;/g, " ").replace(/&nbsp;/g, " ").trim();
+        if (!cleanBlock) return '';
+        if (cleanBlock.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanBlock;
+
+        let formattedLines = cleanBlock.replace(/\n+/g, '<br style="line-height:1.35;">');
+        return `<div style="line-height: 1.45; margin-bottom: 1.25em; text-align: left;">${formattedLines}</div>`;
+      }).join('');
     }
     let zoom = 1.25;
     function changeZoom(v) { zoom = Math.min(Math.max(zoom + (v * 0.15), 0.9), 3.0); document.getElementById('lyrics-display').style.fontSize = zoom + 'rem'; }
