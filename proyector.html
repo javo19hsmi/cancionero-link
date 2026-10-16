@@ -179,16 +179,25 @@
                        str.includes("ALELUIA") ||
                        str.includes("Aleluia");
 
-      // 2. PRIMERO: Reemplazar dobles saltos por un <br class="espacio-estrofa">
       if (isPoesia) {
-        str = str.replace(/(<b[^>]*>R\.<\/b>)/gi, '$1\n\n');
+        let salmoStr = str.replace(/(<b[^>]*>R\.<\/b>)/gi, '$1##STANZA_END##');
+        let salmoBlocks = salmoStr.split(/##STANZA_END##|\n\s*\n+/);
+
+        return salmoBlocks.map(block => {
+          let cleanBlock = block.trim();
+          if (!cleanBlock) return '';
+          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.35;">');
+          return `<div style="line-height: 1.35; text-align: left;">${formattedLines}</div><div style="height: 16px;"></div>`;
+        }).join('');
+      } else {
+        const paragraphs = str.split(/\n\s*\n+/);
+        return paragraphs.map(p => {
+          let cleanP = p.trim();
+          if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.8em;')) return cleanP;
+          let formattedText = cleanP.replace(/\n/g, ' ');
+          return `<div style="margin-bottom: 16px; line-height: 1.5; text-align: left;">${formattedText}</div>`;
+        }).join('');
       }
-      str = str.replace(/\n\s*\n+/g, '<br class="espacio-estrofa">');
-
-      // 3. DESPUÉS: Reemplazar saltos simples por un <br> comun de verso
-      str = str.replace(/\n/g, '<br>');
-
-      return str;
     }
 
     function toggleFS() {

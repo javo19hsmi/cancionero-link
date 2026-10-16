@@ -930,7 +930,7 @@
           let cleanBlock = block.trim();
           if (!cleanBlock) return '';
           let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.32;">');
-          return `<div style="margin-bottom: 14px; line-height: 1.35; text-align: left;">${formattedLines}</div>`;
+          return `<div style="line-height: 1.35; text-align: left;">${formattedLines}</div><div style="height: 16px;"></div>`;
         }).join('');
       } else {
         const paragraphs = str.split(/\n\s*\n+/);
@@ -1842,14 +1842,12 @@
 
         // Limpiar cabeceras web repetitivas y ciclos dominicales al inicio
         clean = clean
-          .replace(/^[\s\-\"\'A-C]*DOMINGO\s+[A-ZÁÉÍÓÚ\s]+/gi, "")
-          .replace(/^-\s*["']?[A-C]["']?\s*/gi, "")
-          .replace(/^TIEMPO DURANTE EL AÑO\s*/gi, "")
-          .replace(/^VIGESIMOCTAVA SEMANA\s*/gi, "")
-          .replace(/^VIGESIMONOVENO\s*/gi, "")
-          .replace(/^Año par\s*/gi, "")
-          .replace(/^Año impar\s*/gi, "")
-          .replace(/^(LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*/gi, "")
+          .replace(/^-\s*["']?[A-C]["']?\s*\n?/gi, "")
+          .replace(/^DOMINGO\s+[A-ZÁÉÍÓÚ\s]+\s*\n?/gi, "")
+          .replace(/^TIEMPO\s+DURANTE\s+EL\s+AÑO\s*\n?/gi, "")
+          .replace(/^VIGESIMO[A-ZÁÉÍÓÚ\s]+\s*\n?/gi, "")
+          .replace(/^Año\s+(?:par|impar)\s*\n?/gi, "")
+          .replace(/^(?:LUNES|MARTES|MIÉRCOLES|JUEVES|VIERNES|SÁBADO|DOMINGO)\s*\n?/gi, "")
           .trim();
 
         if (clean.length > 5) cleanBlocks.push(clean);
