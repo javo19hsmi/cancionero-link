@@ -284,8 +284,8 @@
         return salmoBlocks.map(block => {
           let cleanBlock = block.trim();
           if (!cleanBlock) return '';
-          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.32;">');
-          return `<div style="line-height: 1.35; text-align: left;">${formattedLines}</div><div style="height: 16px;"></div>`;
+          let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.4;">');
+          return `<div style="line-height: 1.45; margin-bottom: 1.2em; text-align: left;">${formattedLines}</div>`;
         }).join('');
       } else {
         const paragraphs = str.split(/\n\s*\n+/);
@@ -293,7 +293,7 @@
           let cleanP = p.trim();
           if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
           let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 14px; line-height: 1.55; text-align: left;">${formattedText}</div>`;
+          return `<div style="margin-bottom: 1.2em; line-height: 1.55; text-align: left;">${formattedText}</div>`;
         }).join('');
       }
     }
