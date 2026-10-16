@@ -164,6 +164,8 @@
           const cuerpoTexto = d.lectura_actual_texto || "";
 
           if (cuerpoTexto) {
+            console.log("🔍 [FIREBASE CRUDO]:\n", JSON.stringify(cuerpoTexto));
+
             // 1. Desempaquetar bloques principales por URL de referencia de curas.com.ar
             let rawBlocks = cuerpoTexto.split(/https?:\/\/[^\s]+/g);
             let cleanBlocks = [];
@@ -203,7 +205,12 @@
             let idxActivo = (blockIdx >= 0 && blockIdx < cleanBlocks.length) ? blockIdx : 0;
             const lecturaSeleccionada = cleanBlocks[idxActivo] || cleanBlocks[0] || titulo;
 
+            console.log("🔍 [BLOQUE SELECCIONADO]:\n", JSON.stringify(lecturaSeleccionada));
+
             const cuerpoFormateado = darFormato(lecturaSeleccionada);
+
+            console.log("🔍 [HTML RESULTANTE]:\n", cuerpoFormateado);
+
             const htmlLectura = `<b>📖 LECTURA EN VIVO${tipoTexto}</b><br><br><h2 style="color:var(--primary-light); margin:0 0 10px 0; font-size:1.3rem;">${titulo}</h2><div style="line-height:1.6; font-family:sans-serif;">${cuerpoFormateado}</div>`;
             mostrarHtmlDirecto(htmlLectura, waitingDiv, lyricsDiv);
           } else {
