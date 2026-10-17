@@ -1877,22 +1877,31 @@
 
         if (isSalmo) {
           // 🎼 Agrupar estrofas completas hasta cada respuesta "R."
+          let chunks = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
           let rawStanzas = [];
-          if (blockText.includes('R.')) {
-            let parts = blockText.split(/(R\.\s*[^\n]*)/gi);
-            let currentStanza = "";
-            for (let p = 0; p < parts.length; p++) {
-              currentStanza += parts[p];
-              if (parts[p].trim().startsWith('R.')) {
-                if (currentStanza.trim().length > 0) {
-                  rawStanzas.push(currentStanza.trim());
-                  currentStanza = "";
-                }
-              }
+          let tempGroup = [];
+
+          for (let c = 0; c < chunks.length; c++) {
+            tempGroup.push(chunks[c]);
+            if (chunks[c].includes('R.') || chunks[c].includes('SALMO')) {
+              rawStanzas.push(tempGroup.join('\n'));
+              tempGroup = [];
             }
-            if (currentStanza.trim().length > 0) {
-              rawStanzas.push(currentStanza.trim());
-            }
+          }
+          if (tempGroup.length > 0) {
+            rawStanzas.push(tempGroup.join('\n'));
+          }
+
+          if (rawStanzas.length > 1) {
+            estrofasList = rawStanzas;
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " estrofas del Salmo";
+          } else {
+            estrofasList = [ blockText ];
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+          }
+        }
           } else {
             rawStanzas = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
           }
