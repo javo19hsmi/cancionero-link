@@ -1901,20 +1901,6 @@
             previewIdx = 0;
             document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
           }
-        }
-          } else {
-            rawStanzas = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
-          }
-
-          if (rawStanzas.length > 1) {
-            estrofasList = rawStanzas;
-            previewIdx = 0;
-            document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " estrofas del Salmo";
-          } else {
-            estrofasList = [ blockText ];
-            previewIdx = 0;
-            document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
-          }
         } else {
           estrofasList = [ blockText ];
           previewIdx = 0;
