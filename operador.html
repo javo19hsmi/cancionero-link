@@ -1862,14 +1862,35 @@
         }
       }
 
-      // 3. MOSTRAR ÚNICAMENTE LA LECTURA SELECCIONADA SI verSoloLecturaSeleccionada ES TRUE
+      // 3. MOSTRAR Y DESGLOSAR ESTROFAS DEL SALMO O LECTURA SELECCIONADA
       let idxActivo = (bloqueIndex !== undefined && bloqueIndex !== null && bloqueIndex >= 0 && bloqueIndex < cleanBlocks.length) ? parseInt(bloqueIndex, 10) : previewIdx;
       if (idxActivo < 0 || idxActivo >= cleanBlocks.length) idxActivo = 0;
 
       if (verSoloLecturaSeleccionada && cleanBlocks.length > 0) {
-        estrofasList = [ cleanBlocks[idxActivo] ];
-        previewIdx = 0;
-        document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+        let blockText = cleanBlocks[idxActivo];
+
+        // 🎼 DESGLOSE EN ESTROFAS PARA EL OPERADOR (Especialmente Salmos y Poesía)
+        const isSalmo = tipoText.toLowerCase().includes('salmo') ||
+                        tipoText.toLowerCase().includes('secuencia') ||
+                        blockText.includes('SALMO') ||
+                        blockText.includes('R.');
+
+        if (isSalmo) {
+          let stanzas = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
+          if (stanzas.length > 1) {
+            estrofasList = stanzas;
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = stanzas.length + " estrofas del Salmo";
+          } else {
+            estrofasList = [ blockText ];
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+          }
+        } else {
+          estrofasList = [ blockText ];
+          previewIdx = 0;
+          document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+        }
       } else {
         estrofasList = cleanBlocks;
         previewIdx = idxActivo;
