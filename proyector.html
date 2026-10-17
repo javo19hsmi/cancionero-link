@@ -413,8 +413,16 @@
           texto.style.color = data.colorBienvenida || data.colorTexto || '#FFFFFF';
           texto.innerHTML = darFormato(data.titulo || 'Bienvenidos a la Santa Misa 🕊️');
         } else {
+          let rawTitle = (data.titulo || "").trim();
+          if (rawTitle.toLowerCase().includes('evangelio')) rawTitle = "Evangelio";
+          else if (rawTitle.toLowerCase().includes('salmo')) rawTitle = "Salmo Responsorial";
+          else if (rawTitle.toLowerCase().includes('primera')) rawTitle = "Primera Lectura";
+          else if (rawTitle.toLowerCase().includes('segunda')) rawTitle = "Segunda Lectura";
+          else if (rawTitle.toLowerCase().includes('secuencia')) rawTitle = "Secuencia";
+          else if (rawTitle.toLowerCase().includes('aleluya')) rawTitle = "Aleluya";
+
           cancionHeader.style.display = 'block';
-          cancionHeader.innerText = data.titulo || '';
+          cancionHeader.innerText = rawTitle;
           texto.style.fontFamily = data.fuenteTexto || data.fuente || 'sans-serif';
           texto.style.fontSize = data.tamano || '3.8rem';
           texto.style.color = data.colorTexto || '#FFFFFF';

@@ -1809,7 +1809,17 @@
 
     function cargarLecturaEvangelio(titulo, texto, tipo, bloqueIndex) {
       ultimaLecturaParametros = { titulo, texto, tipo, bloqueIndex };
-      const titleText = titulo || "Lectura del Día";
+      let rawTitle = (titulo || "Lectura del Día").trim();
+
+      // Limpieza de título para encabezados de proyección limpia
+      if (rawTitle.toLowerCase().includes('evangelio')) rawTitle = "Evangelio";
+      else if (rawTitle.toLowerCase().includes('salmo')) rawTitle = "Salmo Responsorial";
+      else if (rawTitle.toLowerCase().includes('primera')) rawTitle = "Primera Lectura";
+      else if (rawTitle.toLowerCase().includes('segunda')) rawTitle = "Segunda Lectura";
+      else if (rawTitle.toLowerCase().includes('secuencia')) rawTitle = "Secuencia";
+      else if (rawTitle.toLowerCase().includes('aleluya')) rawTitle = "Aleluya";
+
+      const titleText = rawTitle;
       const tipoText = tipo || "Lectura";
       const icon = (tipoText.toLowerCase().includes('evangelio')) ? "📖 " : "📜 ";
 
