@@ -1912,9 +1912,40 @@
             document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
           }
         } else {
-          estrofasList = [ blockText ];
-          previewIdx = 0;
-          document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+          // 📖 DESGLOSE INTELIGENTE PARA PROSA (Lecturas y Evangelio):
+          // Dividir por párrafos (\n\n) y subdividir párrafos largos (> 380 caracteres) en oraciones (. )
+          let paragraphs = blockText.split(/\n\s*\n+/).map(p => p.trim()).filter(x => x.length > 0);
+          let slides = [];
+
+          paragraphs.forEach(pText => {
+            if (pText.length <= 380) {
+              slides.push(pText);
+            } else {
+              let sentences = pText.split(/(?<=\.[\s\n])/);
+              let currentSlide = "";
+              sentences.forEach(s => {
+                if ((currentSlide + s).length > 350 && currentSlide.length > 50) {
+                  slides.push(currentSlide.trim());
+                  currentSlide = s;
+                } else {
+                  currentSlide += s;
+                }
+              });
+              if (currentSlide.trim().length > 0) {
+                slides.push(currentSlide.trim());
+              }
+            }
+          });
+
+          if (slides.length > 1) {
+            estrofasList = slides;
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = slides.length + " diapositivas de la lectura";
+          } else {
+            estrofasList = [ blockText ];
+            previewIdx = 0;
+            document.getElementById('chip-bloques-cnt').innerText = "1 lectura activa (" + (idxActivo + 1) + "/" + cleanBlocks.length + ")";
+          }
         }
       } else {
         estrofasList = cleanBlocks;
