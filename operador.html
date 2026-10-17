@@ -1876,11 +1876,31 @@
                         blockText.includes('R.');
 
         if (isSalmo) {
-          let stanzas = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
-          if (stanzas.length > 1) {
-            estrofasList = stanzas;
+          // 🎼 Agrupar estrofas completas hasta cada respuesta "R."
+          let rawStanzas = [];
+          if (blockText.includes('R.')) {
+            let parts = blockText.split(/(R\.\s*[^\n]*)/gi);
+            let currentStanza = "";
+            for (let p = 0; p < parts.length; p++) {
+              currentStanza += parts[p];
+              if (parts[p].trim().startsWith('R.')) {
+                if (currentStanza.trim().length > 0) {
+                  rawStanzas.push(currentStanza.trim());
+                  currentStanza = "";
+                }
+              }
+            }
+            if (currentStanza.trim().length > 0) {
+              rawStanzas.push(currentStanza.trim());
+            }
+          } else {
+            rawStanzas = blockText.split(/\n\s*\n+/).map(s => s.trim()).filter(x => x.length > 0);
+          }
+
+          if (rawStanzas.length > 1) {
+            estrofasList = rawStanzas;
             previewIdx = 0;
-            document.getElementById('chip-bloques-cnt').innerText = stanzas.length + " estrofas del Salmo";
+            document.getElementById('chip-bloques-cnt').innerText = estrofasList.length + " estrofas del Salmo";
           } else {
             estrofasList = [ blockText ];
             previewIdx = 0;
