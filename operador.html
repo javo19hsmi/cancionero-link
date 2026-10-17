@@ -903,8 +903,8 @@
       });
 
       // 2. Destacar TODAS las respuestas R. y V. en la misma línea
-      str = str.replace(/(^|\s)R\.\s*\n?/g, '$1<b style="color:var(--gold, #F59E0B);">R.</b> ');
-      str = str.replace(/(^|\s)V\.\s*\n?/g, '$1<b style="color:var(--accent-light, #22D3EE);">V. </b> ');
+      str = str.replace(/(^|\s)R\.\s*(?:\n\s*)+/gi, '$1<b style="color:var(--gold, #F59E0B);">R.</b> ');
+      str = str.replace(/(^|\s)V\.\s*(?:\n\s*)+/gi, '$1<b style="color:var(--accent-light, #22D3EE);">V. </b> ');
 
       // 3. Formatear Negritas, Cursivas y Markdown
       str = str
