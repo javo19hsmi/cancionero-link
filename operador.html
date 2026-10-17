@@ -902,9 +902,9 @@
         return `<div style="font-style: italic; font-size: 0.82em; color: var(--accent-light, #22D3EE); margin: 6px 0 12px 0; opacity: 0.85; text-align: right;">${cleanQuote}</div>`;
       });
 
-      // 2. Destacar TODAS las respuestas R. y V. (inicio o final de frase)
-      str = str.replace(/(^|\s)R\.(?=\s|$|<)/g, '$1<b style="color:var(--gold, #F59E0B);">R.</b>');
-      str = str.replace(/(^|\s)V\.\s*/g, '$1<b style="color:var(--accent-light, #22D3EE);">V. </b>');
+      // 2. Destacar TODAS las respuestas R. y V. en la misma línea
+      str = str.replace(/(^|\s)R\.\s*\n?/g, '$1<b style="color:var(--gold, #F59E0B);">R.</b> ');
+      str = str.replace(/(^|\s)V\.\s*\n?/g, '$1<b style="color:var(--accent-light, #22D3EE);">V. </b> ');
 
       // 3. Formatear Negritas, Cursivas y Markdown
       str = str

@@ -164,8 +164,8 @@
             .trim();
           return `<div style="font-style: italic; font-size: 0.8em; color: #FFD700; margin: 8px 0 14px 0; opacity: 0.85; text-align: right;">${cleanQuote}</div>`;
         })
-        .replace(/(^|\s)R\.(?=\s|$|<)/g, '$1<b style="color:#FFD700;">R.</b>')
-        .replace(/(^|\s)V\.\s*/g, '$1<b style="color:#4DB6AC;">V. </b>')
+        .replace(/(^|\s)R\.\s*\n?/g, '$1<b style="color:#FFD700;">R.</b> ')
+        .replace(/(^|\s)V\.\s*\n?/g, '$1<b style="color:#4DB6AC;">V. </b> ')
         .replace(/\{.*?\}/g, "")
         .replace(/\[.*?\]/g, "")
         .replace(/\*\*_([\s\S]*?)_\*\*/g, "<b><i>$1</i></b>")
