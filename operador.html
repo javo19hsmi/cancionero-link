@@ -1913,18 +1913,54 @@
           }
         } else {
           // 📖 DESGLOSE INTELIGENTE PARA PROSA (Lecturas y Evangelio):
-          // Dividir por párrafos (\n\n) y subdividir párrafos largos (> 380 caracteres) en oraciones (. )
-          let paragraphs = blockText.split(/\n\s*\n+/).map(p => p.trim()).filter(x => x.length > 0);
-          let slides = [];
+          let rawParagraphs = blockText.split(/\n\s*\n+/).map(p => p.trim()).filter(x => x.length > 0);
 
+          // 1. Unir Cita de Reflexión + Cita Bíblica con el primer párrafo, y Cierre (Palabra de Dios) con el último
+          let paragraphs = [];
+          let currentGroup = "";
+
+          for (let p = 0; p < rawParagraphs.length; p++) {
+            let chunk = rawParagraphs[p];
+            let esCitaReflexion = chunk.startsWith('>') || chunk.startsWith('&gt;');
+            let esCitaBiblica = /^Lectura\s+de/i.test(chunk) || /^Evangelio\s+de/i.test(chunk) || /^\+?\s*Evangelio/i.test(chunk);
+            let esCierre = /^Palabra\s+d/i.test(chunk) || chunk.length < 30;
+
+            if (esCitaReflexion || esCitaBiblica) {
+              currentGroup += (currentGroup ? "\n\n" : "") + chunk;
+            } else if (esCierre) {
+              if (paragraphs.length > 0) {
+                paragraphs[paragraphs.length - 1] += "\n\n" + chunk;
+              } else if (currentGroup) {
+                currentGroup += "\n\n" + chunk;
+                paragraphs.push(currentGroup);
+                currentGroup = "";
+              } else {
+                paragraphs.push(chunk);
+              }
+            } else {
+              if (currentGroup) {
+                currentGroup += "\n\n" + chunk;
+                paragraphs.push(currentGroup);
+                currentGroup = "";
+              } else {
+                paragraphs.push(chunk);
+              }
+            }
+          }
+          if (currentGroup) {
+            paragraphs.push(currentGroup);
+          }
+
+          // 2. Subdividir párrafos que sigan siendo demasiado largos (> 450 caracteres)
+          let slides = [];
           paragraphs.forEach(pText => {
-            if (pText.length <= 380) {
+            if (pText.length <= 450) {
               slides.push(pText);
             } else {
               let sentences = pText.split(/(?<=\.[\s\n])/);
               let currentSlide = "";
               sentences.forEach(s => {
-                if ((currentSlide + s).length > 350 && currentSlide.length > 50) {
+                if ((currentSlide + s).length > 380 && currentSlide.length > 60) {
                   slides.push(currentSlide.trim());
                   currentSlide = s;
                 } else {
