@@ -99,12 +99,17 @@
 
     .btn-fs {
       position: absolute; top: 20px; right: 25px;
-      background: rgba(255,255,255,0.1); color: #fff;
-      border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;
-      padding: 6px 12px; font-size: 0.85rem; cursor: pointer;
-      transition: opacity 0.3s; z-index: 999;
+      background: rgba(255,255,255,0.12); color: #fff;
+      border: 1px solid rgba(255,255,255,0.25); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.85rem; font-weight: bold; cursor: pointer;
+      transition: opacity 0.5s ease; z-index: 999; backdrop-filter: blur(4px);
+      opacity: 1;
     }
     .btn-fs:hover { opacity: 1; background: rgba(255,255,255,0.25); }
+    .btn-fs.oculto {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
 
     /* ANIMACIONES DE TRANSICIÓN EXTENDIDAS */
     .fade-out { opacity: 0 !important; }
@@ -199,6 +204,25 @@
       }
     }
 
+    let fsTimer = null;
+
+    function resetFsTimer() {
+      const btn = document.getElementById('btnFS');
+      if (!btn) return;
+      if (document.fullscreenElement) {
+        btn.classList.add('oculto');
+        return;
+      }
+      btn.classList.remove('oculto');
+      if (fsTimer) clearTimeout(fsTimer);
+      fsTimer = setTimeout(() => {
+        btn.classList.add('oculto');
+      }, 3000);
+    }
+
+    document.addEventListener('mousemove', resetFsTimer);
+    document.addEventListener('click', resetFsTimer);
+
     function toggleFS() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
@@ -208,10 +232,7 @@
     }
 
     document.addEventListener('fullscreenchange', () => {
-      const btn = document.getElementById('btnFS');
-      if (btn) {
-        btn.style.display = document.fullscreenElement ? 'none' : 'block';
-      }
+      resetFsTimer();
     });
 
     firebase.initializeApp({ databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/" });
