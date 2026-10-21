@@ -499,6 +499,18 @@ function switchMod(mod) {
     const activeBtn = document.getElementById(`tab-${mod}`);
     if (activeBtn) activeBtn.classList.add('active');
 
+    // 5. Controlar visibilidad de botones de acción del Cancionero
+    const btnTopSave = document.getElementById('btn-top-save');
+    const btnBatchImport = document.getElementById('batch-import-btn');
+    if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
+    if (btnBatchImport) {
+      if (mod === 'songs' && window.currentUserRole && (window.currentUserRole === 'super_admin' || window.currentUserRole === 'editor')) {
+        btnBatchImport.style.display = 'inline-flex';
+      } else {
+        btnBatchImport.style.display = 'none';
+      }
+    }
+
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
     const pubBtn = document.getElementById('global-pub-btn');
     if (pubBtn) {
