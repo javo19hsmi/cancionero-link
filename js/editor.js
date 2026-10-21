@@ -500,6 +500,9 @@ function switchMod(mod) {
     if (activeBtn) activeBtn.classList.add('active');
 
     // 5. Controlar visibilidad de botones de acción del Cancionero
+    const btnTopSave = document.getElementById('btn-top-save');
+    if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
+
     const btnBatchImport = document.getElementById('batch-import-btn');
     if (btnBatchImport) {
       btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
