@@ -502,11 +502,7 @@ function switchMod(mod) {
     // 5. Controlar visibilidad de botones de acción del Cancionero
     const btnBatchImport = document.getElementById('batch-import-btn');
     if (btnBatchImport) {
-      if (mod === 'songs' && window.currentUserRole && (window.currentUserRole === 'super_admin' || window.currentUserRole === 'editor')) {
-        btnBatchImport.style.display = 'inline-flex';
-      } else {
-        btnBatchImport.style.display = 'none';
-      }
+      btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
     }
 
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
