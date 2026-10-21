@@ -139,57 +139,94 @@ window.addEventListener('resize', () => {
 });
 }
 
+let currentSearchPage = 1;
+const SEARCH_PAGE_SIZE = 20;
+
+function toggleGestionTheme() {
+  document.body.classList.toggle('light-mode');
+  const isLight = document.body.classList.contains('light-mode');
+  const btn = document.getElementById('theme-toggle-btn');
+  if (btn) btn.innerText = isLight ? '🌙 Oscuro' : '☀️ Claro';
+  try {
+    localStorage.setItem('gestion_theme_mode', isLight ? 'light' : 'dark');
+  } catch(e) {}
+}
+
+function actualizarRelojGestion() {
+  const clock = document.getElementById('top-clock');
+  if (clock) {
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+    const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    const months = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    clock.innerText = `${timeStr} | ${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+  }
+}
+setInterval(actualizarRelojGestion, 1000);
+
+try {
+  const savedTheme = localStorage.getItem('gestion_theme_mode');
+  if (savedTheme === 'light') {
+    document.body.classList.add('light-mode');
+    setTimeout(() => {
+      const btn = document.getElementById('theme-toggle-btn');
+      if (btn) btn.innerText = '🌙 Oscuro';
+    }, 100);
+  }
+} catch(e) {}
+
 /* ==========================================================
    5. FILTRADO Y CARGA DE CANCIONES
    ========================================================== */
 // Filtra la lista de canciones en el panel izquierdo según texto, momento, artista y álbum
-function filterSongs() {
+function filterSongs(resetPage = false) {
+  if (resetPage === true) currentSearchPage = 1;
   const searchBox = document.getElementById('song-search-box');
   const btnLimpiar = document.getElementById('btnLimpiarBusqueda');
-  const momentFilter = document.getElementById('filter-moment-sel').value;
-  const artistFilter = document.getElementById('filter-artist-sel').value;
-  const albumFilter = document.getElementById('filter-album-sel').value;
+  const momentFilter = document.getElementById('filter-moment-sel') ? document.getElementById('filter-moment-sel').value : '';
+  const artistFilter = document.getElementById('filter-artist-sel') ? document.getElementById('filter-artist-sel').value : '';
+  const albumFilter = document.getElementById('filter-album-sel') ? document.getElementById('filter-album-sel').value : '';
 
-  const q = searchBox.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const q = searchBox && searchBox.value ? searchBox.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") : '';
   const res = document.getElementById('song-results-list');  
+  if (!res) return;
   res.innerHTML = "";
   
-  // Muestra u oculta la "X" dependiendo de si hay texto escrito
   if (btnLimpiar) {
-      btnLimpiar.style.display = searchBox.value.length > 0 ? 'block' : 'none';
+      btnLimpiar.style.display = searchBox && searchBox.value.length > 0 ? 'block' : 'none';
   }
   
-  allSongs.filter(s => {
-    // 1. Normalizamos el título
+  const filtered = allSongs.filter(s => {
     const titleClean = (s.title || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
-    // 2. 🚀 MAGIA AQUÍ: Tomamos la letra, le borramos todos los acordes entre corchetes [...] 
-    // y los formatos Markdown para buscar pura y exclusivamente en el texto de la letra
     const lyricsClean = (s.lyrics || "")
-      .replace(/\[.*?\]/g, "") // Borra los acordes (ej: [Do], [Sol7])
-      .replace(/[*_#]/g, "")   // Borra asteriscos o guiones de formato
+      .replace(/\[.*?\]/g, "")
+      .replace(/[*_#]/g, "")
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
      
-    // 1. Filtro por texto de búsqueda
     const matchesText = titleClean.includes(q) || lyricsClean.includes(q);
-
-    // 2. Filtro por momento litúrgico
     const matchesMoment = !momentFilter || (s.moments && s.moments.includes(momentFilter));
-
-    // 3. Filtro por artista
     const matchesArtist = !artistFilter || (s.artist && s.artist.trim() === artistFilter);
-
-    // 4. Filtro por álbum
     const matchesAlbum = !albumFilter || (s.album && s.album.trim() === albumFilter);
 
     return matchesText && matchesMoment && matchesArtist && matchesAlbum;
-  }).slice(0, 40).forEach(s => {
+  });
+
+  const totalPages = Math.ceil(filtered.length / SEARCH_PAGE_SIZE) || 1;
+  if (currentSearchPage > totalPages) currentSearchPage = totalPages;
+  if (currentSearchPage < 1) currentSearchPage = 1;
+
+  const pageIndicator = document.getElementById('page-indicator');
+  if (pageIndicator) pageIndicator.innerText = `Pág ${currentSearchPage} de ${totalPages} (${filtered.length})`;
+
+  const startIdx = (currentSearchPage - 1) * SEARCH_PAGE_SIZE;
+  const pageItems = filtered.slice(startIdx, startIdx + SEARCH_PAGE_SIZE);
+
+  pageItems.forEach(s => {
     const div = document.createElement('div');  
     div.className = `result-item glass ${currentSong && currentSong.id === s.id ? 'active' : ''}`;
-    //Mostramos el título y el ID abajo en gris
-   div.innerText = s.title;
+    div.innerText = s.title;
      
     div.onclick = () => {
         if (hasUnsavedChanges && !confirm("Tenés cambios sin guardar. ¿Querés salir perdiendo los cambios?")) return;
@@ -197,6 +234,18 @@ function filterSongs() {
     };  
     res.appendChild(div);
   });
+}
+
+function prevSongPage() {
+  if (currentSearchPage > 1) {
+    currentSearchPage--;
+    filterSongs(false);
+  }
+}
+
+function nextSongPage() {
+  currentSearchPage++;
+  filterSongs(false);
 }
 
 // Limpia la caja de búsqueda y vuelve a mostrar toda la lista

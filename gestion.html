@@ -37,12 +37,14 @@
     <header style="flex-direction: column; padding: 0;">
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 10px 25px; border-bottom: 1px solid var(--glass-border); box-sizing: border-box;">
         <div style="display:flex; align-items:center; gap:12px">
-          <span class="material-symbols-outlined" style="color:var(--primary)">verified_user</span>
-          <b style="font-size:14px; letter-spacing:1px">PORTAL DE EDICIÓN</b>
+          <img src="https://javo19hsmi.github.io/cancionero-link/assets/images/Logo_Ministerio_Musica.png" style="width:28px; height:28px; object-fit:contain;" alt="Logo">
+          <b style="font-size:14px; letter-spacing:1px; color:var(--text);">Portal de Gestión - Cancionero Parroquial</b>
         </div>
-        <div style="display:flex; gap:15px; align-items:center">
-          <span id="header-email" style="font-size:11px; color:#666"></span>
-          <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:10px; background:rgba(255,255,255,0.05)">SALIR</button>
+        <div style="display:flex; gap:12px; align-items:center">
+          <span id="header-email" style="font-size:11px; color:var(--text-muted)"></span>
+          <span id="top-clock" style="font-size:11px; font-weight:bold; color:var(--gold); background:rgba(255,255,255,0.05); padding:4px 10px; border-radius:6px; border:1px solid var(--glass-border)">--:--</span>
+          <button id="theme-toggle-btn" class="btn" onclick="toggleGestionTheme()" style="padding:5px 12px; font-size:11px; background:var(--card-bg); border:1px solid var(--glass-border); color:var(--text);">☀️ Claro</button>
+          <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:11px; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#FF8A8A">SALIR</button>
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 25px; box-sizing: border-box; background: rgba(0,0,0,0.2);">
@@ -53,9 +55,12 @@
            <button id="tab-scripts" class="tab-btn" onclick="switchMod('scripts')">📜 GUIONES</button>
            <button id="tab-reports" class="tab-btn" onclick="switchMod('reports')">📊 REPORTES</button>
         </div>
-        <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
-        <!-- 🚀 BOTÓN NUEVO DEL IMPORTADOR MASIVO -->
-        <button id="batch-import-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: #00897B; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>      </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button id="btn-top-save" class="btn btn-save" style="padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveBorrador()">💾 GUARDAR CAMBIOS</button>
+          <button id="batch-import-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: #0891B2; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>
+          <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0; background: #F59E0B; color: black;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
+        </div>
+      </div>
     </header>
 
     <main id="mod-songs" class="main-grid">
@@ -94,6 +99,11 @@
         </div>
 
         <div id="song-results-list" class="search-results"></div>
+        <div id="song-pagination-bar" style="display:flex; justify-content:space-between; align-items:center; margin-top:8px; padding:6px 10px; background:rgba(255,255,255,0.03); border-radius:8px; border:1px solid var(--glass-border);">
+          <button class="btn" style="padding:3px 10px; font-size:11px; background:var(--card-bg); color:var(--text);" onclick="prevSongPage()">&lt; Anterior</button>
+          <span id="page-indicator" style="font-size:10px; color:var(--text-muted); font-weight:bold;">Pág 1 de 1</span>
+          <button class="btn" style="padding:3px 10px; font-size:11px; background:var(--card-bg); color:var(--text);" onclick="nextSongPage()">Siguiente &gt;</button>
+        </div>
       </section>
       
       <!-- COLUMNA 2: EDITOR VISUAL -->

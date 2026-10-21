@@ -2,14 +2,26 @@
    1. VARIABLES GLOBALES Y COLORES DE LA APLICACIÓN
    ========================================================== */
 :root {
-  --primary: #4DB6AC;          /* Color principal (Turquesa) */
-  --primary-dark: #004D40;     /* Turquesa oscuro para contrastes */
-  --bg: #0A0A0B;               /* Fondo general oscuro de la app */
-  --card-bg: rgba(255, 255, 255, 0.04); /* Fondo translúcido para paneles */
-  --glass-border: rgba(255, 255, 255, 0.12); /* Bordes sutiles con efecto vidrio */
-  --text: #E0E0E0;             /* Color de texto general */
-  --danger: #ff5252;           /* Rojo para errores o botones de alerta */
-  --warning: #ffa726;          /* Naranja/Amarillo para avisos o publicaciones */
+  --primary: #22D3EE;
+  --primary-dark: #0891B2;
+  --bg: #090E17;
+  --sidebar-bg: #0D1520;
+  --card-bg: #111827;
+  --glass-border: #1E293B;
+  --text: #F1F5F9;
+  --text-muted: #94A3B8;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+  --gold: #F59E0B;
+}
+
+body.light-mode {
+  --bg: #F8FAFC;
+  --sidebar-bg: #FFFFFF;
+  --card-bg: #FFFFFF;
+  --glass-border: #E2E8F0;
+  --text: #0F172A;
+  --text-muted: #64748B;
 }
 
 /* ==========================================================
