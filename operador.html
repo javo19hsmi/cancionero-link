@@ -303,11 +303,12 @@
               </div>
             </div>
 
-            <!-- DERECHA: 3 BOTONES ALINEADOS (ABRIR CAÑÓN | BIENVENIDA | TRANSMITIR) -->
-            <div class="main-command-group" style="gap: 8px;">
-              <button class="btn-command btn-canon" onclick="abrirProyectorCañon()"><span class="material-symbols-outlined" style="font-size:18px;">desktop_windows</span> Abrir Cañón</button>
-              <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:18px;">church</span> Bienvenida</button>
-              <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:18px;">sensors</span> Transmitir</button>
+            <!-- DERECHA: BOTONES ALINEADOS (ABRIR TEMPLO | OBS CHROMA | BIENVENIDA | TRANSMITIR) -->
+            <div class="main-command-group" style="gap: 6px; display: flex; flex-wrap: wrap; align-items: center;">
+              <button class="btn-command btn-canon" onclick="abrirProyectorCañon()" title="Proyector Templo"><span class="material-symbols-outlined" style="font-size:16px;">desktop_windows</span> Templo</button>
+              <button class="btn-command" style="background: #15803D; color: #FFF; border: 1px solid #22C55E;" onclick="abrirProyectorOBS()" title="Fondo Verde Chroma Fijo para OBS"><span class="material-symbols-outlined" style="font-size:16px;">videocam</span> OBS Chroma</button>
+              <button class="btn-command btn-welcome" onclick="mostrarBienvenidaPreview()"><span class="material-symbols-outlined" style="font-size:16px;">church</span> Bienvenida</button>
+              <button class="btn-command btn-transmit" onclick="enviarAlCañon()"><span class="material-symbols-outlined" style="font-size:16px;">sensors</span> Transmitir</button>
             </div>
           </div>
 
@@ -422,18 +423,11 @@
 
           <h3 style="color: var(--accent-light); margin: 10px 0 0 0;">Ajustes de Tipografía y Textos Independientes</h3>
 
-          <!-- 1. NOMBRE Y SUBTÍTULO PARROQUIA -->
+          <!-- 1. NOMBRE DE PARROQUIA / CAPILLA -->
           <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
-            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre y Subtítulo de Parroquia / Capilla</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:8px;">
-              <div class="field-group" style="margin-bottom:0;">
-                <label>Nombre Principal:</label>
-                <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Parroquia Santísima Trinidad">
-              </div>
-              <div class="field-group" style="margin-bottom:0;">
-                <label>Subtítulo / Evento / Ciclo:</label>
-                <input type="text" id="cfg-subtitulo-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Fiestas Patronales 2026 / Domingo XXVIII">
-              </div>
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🏛️ Nombre de Parroquia / Capilla</div>
+            <div class="field-group" style="margin-bottom:8px;">
+              <input type="text" id="cfg-nombre-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Parroquia Santísima Trinidad">
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
               <div class="field-group" style="margin-bottom:0;">
@@ -453,6 +447,7 @@
                   <option value="0.9rem">Pequeño</option>
                   <option value="1.1rem" selected>Mediano</option>
                   <option value="1.4rem">Grande</option>
+                  <option value="1.8rem">Gigante</option>
                 </select>
               </div>
               <div class="field-group" style="margin-bottom:0;">
@@ -477,16 +472,71 @@
             </div>
           </div>
 
-          <!-- 2. TÍTULO DE CANCIÓN -->
+          <!-- 2. SUBTÍTULO / EVENTO / CICLO -->
+          <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
+            <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Subtítulo / Evento / Ciclo</div>
+            <div class="field-group" style="margin-bottom:8px;">
+              <input type="text" id="cfg-subtitulo-parroquia" onchange="aplicarEstiloPreviewLocal()" placeholder="Ej: Fiestas Patronales 2026 / Domingo XXVIII">
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Alineación:</label>
+                <select id="cfg-align-subtitulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="left" selected>Izquierda</option>
+                  <option value="center">Centrado</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tamaño:</label>
+                <select id="cfg-tamano-subtitulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="0.7rem">Pequeño</option>
+                  <option value="0.9rem" selected>Mediano</option>
+                  <option value="1.1rem">Grande</option>
+                  <option value="1.4rem">Gigante</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Color:</label>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <input type="color" id="cfg-color-subtitulo" value="#CCCCCC" onchange="aplicarEstiloPreviewLocal()">
+                </div>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tipografía:</label>
+                <select id="cfg-fuente-subtitulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="'Roboto', sans-serif" selected>Sans-Serif (Roboto)</option>
+                  <option value="'Playfair Display', serif">Serif Litúrgica</option>
+                  <option value="'Montserrat', sans-serif">Redondeada</option>
+                  <option value="'Cinzel', serif">Cinzel Romana</option>
+                  <option value="'Cinzel Decorative', serif">Cinzel Sacra</option>
+                  <option value="'Oswald', sans-serif">Oswald Gruesa</option>
+                  <option value="'Quicksand', sans-serif">Quicksand Cálida</option>
+                  <option value="'Caveat', cursive">Caveat Cursiva</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. TÍTULO DE CANCIÓN -->
           <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
             <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">🎶 Título de la Canción</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Alineación:</label>
+                <select id="cfg-align-titulo" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="center" selected>Centrado</option>
+                  <option value="left">Izquierda</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
               <div class="field-group" style="margin-bottom:0;">
                 <label>Tamaño:</label>
                 <select id="cfg-tamano-titulo" onchange="aplicarEstiloPreviewLocal()">
                   <option value="1.8rem">Pequeño</option>
                   <option value="2.2rem" selected>Mediano</option>
                   <option value="2.8rem">Grande</option>
+                  <option value="3.5rem">Gigante</option>
                 </select>
               </div>
               <div class="field-group" style="margin-bottom:0;">
@@ -511,15 +561,23 @@
             </div>
           </div>
 
-          <!-- 3. ESTROFAS -->
+          <!-- 4. ESTROFAS -->
           <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
             <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">📜 Estrofas / Letra</div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
               <div class="field-group" style="margin-bottom:0;">
-                <label>Tamaño (Cañón):</label>
+                <label>Alineación:</label>
+                <select id="cfg-align-texto" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="left" selected>Izquierda</option>
+                  <option value="center">Centrado</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Tamaño:</label>
                 <select id="cfg-tamano" onchange="aplicarEstiloPreviewLocal()">
-                  <option value="3.0rem">Pequeña</option>
-                  <option value="3.8rem" selected>Mediana</option>
+                  <option value="3.0rem">Pequeño</option>
+                  <option value="3.8rem" selected>Mediano</option>
                   <option value="4.5rem">Grande</option>
                   <option value="5.2rem">Gigante</option>
                 </select>
@@ -546,13 +604,21 @@
             </div>
           </div>
 
-          <!-- 4. MENSAJE DE BIENVENIDA (MULTILÍNEA CON RENGLONES) -->
+          <!-- 5. MENSAJE DE BIENVENIDA -->
           <div style="background: var(--card-bg); border: 1px solid var(--card-border); padding: 12px; border-radius: 12px; margin-bottom: 12px;">
             <div style="font-weight: bold; font-size: 0.9rem; margin-bottom: 8px; color: var(--accent-light);">⛪ Pantalla de Bienvenida (Permite Renglones / Multilínea)</div>
             <div class="field-group" style="margin-bottom:8px;">
               <textarea id="cfg-bienvenida-msg" rows="3" onchange="aplicarEstiloPreviewLocal()" placeholder="Mensaje de bienvenida">Bienvenidos a la Santa Misa 🕊️</textarea>
             </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap:10px;">
+              <div class="field-group" style="margin-bottom:0;">
+                <label>Alineación:</label>
+                <select id="cfg-align-bienvenida" onchange="aplicarEstiloPreviewLocal()">
+                  <option value="center" selected>Centrado</option>
+                  <option value="left">Izquierda</option>
+                  <option value="right">Derecha</option>
+                </select>
+              </div>
               <div class="field-group" style="margin-bottom:0;">
                 <label>Tamaño:</label>
                 <select id="cfg-tamano-bienvenida" onchange="aplicarEstiloPreviewLocal()">
@@ -1038,6 +1104,7 @@
           marcarSwatchActivo(cfg.fondo);
         }
         if (cfg.fuenteParroquia) document.getElementById('cfg-fuente-parroquia').value = cfg.fuenteParroquia;
+        if (cfg.fuenteSubtitulo) document.getElementById('cfg-fuente-subtitulo').value = cfg.fuenteSubtitulo;
         if (cfg.fuenteTitulo) document.getElementById('cfg-fuente-titulo').value = cfg.fuenteTitulo;
         if (cfg.fuenteTexto) document.getElementById('cfg-fuente-texto').value = cfg.fuenteTexto;
         if (cfg.fuenteBienvenida) document.getElementById('cfg-fuente-bienvenida').value = cfg.fuenteBienvenida;
@@ -1045,7 +1112,13 @@
         if (cfg.tamano) document.getElementById('cfg-tamano').value = cfg.tamano;
         if (cfg.tamanoTitulo) document.getElementById('cfg-tamano-titulo').value = cfg.tamanoTitulo;
         if (cfg.tamanoParroquia) document.getElementById('cfg-tamano-parroquia').value = cfg.tamanoParroquia;
+        if (cfg.tamanoSubtitulo) document.getElementById('cfg-tamano-subtitulo').value = cfg.tamanoSubtitulo;
         if (cfg.tamanoBienvenida) document.getElementById('cfg-tamano-bienvenida').value = cfg.tamanoBienvenida;
+
+        if (cfg.alignSubtitulo) document.getElementById('cfg-align-subtitulo').value = cfg.alignSubtitulo;
+        if (cfg.alignTitulo) document.getElementById('cfg-align-titulo').value = cfg.alignTitulo;
+        if (cfg.alignTexto) document.getElementById('cfg-align-texto').value = cfg.alignTexto;
+        if (cfg.alignBienvenida) document.getElementById('cfg-align-bienvenida').value = cfg.alignBienvenida;
 
         if (cfg.posicionParroquia) document.getElementById('cfg-posicion-parroquia').value = cfg.posicionParroquia;
         if (cfg.subtituloParroquia !== undefined) document.getElementById('cfg-subtitulo-parroquia').value = cfg.subtituloParroquia;
@@ -1062,6 +1135,7 @@
         if (cfg.colorTitulo) document.getElementById('cfg-color-titulo').value = cfg.colorTitulo;
         if (cfg.colorTexto) document.getElementById('cfg-color-texto').value = cfg.colorTexto;
         if (cfg.colorParroquia) document.getElementById('cfg-color-parroquia').value = cfg.colorParroquia;
+        if (cfg.colorSubtitulo) document.getElementById('cfg-color-subtitulo').value = cfg.colorSubtitulo;
         if (cfg.colorBienvenida) document.getElementById('cfg-color-bienvenida').value = cfg.colorBienvenida;
 
         if (cfg.swatchesCustom) {
@@ -1101,7 +1175,28 @@
       const cfg = {
         fondo: document.getElementById('cfg-fondo').value,
         fuenteParroquia: document.getElementById('cfg-fuente-parroquia').value,
+        fuenteSubtitulo: document.getElementById('cfg-fuente-subtitulo').value,
         fuenteTitulo: document.getElementById('cfg-fuente-titulo').value,
+        fuenteTexto: document.getElementById('cfg-fuente-texto').value,
+        fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
+
+        tamano: document.getElementById('cfg-tamano').value,
+        tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
+        tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
+        tamanoSubtitulo: document.getElementById('cfg-tamano-subtitulo').value,
+        tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
+
+        alignSubtitulo: document.getElementById('cfg-align-subtitulo').value,
+        alignTitulo: document.getElementById('cfg-align-titulo').value,
+        alignTexto: document.getElementById('cfg-align-texto').value,
+        alignBienvenida: document.getElementById('cfg-align-bienvenida').value,
+
+        posicionParroquia: document.getElementById('cfg-posicion-parroquia').value,
+        subtituloParroquia: document.getElementById('cfg-subtitulo-parroquia').value.trim(),
+
+        imagenFit: document.getElementById('cfg-img-fit').value,
+        imagenPosition: document.getElementById('cfg-img-position').value,
+        imagenOverlay: document.getElementById('cfg-img-overlay').value,
         fuenteTexto: document.getElementById('cfg-fuente-texto').value,
         fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
 
@@ -1187,6 +1282,7 @@
 
       const fondoVal = document.getElementById('cfg-fondo').value;
       const fuenteParVal = document.getElementById('cfg-fuente-parroquia').value;
+      const fuenteSubVal = document.getElementById('cfg-fuente-subtitulo').value;
       const fuenteTitVal = document.getElementById('cfg-fuente-titulo').value;
       const fuenteTxtVal = document.getElementById('cfg-fuente-texto').value;
       const fuenteBvnVal = document.getElementById('cfg-fuente-bienvenida').value;
@@ -1194,6 +1290,7 @@
       const colorTitVal = document.getElementById('cfg-color-titulo').value;
       const colorTxtVal = document.getElementById('cfg-color-texto').value;
       const colorParVal = document.getElementById('cfg-color-parroquia').value;
+      const colorSubVal = document.getElementById('cfg-color-subtitulo').value;
       const colorBvnVal = document.getElementById('cfg-color-bienvenida').value;
 
       const tamCanonVal = document.getElementById('cfg-tamano').value;
@@ -2151,6 +2248,10 @@
 
     function abrirProyectorCañon() {
       window.open('proyector.html?comunidad=' + encodeURIComponent(comunidadPath), '_blank', 'width=1280,height=720');
+    }
+
+    function abrirProyectorOBS() {
+      window.open('proyector.html?comunidad=' + encodeURIComponent(comunidadPath) + '&chroma=1', '_blank', 'width=1280,height=720');
     }
 
     // ATAJOS DE TECLADO / PEDAL BLUETOOTH
