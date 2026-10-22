@@ -502,6 +502,7 @@ function switchMod(mod) {
     // 5. Controlar visibilidad de botones de acción por pestaña
     const btnTopSave = document.getElementById('btn-top-save');
     const btnBatchImport = document.getElementById('batch-import-btn');
+    const btnTopOperador = document.getElementById('btn-top-operador');
     const annTopAction = document.getElementById('ann-top-action-btn');
     const annTopSave = document.getElementById('ann-top-save-btn');
     const prayerTopDelete = document.getElementById('prayer-top-delete-btn');
@@ -510,6 +511,7 @@ function switchMod(mod) {
 
     if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
     if (btnBatchImport) btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
+    if (btnTopOperador) btnTopOperador.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
 
     if (annTopSave) annTopSave.style.display = (mod === 'announcements' && !isViewingArchive) ? 'inline-flex' : 'none';
     if (annTopAction) annTopAction.style.display = (mod === 'announcements' && typeof currentAnnKey !== 'undefined' && currentAnnKey) ? 'inline-flex' : 'none';
@@ -2147,6 +2149,11 @@ function moveBlockUp(btn) {
         block.parentNode.insertBefore(block, previousBlock);
         if (typeof markUnsavedChanges === 'function') markUnsavedChanges();
     }
+}
+
+function abrirCentroProyeccion() {
+    const commPath = (typeof comunidadPath !== 'undefined' && comunidadPath) ? comunidadPath : 'comunidades/san_cayetano';
+    window.open('operador.html?comunidad=' + encodeURIComponent(commPath), '_blank');
 }
 
 function moveBlockDown(btn) {

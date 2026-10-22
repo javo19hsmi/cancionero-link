@@ -47,26 +47,27 @@
           <button class="btn" onclick="logout()" style="padding:5px 15px; font-size:11px; background:rgba(239,68,68,0.15); border:1px solid #EF4444; color:#FF8A8A">SALIR</button>
         </div>
       </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 0 25px; box-sizing: border-box; background: rgba(0,0,0,0.2);">
-        <div id="nav-tabs" style="display:flex; gap:20px">
+      <div class="header-action-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 6px 25px; box-sizing: border-box; background: rgba(0,0,0,0.2); flex-wrap: wrap; gap: 8px;">
+        <div id="nav-tabs" style="display:flex; gap:16px; flex-wrap:wrap;">
            <button id="tab-songs" class="tab-btn active" onclick="switchMod('songs')">🎵 CANCIONERO</button>
            <button id="tab-announcements" class="tab-btn" onclick="switchMod('announcements')">📢 ANUNCIOS</button>
            <button id="tab-prayers" class="tab-btn" onclick="switchMod('prayers')">🙏 ORACIONES</button>
            <button id="tab-scripts" class="tab-btn" onclick="switchMod('scripts')">📜 GUIONES</button>
            <button id="tab-reports" class="tab-btn" onclick="switchMod('reports')">📊 REPORTES</button>
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button id="btn-top-save" class="btn btn-save" style="padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveBorrador()">💾 GUARDAR CAMBIOS</button>
-          <button id="batch-import-btn" class="btn btn-save" style="display:inline-flex; padding:8px 16px; font-size:11px; margin: 5px 0; background: #0891B2; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>
-          <button id="ann-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleAnnouncementAction()">ARCHIVAR 📦</button>
-          <button id="ann-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveAnnouncement()">💾 GUARDAR ANUNCIO</button>
-          <button id="prayer-top-delete-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #FF8A8A;" onclick="deletePrayer()">ELIMINAR 🗑️</button>
-          <button id="prayer-top-cancel-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: var(--card-bg); border: 1px solid var(--glass-border); color: var(--text);" onclick="cancelPrayerEdit()">CANCELAR</button>
-          <button id="prayer-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="savePrayer()">💾 GUARDAR ORACIÓN 🙏</button>
-          <button id="script-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleScriptAction()">ARCHIVAR 📦</button>
-          <button id="script-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveScript()">💾 GUARDAR GUION</button>
-          <button id="reports-top-csv-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: #0891B2; color: white;" onclick="exportReportToCSV()">📊 DESCARGAR REPORTE EXCEL (CSV)</button>
-          <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0; background: #F59E0B; color: black;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
+        <div class="header-action-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto;">
+          <button id="btn-top-save" class="btn btn-save" style="padding:8px 16px; font-size:11px; margin: 3px 0; background: #10B981; color: white;" onclick="saveBorrador()">💾 GUARDAR CAMBIOS</button>
+          <button id="batch-import-btn" class="btn btn-save" style="display:inline-flex; padding:8px 16px; font-size:11px; margin: 3px 0; background: #0891B2; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>
+          <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: #F59E0B; color: black;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
+          <button id="btn-top-operador" class="btn" style="display:inline-flex; padding:8px 16px; font-size:11px; margin: 3px 0; background: #0284C7; color: white; border: 1px solid #0284C7;" onclick="abrirCentroProyeccion()">🎛️ CENTRO DE PROYECCIÓN</button>
+          <button id="ann-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleAnnouncementAction()">ARCHIVAR 📦</button>
+          <button id="ann-top-save-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: #10B981; color: white;" onclick="saveAnnouncement()">💾 GUARDAR ANUNCIO</button>
+          <button id="prayer-top-delete-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #FF8A8A;" onclick="deletePrayer()">ELIMINAR 🗑️</button>
+          <button id="prayer-top-cancel-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: var(--card-bg); border: 1px solid var(--glass-border); color: var(--text);" onclick="cancelPrayerEdit()">CANCELAR</button>
+          <button id="prayer-top-save-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: #10B981; color: white;" onclick="savePrayer()">💾 GUARDAR ORACIÓN 🙏</button>
+          <button id="script-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleScriptAction()">ARCHIVAR 📦</button>
+          <button id="script-top-save-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: #10B981; color: white;" onclick="saveScript()">💾 GUARDAR GUION</button>
+          <button id="reports-top-csv-btn" class="btn btn-save" style="display:none; padding:8px 16px; font-size:11px; margin: 3px 0; background: #0891B2; color: white;" onclick="exportReportToCSV()">📊 DESCARGAR REPORTE EXCEL (CSV)</button>
         </div>
       </div>
     </header>
