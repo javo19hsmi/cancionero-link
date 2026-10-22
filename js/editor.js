@@ -499,14 +499,17 @@ function switchMod(mod) {
     const activeBtn = document.getElementById(`tab-${mod}`);
     if (activeBtn) activeBtn.classList.add('active');
 
-    // 5. Controlar visibilidad de botones de acción del Cancionero
+    // 5. Controlar visibilidad de botones de acción por pestaña
     const btnTopSave = document.getElementById('btn-top-save');
-    if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
-
     const btnBatchImport = document.getElementById('batch-import-btn');
-    if (btnBatchImport) {
-      btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
-    }
+    const annTopAction = document.getElementById('ann-top-action-btn');
+    const annTopSave = document.getElementById('ann-top-save-btn');
+
+    if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
+    if (btnBatchImport) btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
+
+    if (annTopSave) annTopSave.style.display = (mod === 'announcements' && !isViewingArchive) ? 'inline-flex' : 'none';
+    if (annTopAction) annTopAction.style.display = (mod === 'announcements' && typeof currentAnnKey !== 'undefined' && currentAnnKey) ? 'inline-flex' : 'none';
 
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
     const pubBtn = document.getElementById('global-pub-btn');
@@ -1328,11 +1331,21 @@ function renderAnnouncementList() {
     });
 }
 
+function autoExpandAnnText(el) {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = Math.max(100, el.scrollHeight) + 'px';
+}
+
 // 2. GESTIÓN DE LA UI DEL EDITOR Y BOTONES
 function loadSingleAnnouncement(key, ann) {
     currentAnnKey = key;
     document.getElementById('ann-title').value = ann.titulo || "";
-    document.getElementById('ann-text').value = ann.texto || "";
+    const annTextEl = document.getElementById('ann-text');
+    if (annTextEl) {
+      annTextEl.value = ann.texto || "";
+      autoExpandAnnText(annTextEl);
+    }
     document.getElementById('ann-date-label').value = ann.fecha || "";
     document.getElementById('ann-expiry').value = ann.fechaVencimiento || "";
     document.getElementById('ann-image-url').value = ann.imagenUrl || "";
@@ -1348,26 +1361,30 @@ function loadSingleAnnouncement(key, ann) {
         prev.style.display = 'none'; 
     }
 
-    // 🚀 LÓGICA DE BOTONES SEGÚN EL MODO
-    const actionBtn = document.getElementById('ann-action-btn');
-    const saveBtn = document.getElementById('ann-save-btn');
+    // 🚀 LÓGICA DE BOTONES SEGÚN EL MODO EN EL HEADER
+    const actionBtn = document.getElementById('ann-top-action-btn');
+    const saveBtn = document.getElementById('ann-top-save-btn');
     
-    actionBtn.style.display = 'block';
+    if (actionBtn) actionBtn.style.display = 'inline-flex';
 
     if (isViewingArchive) {
         // Modo Restaurar
-        actionBtn.innerText = "RESTAURAR ♻️";
-        actionBtn.style.color = "var(--primary)";
-        actionBtn.style.borderColor = "var(--primary)";
-        actionBtn.style.background = "rgba(77,182,172,0.1)";
-        saveBtn.style.display = 'none'; // No se edita en el archivo
+        if (actionBtn) {
+          actionBtn.innerText = "RESTAURAR ♻️";
+          actionBtn.style.color = "var(--primary)";
+          actionBtn.style.borderColor = "var(--primary)";
+          actionBtn.style.background = "rgba(77,182,172,0.1)";
+        }
+        if (saveBtn) saveBtn.style.display = 'none'; // No se edita en el archivo
     } else {
-        // Modo Archivar (Lo que antes era Eliminar)
-        actionBtn.innerText = "ARCHIVAR 📦";
-        actionBtn.style.color = "var(--warning)";
-        actionBtn.style.borderColor = "var(--warning)";
-        actionBtn.style.background = "rgba(255,167,38,0.1)";
-        saveBtn.style.display = 'block'; 
+        // Modo Archivar
+        if (actionBtn) {
+          actionBtn.innerText = "ARCHIVAR 📦";
+          actionBtn.style.color = "var(--warning)";
+          actionBtn.style.borderColor = "var(--warning)";
+          actionBtn.style.background = "rgba(245,158,11,0.15)";
+        }
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
     }
 
     renderAnnouncementList();
@@ -1376,7 +1393,11 @@ function loadSingleAnnouncement(key, ann) {
 function newAnnouncement() {
     currentAnnKey = null;
     document.getElementById('ann-title').value = "";
-    document.getElementById('ann-text').value = "";
+    const annTextEl = document.getElementById('ann-text');
+    if (annTextEl) {
+      annTextEl.value = "";
+      autoExpandAnnText(annTextEl);
+    }
     document.getElementById('ann-date-label').value = "";
     document.getElementById('ann-expiry').value = "";
     document.getElementById('ann-image-url').value = "";
@@ -1384,7 +1405,14 @@ function newAnnouncement() {
     document.getElementById('ann-btn-url').value = "";
     
     document.getElementById('flyer-preview').style.display = 'none';
-    document.getElementById('ann-action-btn').style.display = 'none';
+    const actionBtn = document.getElementById('ann-top-action-btn');
+    if (actionBtn) actionBtn.style.display = 'none';
+
+    const saveBtn = document.getElementById('ann-top-save-btn');
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+
+    renderAnnouncementList();
+}
     
     // Si creás uno nuevo, asegúrate de que el botón de guardar esté visible
     document.getElementById('ann-save-btn').style.display = 'block'; 

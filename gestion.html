@@ -58,6 +58,8 @@
         <div style="display:flex; gap:8px; align-items:center;">
           <button id="btn-top-save" class="btn btn-save" style="padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveBorrador()">💾 GUARDAR CAMBIOS</button>
           <button id="batch-import-btn" class="btn btn-save" style="display:inline-flex; padding:8px 16px; font-size:11px; margin: 5px 0; background: #0891B2; color: white;" onclick="openBatchImporterModal()">📥 IMPORTAR CANCIONERO</button>
+          <button id="ann-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleAnnouncementAction()">ARCHIVAR 📦</button>
+          <button id="ann-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveAnnouncement()">💾 GUARDAR ANUNCIO</button>
           <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0; background: #F59E0B; color: black;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
         </div>
       </div>
@@ -242,7 +244,7 @@
         <input type="text" id="ann-title" placeholder="Ej: Retiro de Jóvenes 2026">
 
         <label>TEXTO / DESCRIPCIÓN</label>
-        <textarea id="ann-text" rows="4" placeholder="Escribí los detalles acá..."></textarea>
+        <textarea id="ann-text" rows="4" placeholder="Escribí los detalles acá..." oninput="autoExpandAnnText(this)"></textarea>
 
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
           <div>
@@ -276,14 +278,6 @@
         <!-- VISTA PREVIA DEL FLYER -->
         <div id="flyer-preview" style="display:none; text-align:center; margin-bottom:15px; background:rgba(255,255,255,0.02); padding:10px; border-radius:8px;">
            <img id="ann-img-preview" src="" style="max-width:100%; max-height:200px; border-radius:8px; border:1px solid var(--glass-border); object-fit:contain;">
-        </div>
-
-        <div style="display:flex; gap:10px; margin-top:auto;">
-          <!-- Botón de archivo/restauración dinámico -->
-          <button id="ann-action-btn" class="btn" style="flex:1; display:none;" onclick="handleAnnouncementAction()"></button>
-          
-          <!-- Botón de guardado -->
-          <button id="ann-save-btn" class="btn btn-save" style="flex:2;" onclick="saveAnnouncement()">GUARDAR ANUNCIO 💾</button>
         </div>
       </section>
     </main>
