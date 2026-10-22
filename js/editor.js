@@ -3126,22 +3126,26 @@ function renderReportsModule() {
     filterReportList(activeReportFilter);
 }
 
+let reportCurrentPage = 1;
+const REPORT_PAGE_SIZE = 20;
+
 // 2. Filtra la lista según el botón presionado
-function filterReportList(filterType) {
+function filterReportList(filterType, resetPage) {
+    if (resetPage === true || filterType !== activeReportFilter) {
+      reportCurrentPage = 1;
+    }
     activeReportFilter = filterType;
 
     // Actualizar estados visuales de los botones de filtro
     document.querySelectorAll('.rep-filter-btn').forEach(btn => {
-        btn.style.background = 'rgba(255,255,255,0.05)';
-        btn.style.color = 'white';
-        btn.style.borderColor = 'var(--glass-border)';
+        btn.classList.remove('active');
+        btn.style.background = '';
+        btn.style.color = '';
     });
 
     const activeBtn = document.getElementById(`btn-rep-${filterType}`);
     if (activeBtn) {
-        activeBtn.style.background = 'var(--primary)';
-        activeBtn.style.color = 'black';
-        activeBtn.style.borderColor = 'var(--primary)';
+        activeBtn.classList.add('active');
     }
 
     const tbody = document.getElementById('reports-tbody');
@@ -3163,6 +3167,13 @@ function filterReportList(filterType) {
         return true; // 'all'
     });
 
+    const totalPages = Math.ceil(filtered.length / REPORT_PAGE_SIZE) || 1;
+    if (reportCurrentPage > totalPages) reportCurrentPage = totalPages;
+    if (reportCurrentPage < 1) reportCurrentPage = 1;
+
+    const pageInd = document.getElementById('rep-page-indicator');
+    if (pageInd) pageInd.innerText = `Pág ${reportCurrentPage} de ${totalPages}`;
+
     document.getElementById('rep-list-count').innerText = `Mostrando ${filtered.length} canciones`;
 
     if (filtered.length === 0) {
@@ -3170,23 +3181,26 @@ function filterReportList(filterType) {
         return;
     }
 
-    filtered.forEach(s => {
+    const startIdx = (reportCurrentPage - 1) * REPORT_PAGE_SIZE;
+    const pageItems = filtered.slice(startIdx, startIdx + REPORT_PAGE_SIZE);
+
+    pageItems.forEach(s => {
         const hasAudio = s.link && s.link.trim() !== '';
         const hasSheet = s.sheetMusicLink && s.sheetMusicLink.trim() !== '';
         const hasChords = s.lyrics && s.lyrics.includes('[');
         const hasArtist = s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido';
 
         const tr = document.createElement('tr');
-        tr.style.borderBottom = '1px solid rgba(255,255,255,0.05)';
+        tr.style.borderBottom = '1px solid var(--glass-border)';
 
         const momentText = (s.moments && s.moments.length > 0) ? s.moments.join(', ') : 'Varios';
 
         tr.innerHTML = `
             <td style="padding:10px;">
-                <b style="font-size:13px; color:white;">${s.title}</b>
-                <div style="font-size:10px; opacity:0.6;">👤 ${hasArtist ? s.artist : 'Sin Autor'}</div>
+                <b style="font-size:13px; color:var(--text);">${s.title}</b>
+                <div style="font-size:10px; color:var(--text-muted);">👤 ${hasArtist ? s.artist : 'Sin Autor'}</div>
             </td>
-            <td style="padding:10px; font-size:11px; opacity:0.8;">📍 ${momentText}</td>
+            <td style="padding:10px; font-size:11px; color:var(--text-muted);">📍 ${momentText}</td>
             <td style="padding:10px; text-align:center;">
                 <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasAudio ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasAudio ? '🎧 Audio' : '🎧 Sin Audio'}</span>
                 <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasSheet ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasSheet ? '🎼 Partitura' : '🎼 Sin Partitura'}</span>
@@ -3198,6 +3212,18 @@ function filterReportList(filterType) {
         `;
         tbody.appendChild(tr);
     });
+}
+
+function prevReportPage() {
+    if (reportCurrentPage > 1) {
+      reportCurrentPage--;
+      filterReportList(activeReportFilter, false);
+    }
+}
+
+function nextReportPage() {
+    reportCurrentPage++;
+    filterReportList(activeReportFilter, false);
 }
 
 // 3. Salto Mágico: Cambia a la solapa Cancionero y carga la canción para editar
