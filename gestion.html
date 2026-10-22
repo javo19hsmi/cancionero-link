@@ -63,6 +63,8 @@
           <button id="prayer-top-delete-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(239,68,68,0.15); border: 1px solid #EF4444; color: #FF8A8A;" onclick="deletePrayer()">ELIMINAR 🗑️</button>
           <button id="prayer-top-cancel-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: var(--card-bg); border: 1px solid var(--glass-border); color: var(--text);" onclick="cancelPrayerEdit()">CANCELAR</button>
           <button id="prayer-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="savePrayer()">💾 GUARDAR ORACIÓN 🙏</button>
+          <button id="script-top-action-btn" class="btn" style="display:none; padding:8px 16px; font-size:11px; margin: 5px 0; background: rgba(245,158,11,0.15); border: 1px solid #F59E0B; color: #F59E0B;" onclick="handleScriptAction()">ARCHIVAR 📦</button>
+          <button id="script-top-save-btn" class="btn btn-save" style="display:none; padding:8px 18px; font-size:11px; margin: 5px 0; background: #10B981; color: white;" onclick="saveScript()">💾 GUARDAR GUION</button>
           <button id="global-pub-btn" class="btn btn-publish" style="display:none; padding:8px 20px; font-size:11px; margin: 5px 0; background: #F59E0B; color: black;" onclick="confirmPublish()">🚀 SUBIR VERSIÓN PÚBLICA</button>
         </div>
       </div>
@@ -322,11 +324,6 @@
         <label>CONTENIDO DEL GUION</label>
         <!-- Textarea oculto que será reemplazado por EasyMDE -->
         <textarea id="script-content"></textarea>
-
-        <div style="display:flex; gap:10px; margin-top:15px;">
-          <button id="script-action-btn" class="btn" style="flex:1; display:none;" onclick="handleScriptAction()"></button>
-          <button id="script-save-btn" class="btn btn-save" style="flex:2;" onclick="saveScript()">GUARDAR GUION 💾</button>
-        </div>
       </section>
     </main>
 

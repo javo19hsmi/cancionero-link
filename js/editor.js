@@ -518,6 +518,12 @@ function switchMod(mod) {
     if (prayerTopCancel) prayerTopCancel.style.display = (mod === 'prayers') ? 'inline-flex' : 'none';
     if (prayerTopDelete) prayerTopDelete.style.display = (mod === 'prayers' && typeof currentPrayerId !== 'undefined' && currentPrayerId) ? 'inline-flex' : 'none';
 
+    const scriptTopAction = document.getElementById('script-top-action-btn');
+    const scriptTopSave = document.getElementById('script-top-save-btn');
+
+    if (scriptTopSave) scriptTopSave.style.display = (mod === 'scripts' && (typeof isViewingScriptArchive === 'undefined' || !isViewingScriptArchive)) ? 'inline-flex' : 'none';
+    if (scriptTopAction) scriptTopAction.style.display = (mod === 'scripts' && typeof currentScriptKey !== 'undefined' && currentScriptKey) ? 'inline-flex' : 'none';
+
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
     const pubBtn = document.getElementById('global-pub-btn');
     if (pubBtn) {
@@ -1653,38 +1659,44 @@ function loadSingleScript(key, g) {
     document.getElementById('script-date').value = g.date || "";
     if (easyMDEInstance) easyMDEInstance.value(g.content || "");
     
-    const actionBtn = document.getElementById('script-action-btn');
-    const saveBtn = document.getElementById('script-save-btn');
-    actionBtn.style.display = 'block';
+    const actionBtn = document.getElementById('script-top-action-btn');
+    const saveBtn = document.getElementById('script-top-save-btn');
+    if (actionBtn) actionBtn.style.display = 'inline-flex';
 
     if (isViewingScriptArchive) {
-        actionBtn.innerText = "RESTAURAR ♻️";
-        actionBtn.style.color = "var(--primary)";
-        actionBtn.style.borderColor = "var(--primary)";
-        actionBtn.style.background = "rgba(77,182,172,0.1)";
-        saveBtn.style.display = 'none'; 
+        if (actionBtn) {
+          actionBtn.innerText = "RESTAURAR ♻️";
+          actionBtn.style.color = "var(--primary)";
+          actionBtn.style.borderColor = "var(--primary)";
+          actionBtn.style.background = "rgba(77,182,172,0.1)";
+        }
+        if (saveBtn) saveBtn.style.display = 'none';
     } else {
-        actionBtn.innerText = "ARCHIVAR 📦";
-        actionBtn.style.color = "var(--warning)";
-        actionBtn.style.borderColor = "var(--warning)";
-        actionBtn.style.background = "rgba(255,167,38,0.1)";
-        saveBtn.style.display = 'block'; 
+        if (actionBtn) {
+          actionBtn.innerText = "ARCHIVAR 📦";
+          actionBtn.style.color = "var(--warning)";
+          actionBtn.style.borderColor = "var(--warning)";
+          actionBtn.style.background = "rgba(245,158,11,0.15)";
+        }
+        if (saveBtn) saveBtn.style.display = 'inline-flex';
     }
     renderScriptList();
-   hasUnsavedChanges = false; // Reseteamos al terminar de cargar
+    hasUnsavedChanges = false;
 }
 
 function newScript() {
     currentScriptKey = null;
     document.getElementById('script-title').value = "";
-    // Poner fecha de hoy por defecto
     document.getElementById('script-date').value = new Date().toISOString().split('T')[0];
     if (easyMDEInstance) easyMDEInstance.value("");
     
-    document.getElementById('script-action-btn').style.display = 'none';
-    document.getElementById('script-save-btn').style.display = 'block'; 
+    const actionBtn = document.getElementById('script-top-action-btn');
+    if (actionBtn) actionBtn.style.display = 'none';
+
+    const saveBtn = document.getElementById('script-top-save-btn');
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
     renderScriptList();
-   hasUnsavedChanges = false; // Reseteamos al crear uno nuevo
+    hasUnsavedChanges = false;
 }
 
 async function saveScript() {

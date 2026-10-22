@@ -66,6 +66,32 @@ body.light-mode [id*="prayer-cat"] span {
   font-weight: bold !important;
 }
 
+body.light-mode .editor-toolbar {
+  background: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+body.light-mode .editor-toolbar button {
+  color: #0F172A !important;
+}
+body.light-mode .editor-toolbar button:hover {
+  background: #E2E8F0 !important;
+}
+body.light-mode .CodeMirror {
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+body.light-mode #script-list .result-item {
+  color: #0F172A !important;
+}
+body.light-mode #script-list .result-item:hover {
+  background: #F1F5F9 !important;
+}
+body.light-mode #script-list .result-item.active {
+  background: #0284C7 !important;
+  color: #FFFFFF !important;
+}
+
 body.light-mode #prayer-blocks-container > div {
   background: #F1F5F9 !important;
   border-color: #CBD5E1 !important;
