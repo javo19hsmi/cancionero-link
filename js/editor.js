@@ -1717,8 +1717,10 @@ async function saveScript() {
         // Ignoramos el guion actual (si estamos editando) para que nos deje guardar nuestros propios cambios
         if (key === currentScriptKey) return false; 
         
-        // Comparamos ignorando mayúsculas/minúsculas para ser más precisos
-        return script.title.toLowerCase() === title.toLowerCase() && script.date === date;
+        // Comparamos ignorando mayúsculas/minúsculas para ser más precisos con nulo-guard
+        const sTitle = (script && script.title ? script.title : "").toLowerCase();
+        const sDate = script && script.date ? script.date : "";
+        return sTitle === title.toLowerCase() && sDate === date;
     });
 
     if (isDuplicate) {
@@ -1810,9 +1812,18 @@ const PRAYER_CATEGORIES_LIST = [
   'Otras Oraciones',
 ];
 
+let activePrayerRefs = [];
+
 // 1. CARGA DEL MÓDULO CON CONTROL DE PERMISOS JERÁRQUICO MULTI-ACCESO
 function loadPrayersModule(communities, role) {
-    allPrayers = {}; 
+    if (activePrayerRefs && activePrayerRefs.length > 0) {
+        activePrayerRefs.forEach(ref => {
+            try { ref.off('value'); } catch(_) {}
+        });
+        activePrayerRefs = [];
+    }
+
+    allPrayers = {};
     const localSelector = document.getElementById('prayer-local-destination');
     const containerDestino = document.getElementById('prayer-local-destination-container');
 
@@ -1852,8 +1863,10 @@ function loadPrayersModule(communities, role) {
             localSelector.appendChild(opt);
             tieneOpcionesLocales = true;
 
-            // Leer las oraciones de esa comunidad
-            db.ref(`${com.path}/oraciones`).on('value', snap => {
+            // Leer las oraciones de esa comunidad limpiando suscripciones anteriores
+            const pRef = db.ref(`${com.path}/oraciones`);
+            activePrayerRefs.push(pRef);
+            pRef.on('value', snap => {
                 if (snap.exists()) {
                     procesarNodos(snap.val(), 'local', com.nombre || 'Local', `${com.path}/oraciones`);
                 } else {

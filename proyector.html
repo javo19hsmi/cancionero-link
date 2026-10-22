@@ -148,7 +148,7 @@
         .replace(/'/g, "&#039;");
     }
 
-    function darFormato(t) {
+    function darFormato(t, alignMode) {
       if (!t) return "";
       let safe = escapeHtml(t);
       let str = safe

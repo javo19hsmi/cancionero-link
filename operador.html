@@ -856,6 +856,12 @@
   </div>
 
   <script>
+    if (!Number.prototype.clamp) {
+      Number.prototype.clamp = function(min, max) {
+        return Math.min(Math.max(this, min), max);
+      };
+    }
+
     firebase.initializeApp({
       databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com/"
     });
@@ -1190,20 +1196,6 @@
         alignTitulo: document.getElementById('cfg-align-titulo').value,
         alignTexto: document.getElementById('cfg-align-texto').value,
         alignBienvenida: document.getElementById('cfg-align-bienvenida').value,
-
-        posicionParroquia: document.getElementById('cfg-posicion-parroquia').value,
-        subtituloParroquia: document.getElementById('cfg-subtitulo-parroquia').value.trim(),
-
-        imagenFit: document.getElementById('cfg-img-fit').value,
-        imagenPosition: document.getElementById('cfg-img-position').value,
-        imagenOverlay: document.getElementById('cfg-img-overlay').value,
-        fuenteTexto: document.getElementById('cfg-fuente-texto').value,
-        fuenteBienvenida: document.getElementById('cfg-fuente-bienvenida').value,
-
-        tamano: document.getElementById('cfg-tamano').value,
-        tamanoTitulo: document.getElementById('cfg-tamano-titulo').value,
-        tamanoParroquia: document.getElementById('cfg-tamano-parroquia').value,
-        tamanoBienvenida: document.getElementById('cfg-tamano-bienvenida').value,
 
         posicionParroquia: document.getElementById('cfg-posicion-parroquia').value,
         subtituloParroquia: document.getElementById('cfg-subtitulo-parroquia').value.trim(),
