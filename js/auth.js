@@ -1,11 +1,24 @@
-document.getElementById('login-trigger').onclick = () => {
+document.getElementById('login-trigger').onclick = async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithPopup(provider).catch(error => {
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await auth.signInWithPopup(provider);
+  } catch (error) {
     console.warn("⚠️ Popup bloqueado por el navegador. Redirigiendo...", error);
-    auth.signInWithRedirect(provider);
-  });
+    try {
+      await auth.signInWithRedirect(provider);
+    } catch(err) {
+      alert("Error al ingresar con Google: " + (err.message || err));
+    }
+  }
 };
 const logout = () => auth.signOut();
+
+auth.getRedirectResult().catch(err => {
+  if (err && err.code !== 'auth/popup-closed-by-user') {
+    console.warn("Redirect result handler error:", err);
+  }
+});
 
 auth.onAuthStateChanged(async user => {
   if (user) {
