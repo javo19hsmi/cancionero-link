@@ -92,6 +92,29 @@ body.light-mode #script-list .result-item.active {
   color: #FFFFFF !important;
 }
 
+body.light-mode #mod-reports div[id^="rep-"] {
+  color: #0F172A !important;
+}
+
+body.light-mode .rep-filter-btn {
+  background: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
+body.light-mode .rep-filter-btn.active {
+  background: #0284C7 !important;
+  color: #FFFFFF !important;
+}
+
+body.light-mode #rep-table-container,
+body.light-mode #rep-table-container td,
+body.light-mode #rep-table-container th,
+body.light-mode #rep-list-title {
+  color: #0F172A !important;
+  border-color: #CBD5E1 !important;
+}
+
 body.light-mode #prayer-blocks-container > div {
   background: #F1F5F9 !important;
   border-color: #CBD5E1 !important;

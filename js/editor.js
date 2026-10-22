@@ -524,6 +524,9 @@ function switchMod(mod) {
     if (scriptTopSave) scriptTopSave.style.display = (mod === 'scripts' && (typeof isViewingScriptArchive === 'undefined' || !isViewingScriptArchive)) ? 'inline-flex' : 'none';
     if (scriptTopAction) scriptTopAction.style.display = (mod === 'scripts' && typeof currentScriptKey !== 'undefined' && currentScriptKey) ? 'inline-flex' : 'none';
 
+    const reportsTopCsv = document.getElementById('reports-top-csv-btn');
+    if (reportsTopCsv) reportsTopCsv.style.display = (mod === 'reports') ? 'inline-flex' : 'none';
+
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
     const pubBtn = document.getElementById('global-pub-btn');
     if (pubBtn) {
