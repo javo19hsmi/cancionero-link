@@ -1420,12 +1420,6 @@ function newAnnouncement() {
 
     renderAnnouncementList();
 }
-    
-    // Si creás uno nuevo, asegúrate de que el botón de guardar esté visible
-    document.getElementById('ann-save-btn').style.display = 'block'; 
-    
-    renderAnnouncementList();
-}
 
 async function saveAnnouncement() {
     const title = document.getElementById('ann-title').value.trim();
