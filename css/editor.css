@@ -28,11 +28,34 @@ body.light-mode {
 
 /* Adaptación de campos de texto e inputs para Modo Claro/Oscuro */
 input, select, textarea {
-  background: var(--surface) !important;
+  background: var(--card-bg) !important;
   color: var(--text) !important;
   border: 1px solid var(--glass-border) !important;
   border-radius: 8px;
   outline: none;
+  font-family: inherit;
+  font-size: 12px;
+}
+
+select {
+  padding: 6px 10px !important;
+  cursor: pointer !important;
+  max-width: 100% !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+}
+
+select option {
+  background-color: #111827 !important;
+  color: #F1F5F9 !important;
+  padding: 8px 12px !important;
+  font-size: 12px !important;
+}
+
+body.light-mode select option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
 }
 
 body.light-mode #lyrics-editor {
