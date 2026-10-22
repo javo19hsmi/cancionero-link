@@ -504,12 +504,19 @@ function switchMod(mod) {
     const btnBatchImport = document.getElementById('batch-import-btn');
     const annTopAction = document.getElementById('ann-top-action-btn');
     const annTopSave = document.getElementById('ann-top-save-btn');
+    const prayerTopDelete = document.getElementById('prayer-top-delete-btn');
+    const prayerTopCancel = document.getElementById('prayer-top-cancel-btn');
+    const prayerTopSave = document.getElementById('prayer-top-save-btn');
 
     if (btnTopSave) btnTopSave.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
     if (btnBatchImport) btnBatchImport.style.display = (mod === 'songs') ? 'inline-flex' : 'none';
 
     if (annTopSave) annTopSave.style.display = (mod === 'announcements' && !isViewingArchive) ? 'inline-flex' : 'none';
     if (annTopAction) annTopAction.style.display = (mod === 'announcements' && typeof currentAnnKey !== 'undefined' && currentAnnKey) ? 'inline-flex' : 'none';
+
+    if (prayerTopSave) prayerTopSave.style.display = (mod === 'prayers') ? 'inline-flex' : 'none';
+    if (prayerTopCancel) prayerTopCancel.style.display = (mod === 'prayers') ? 'inline-flex' : 'none';
+    if (prayerTopDelete) prayerTopDelete.style.display = (mod === 'prayers' && typeof currentPrayerId !== 'undefined' && currentPrayerId) ? 'inline-flex' : 'none';
 
     // 5. Control inteligente del botón "Subir Versión Pública" (Solo visible en Cancionero)
     const pubBtn = document.getElementById('global-pub-btn');
@@ -2253,8 +2260,13 @@ function loadSinglePrayer(key, p) {
         }
     }
 
-    document.getElementById('prayer-delete-btn').style.display = 'block';
-    document.getElementById('prayer-cancel-btn').style.display = 'block';
+    const delBtn = document.getElementById('prayer-top-delete-btn');
+    if (delBtn) delBtn.style.display = 'inline-flex';
+    const cancelBtn = document.getElementById('prayer-top-cancel-btn');
+    if (cancelBtn) cancelBtn.style.display = 'inline-flex';
+    const saveBtn = document.getElementById('prayer-top-save-btn');
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+
     hasUnsavedChanges = false;
     
     toggleLocalDestinationVisibility();
@@ -2293,12 +2305,15 @@ function newPrayer() {
         renderPrayerCategoriesChips(['Otras Oraciones']);
     }
 
-    // 6. Ocultamos los botones de eliminar y cancelar (porque estamos creando una nueva)
-    const deleteBtn = document.getElementById('prayer-delete-btn');
-    if (deleteBtn) deleteBtn.style.display = 'none';
+    // 6. Ocultamos el botón de eliminar de la barra superior (porque estamos creando una nueva)
+    const delBtnTop = document.getElementById('prayer-top-delete-btn');
+    if (delBtnTop) delBtnTop.style.display = 'none';
 
-    const cancelBtn = document.getElementById('prayer-cancel-btn');
-    if (cancelBtn) cancelBtn.style.display = 'none';
+    const cancelBtnTop = document.getElementById('prayer-top-cancel-btn');
+    if (cancelBtnTop) cancelBtnTop.style.display = 'inline-flex';
+
+    const saveBtnTop = document.getElementById('prayer-top-save-btn');
+    if (saveBtnTop) saveBtnTop.style.display = 'inline-flex';
 
     document.getElementById('prayer-level').value = "local";
     
