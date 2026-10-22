@@ -1349,6 +1349,11 @@ function renderAnnouncementList() {
     });
 }
 
+function isTabActive(tabName) {
+  const activeTab = document.querySelector('.tab-btn.active');
+  return activeTab && activeTab.id === 'tab-' + tabName;
+}
+
 function autoExpandAnnText(el) {
     if (!el) return;
     el.style.height = 'auto';
@@ -1383,7 +1388,7 @@ function loadSingleAnnouncement(key, ann) {
     const actionBtn = document.getElementById('ann-top-action-btn');
     const saveBtn = document.getElementById('ann-top-save-btn');
     
-    if (actionBtn) actionBtn.style.display = 'inline-flex';
+    if (actionBtn) actionBtn.style.display = isTabActive('announcements') ? 'inline-flex' : 'none';
 
     if (isViewingArchive) {
         // Modo Restaurar
@@ -1402,7 +1407,7 @@ function loadSingleAnnouncement(key, ann) {
           actionBtn.style.borderColor = "var(--warning)";
           actionBtn.style.background = "rgba(245,158,11,0.15)";
         }
-        if (saveBtn) saveBtn.style.display = 'inline-flex';
+        if (saveBtn) saveBtn.style.display = isTabActive('announcements') ? 'inline-flex' : 'none';
     }
 
     renderAnnouncementList();
@@ -1427,7 +1432,7 @@ function newAnnouncement() {
     if (actionBtn) actionBtn.style.display = 'none';
 
     const saveBtn = document.getElementById('ann-top-save-btn');
-    if (saveBtn) saveBtn.style.display = 'inline-flex';
+    if (saveBtn) saveBtn.style.display = isTabActive('announcements') ? 'inline-flex' : 'none';
 
     renderAnnouncementList();
 }
