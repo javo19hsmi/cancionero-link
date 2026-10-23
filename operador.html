@@ -953,8 +953,9 @@
         .replace(/'/g, "&#039;");
     }
 
-    function darFormato(t) {
+    function darFormato(t, alignMode) {
       if (!t) return "";
+      const align = (alignMode === 'center') ? 'center' : (alignMode === 'right' ? 'right' : 'left');
       let safe = escapeHtml(t);
       let str = safe
         .replace(/##P_END##/g, "\n\n")
@@ -1001,7 +1002,7 @@
           let cleanBlock = block.trim();
           if (!cleanBlock) return '';
           let formattedLines = cleanBlock.replace(/\n/g, '<br style="line-height:1.32;">');
-          return `<div style="line-height: 1.35; text-align: left; margin-bottom: 14px;">${formattedLines}</div>`;
+          return `<div style="line-height: 1.35; text-align: ${align}; margin-bottom: 14px;">${formattedLines}</div>`;
         }).join('');
       } else {
         const paragraphs = str.split(/\n\s*\n+/);
@@ -1009,7 +1010,7 @@
           let cleanP = p.trim();
           if (cleanP.startsWith('<div style="font-style: italic; font-size: 0.82em;')) return cleanP;
           let formattedText = cleanP.replace(/\n/g, ' ');
-          return `<div style="margin-bottom: 14px; line-height: 1.55; text-align: left;">${formattedText}</div>`;
+          return `<div style="margin-bottom: 14px; line-height: 1.55; text-align: ${align};">${formattedText}</div>`;
         }).join('');
       }
     }
@@ -1634,18 +1635,21 @@
         parSub.style.display = 'none';
       }
 
+      const alignTxtVal = document.getElementById('cfg-align-texto') ? document.getElementById('cfg-align-texto').value : 'left';
+      const alignBvnVal = document.getElementById('cfg-align-bienvenida') ? document.getElementById('cfg-align-bienvenida').value : 'center';
+
       if (previewState.modo === 'NEGRA') {
         tit.style.display = 'none';
         txt.innerHTML = "<span style='color:#555'>[ Pantalla Negra ]</span>";
         cnt.innerText = "";
       } else if (previewState.modo === 'BIENVENIDA') {
         tit.style.display = 'none';
-        txt.innerHTML = darFormato(previewState.titulo || 'Bienvenidos');
+        txt.innerHTML = darFormato(previewState.titulo || 'Bienvenidos', alignBvnVal);
         cnt.innerText = "";
       } else if (estrofasList.length > 0) {
         tit.style.display = 'block';
         tit.innerText = document.getElementById('cancion-titulo').innerText.replace("🎶 ", "");
-        txt.innerHTML = darFormato(estrofasList[previewIdx] ? estrofasList[previewIdx].trim() : '');
+        txt.innerHTML = darFormato(estrofasList[previewIdx] ? estrofasList[previewIdx].trim() : '', alignTxtVal);
         cnt.innerText = (previewIdx + 1) + ' / ' + estrofasList.length;
       } else {
         tit.style.display = 'none';
@@ -1743,18 +1747,19 @@
           const remVal = parseFloat(data.tamanoBienvenida) || 3.8;
           txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
         }
-        txt.innerHTML = darFormato(data.titulo || 'Bienvenidos');
+        txt.innerHTML = darFormato(data.titulo || 'Bienvenidos', data.alignBienvenida || 'center');
         cnt.innerText = "";
       } else {
         tit.style.display = 'block';
         tit.innerText = data.titulo || '';
+        tit.style.textAlign = data.alignTitulo || 'center';
         if (data.fuenteTexto) txt.style.fontFamily = data.fuenteTexto;
         if (data.colorTexto) txt.style.color = data.colorTexto;
         if (data.tamano) {
           const remVal = parseFloat(data.tamano) || 3.8;
           txt.style.fontSize = (remVal * 0.26).toFixed(2) + "rem";
         }
-        txt.innerHTML = darFormato(data.bloqueTexto || '');
+        txt.innerHTML = darFormato(data.bloqueTexto || '', data.alignTexto || 'left');
         cnt.innerText = (data.bloqueIndex + 1) + ' / ' + data.totalBloques;
       }
     });
@@ -2098,13 +2103,14 @@
         container.innerHTML = "<div style='grid-column:1/-1; text-align:center; padding:30px; color:#888;'>No hay letra disponible para esta canción.</div>";
         return;
       }
+      const alignTxt = document.getElementById('cfg-align-texto') ? document.getElementById('cfg-align-texto').value : 'left';
       container.innerHTML = estrofasList.map((e, idx) => `
         <div class="stanza-card ${idx === previewIdx && previewState.modo === 'CANCCION' ? 'active' : ''}" onclick="seleccionarEstrofaPreview(${idx})">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <span style="font-size:0.75rem; color:var(--accent-light); font-weight:bold;">Estrofa ${idx + 1}</span>
             <span class="stanza-badge">${idx === previewIdx && previewState.modo === 'CANCCION' ? 'En Preview' : 'Clic para Previa'}</span>
           </div>
-          <div class="stanza-info">${darFormato(e.trim())}</div>
+          <div class="stanza-info">${darFormato(e.trim(), alignTxt)}</div>
         </div>
       `).join('');
     }
@@ -2167,6 +2173,10 @@
       const colorParLive = document.getElementById('cfg-color-parroquia').value;
       const colorBvnLive = document.getElementById('cfg-color-bienvenida').value;
 
+      const alignTxtLive = document.getElementById('cfg-align-texto') ? document.getElementById('cfg-align-texto').value : "left";
+      const alignTitLive = document.getElementById('cfg-align-titulo') ? document.getElementById('cfg-align-titulo').value : "center";
+      const alignBvnLive = document.getElementById('cfg-align-bienvenida') ? document.getElementById('cfg-align-bienvenida').value : "center";
+
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
       mostrarToast("📡 Transmitiendo al Cañón...");
@@ -2176,6 +2186,10 @@
         bloqueTexto: previewState.bloqueTexto,
         bloqueIndex: previewState.bloqueIndex,
         totalBloques: previewState.totalBloques,
+
+        alignTexto: alignTxtLive,
+        alignTitulo: alignTitLive,
+        alignBienvenida: alignBvnLive,
 
         comunidadNombre: nombreParroquia,
         subtituloParroquia: subtituloParroquia,
