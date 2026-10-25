@@ -223,6 +223,15 @@
 
     const urlParams = new URLSearchParams(window.location.search);
     const isChromaMode = urlParams.get('chroma') === '1' || urlParams.get('obs') === '1';
+
+    // Ocultar botón de pantalla completa si está en modo OBS Chroma
+    window.addEventListener('DOMContentLoaded', () => {
+      if (isChromaMode) {
+        const btnFs = document.getElementById('btnFS');
+        if (btnFs) btnFs.style.display = 'none';
+      }
+    });
+
     let comunidadPath = urlParams.get('comunidad') || 'comunidades/san_cayetano';
     if (!comunidadPath.startsWith('comunidades/')) {
       comunidadPath = 'comunidades/' + comunidadPath;

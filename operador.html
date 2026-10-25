@@ -2267,7 +2267,49 @@
     }
 
     function abrirProyectorOBS() {
-      window.open('proyector.html?comunidad=' + encodeURIComponent(comunidadPath) + '&chroma=1', '_blank', 'width=1280,height=720');
+      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1);
+      const obsUrl = baseUrl + 'proyector.html?comunidad=' + encodeURIComponent(comunidadPath) + '&chroma=1';
+
+      const overlay = document.createElement('div');
+      overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.7); z-index:9999; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px);';
+
+      overlay.innerHTML = `
+        <div style="background:#1E293B; border:1px solid #334155; border-radius:16px; padding:24px; max-width:450px; width:90%; color:#FFF; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <h3 style="margin:0; font-size:1.1rem; color:#22C55E; display:flex; align-items:center; gap:8px;">
+              🎥 Transmisión OBS Chroma Key
+            </h3>
+            <button onclick="this.closest('div.parent-modal').remove()" style="background:none; border:none; color:#AAA; font-size:18px; cursor:pointer;">✕</button>
+          </div>
+          <p style="font-size:0.85rem; color:#CBD5E1; margin-bottom:16px; line-height:1.4;">
+            Elegí cómo querés usar el modo transparente sin fondo para transmisiones en vivo:
+          </p>
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <button id="btn-copy-obs" style="background:#0F766E; color:#FFF; border:1px solid #14B8A6; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+              📋 Copiar Link para OBS (Browser Source)
+            </button>
+            <button id="btn-open-obs" style="background:#1E3A8A; color:#FFF; border:1px solid #3B82F6; padding:12px; border-radius:10px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px;">
+              ↗️ Abrir Ventana Navegador
+            </button>
+          </div>
+        </div>
+      `;
+      overlay.className = 'parent-modal';
+      document.body.appendChild(overlay);
+
+      document.getElementById('btn-copy-obs').onclick = () => {
+        navigator.clipboard.writeText(obsUrl).then(() => {
+          mostrarToast("📋 Link para OBS copiado al portapapeles");
+          overlay.remove();
+        }).catch(() => {
+          mostrarToast("URL: " + obsUrl);
+        });
+      };
+
+      document.getElementById('btn-open-obs').onclick = () => {
+        window.open(obsUrl, '_blank', 'width=1280,height=720');
+        overlay.remove();
+      };
     }
 
     // ATAJOS DE TECLADO / PEDAL BLUETOOTH
