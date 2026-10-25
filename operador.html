@@ -1342,6 +1342,12 @@
         parSub.style.display = 'none';
       }
 
+      const alignTxtVal = document.getElementById('cfg-align-texto') ? document.getElementById('cfg-align-texto').value : 'left';
+      const alignTitVal = document.getElementById('cfg-align-titulo') ? document.getElementById('cfg-align-titulo').value : 'center';
+      const alignBvnVal = document.getElementById('cfg-align-bienvenida') ? document.getElementById('cfg-align-bienvenida').value : 'center';
+
+      title.style.textAlign = alignTitVal;
+
       if (previewState.modo === 'BIENVENIDA') {
         text.style.fontFamily = fuenteBvnVal;
         text.style.color = colorBvnVal;
@@ -1353,6 +1359,7 @@
         else if (tamBvnVal === '5.8rem') bPx = 30;
 
         text.style.fontSize = (bPx * previewScale) + 'px';
+        text.innerHTML = darFormato(previewState.titulo || 'Bienvenidos', alignBvnVal);
       } else {
         text.style.fontFamily = fuenteTxtVal;
         text.style.color = colorTxtVal;
@@ -1364,6 +1371,9 @@
         else if (tamCanonVal === '5.2rem') basePx = 26;
 
         text.style.fontSize = (basePx * previewScale) + 'px';
+        if (estrofasList.length > 0) {
+          text.innerHTML = darFormato(estrofasList[previewIdx] ? estrofasList[previewIdx].trim() : '', alignTxtVal);
+        }
       }
 
       if (tamTitVal) title.style.fontSize = (tamTitVal === '1.8rem') ? '0.65rem' : ((tamTitVal === '2.2rem') ? '0.75rem' : '0.9rem');
