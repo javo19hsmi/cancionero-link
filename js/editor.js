@@ -71,7 +71,7 @@ const MOMENTS_LIST = [
   "Credo", "Ofertorio", "Santo", "Aclamaciones", "Doxologia Final",
   "Padre Nuestro/Tuyo es el Reino", "Cordero de Dios", "Comunión", "Meditación", "Salida",
   "Virgen María", "Espíritu Santo", "Animación", "Adoración Eucarística",
-  "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés","Santo Rosario",
+  "Adviento", "Navidad", "Cuaresma", "Semana Santa", "Pascua y Pentecostés", "Tiempo Ordinario", "Santo Rosario",
   "Via Crucis", "Pesebre", "Juveniles", "Acción de Gracia", "Misioneros / Vocacionales",
   "Bautismo", "Matrimonios", "Santos y Devociones", "Misa con Niños", "Exequias", "Propios del Ordinario", 
     "Varios"
