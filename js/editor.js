@@ -3340,12 +3340,14 @@ function renderWebNotifTargets() {
         }
 
         if (html === '') {
-            html = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${selectedCommunityId || 'default'}" checked> ⛪ Esta Parroquia / Capilla</label>`;
+            const fallbackId = (typeof selectedCommunityId !== 'undefined' && selectedCommunityId) ? selectedCommunityId : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].id : 'default');
+            html = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${fallbackId}" checked> ⛪ Esta Parroquia / Capilla</label>`;
         }
 
         container.innerHTML = html;
     }).catch(() => {
-        container.innerHTML = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${selectedCommunityId || 'default'}" checked> ⛪ Esta Parroquia / Capilla</label>`;
+        const fallbackId = (typeof selectedCommunityId !== 'undefined' && selectedCommunityId) ? selectedCommunityId : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].id : 'default');
+        container.innerHTML = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${fallbackId}" checked> ⛪ Esta Parroquia / Capilla</label>`;
     });
 }
 
@@ -3451,7 +3453,8 @@ function sendWebNotifPush() {
     };
 
     const isGlobal = selectedTargets.includes('global') || (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
-    const nodePath = isGlobal ? 'notificaciones_globales' : `${selectedCommunityPath}/notificaciones`;
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
+    const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
     firebase.database().ref(nodePath).push(notifObj).then(() => {
         alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
@@ -3467,7 +3470,8 @@ function listenWebNotifHistory() {
     if (!listDiv) return;
 
     const isGlobal = (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
-    const nodePath = isGlobal ? 'notificaciones_globales' : `${selectedCommunityPath}/notificaciones`;
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
+    const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
     firebase.database().ref(nodePath).limitToLast(20).on('value', snap => {
         if (!snap.exists()) {
