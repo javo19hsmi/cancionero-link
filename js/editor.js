@@ -3305,54 +3305,53 @@ function renderWebNotifTargets() {
     const container = document.getElementById('web-target-checklist-container');
     if (!container) return;
 
-    container.innerHTML = '<p style="color:#aaa; font-size:11px;">Cargando comunidades...</p>';
-
-    const userRole = (typeof currentUserRole !== 'undefined') ? currentUserRole : 'admin';
+    const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
     const isSuper = (userRole === 'super_admin');
+    const authComms = (typeof authorizedCommunities !== 'undefined' && authorizedCommunities) ? authorizedCommunities : (window.authorizedCommunities || []);
 
-    const renderHtmlFromCommunities = (communities) => {
-        let html = '';
-        if (isSuper) {
-            html += `<label style="display:block; margin-bottom:6px; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="global" checked> 🌐 Todos los Usuarios (Global)</label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:6px 0;">`;
-        }
+    let html = '';
+    if (isSuper) {
+        html += `<label style="display:block; margin-bottom:6px; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="global" checked> 🌐 Todos los Usuarios (Global)</label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:6px 0;">`;
+    }
 
-        if (communities && Object.keys(communities).length > 0) {
+    if (!isSuper && authComms.length > 0) {
+        authComms.forEach(c => {
+            const isSub = c.id && c.id.startsWith('sub_');
+            const prefix = isSub ? '↳ 💒 Capilla:' : '⛪ Parroquia:';
+            const indent = isSub ? 'margin-left:18px;' : '';
+            html += `<label style="display:block; margin:4px 0; font-weight:bold; ${indent}"><input type="checkbox" name="web-target-chk" value="${c.id}" checked> ${prefix} ${c.nombre || c.id}</label>`;
+        });
+        container.innerHTML = html;
+        return;
+    }
+
+    // Si es Super Admin, traemos el árbol completo de Firebase
+    db.ref('comunidades').once('value').then(snap => {
+        if (snap.exists()) {
+            const communities = snap.val();
             Object.keys(communities).forEach(commKey => {
                 const commData = communities[commKey];
                 const commName = commData.nombre || commKey;
 
-                const hasAuth = isSuper || (typeof authorizedCommunities !== 'undefined' && authorizedCommunities.some(c => c.id === commKey || (c.path && c.path.includes(commKey))));
+                html += `<label style="display:block; margin:4px 0; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="${commKey}"> ⛪ Parroquia: ${commName}</label>`;
 
-                if (hasAuth) {
-                    html += `<label style="display:block; margin:4px 0; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="${commKey}" ${!isSuper ? 'checked' : ''}> ⛪ Parroquia: ${commName}</label>`;
-
-                    if (commData.sub_nodos) {
-                        Object.keys(commData.sub_nodos).forEach(capKey => {
-                            const capData = commData.sub_nodos[capKey];
-                            const capName = capData.nombre || capKey;
-                            html += `<label style="display:block; margin:3px 0 3px 20px; font-size:11px;"><input type="checkbox" name="web-target-chk" value="sub_${capKey}" ${!isSuper ? 'checked' : ''}> ↳ 💒 Capilla: ${capName}</label>`;
-                        });
-                    }
+                if (commData.sub_nodos) {
+                    Object.keys(commData.sub_nodos).forEach(capKey => {
+                        const capData = commData.sub_nodos[capKey];
+                        const capName = capData.nombre || capKey;
+                        html += `<label style="display:block; margin:3px 0 3px 20px; font-size:11px;"><input type="checkbox" name="web-target-chk" value="sub_${capKey}"> ↳ 💒 Capilla: ${capName}</label>`;
+                    });
                 }
             });
         }
 
         if (html === '') {
-            const fallbackId = (typeof selectedCommunityId !== 'undefined' && selectedCommunityId) ? selectedCommunityId : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].id : 'default');
-            html = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${fallbackId}" checked> ⛪ Esta Parroquia / Capilla</label>`;
+            html = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="default" checked> ⛪ Esta Parroquia / Capilla</label>`;
         }
 
         container.innerHTML = html;
-    };
-
-    db.ref('comunidades').once('value').then(snap => {
-        if (snap.exists()) {
-            renderHtmlFromCommunities(snap.val());
-        } else {
-            renderHtmlFromCommunities({});
-        }
     }).catch(() => {
-        renderHtmlFromCommunities({});
+        container.innerHTML = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="default" checked> ⛪ Esta Parroquia / Capilla</label>`;
     });
 }
 

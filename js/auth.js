@@ -113,7 +113,9 @@ auth.onAuthStateChanged(async user => {
             }
         }
         
-        initApp(); 
+        window.authorizedCommunities = authorizedCommunities;
+        window.currentUserRole = userRole;
+        initApp();
 
         // --- INICIO INTEGRACIÓN DE ANUNCIOS ---
         if (canA && authorizedCommunities.length > 0) {
