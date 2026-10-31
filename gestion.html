@@ -54,6 +54,7 @@
            <button id="tab-prayers" class="tab-btn" onclick="switchMod('prayers')">🙏 ORACIONES</button>
            <button id="tab-scripts" class="tab-btn" onclick="switchMod('scripts')">📜 GUIONES</button>
            <button id="tab-reports" class="tab-btn" onclick="switchMod('reports')">📊 REPORTES</button>
+           <button id="tab-notifications" class="tab-btn" onclick="switchMod('notifications')">🔔 AVISOS PUSH</button>
         </div>
         <div class="header-action-group" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-left:auto;">
           <button id="btn-top-save" class="btn btn-save" style="padding:8px 16px; font-size:11px; margin: 3px 0; background: #10B981; color: white;" onclick="saveBorrador()">💾 GUARDAR CAMBIOS</button>
@@ -545,6 +546,72 @@
             <!-- Filas inyectadas dinámicamente -->
           </tbody>
         </table>
+      </section>
+
+      <!-- ========================================================== -->
+      <!-- MÓDULO 6: AVISOS PUSH E HISTORIAL                          -->
+      <!-- ========================================================== -->
+      <section id="mod-notifications" class="module-section" style="display:none; padding: 15px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+          <!-- COLUMNA 1: FORMULARIO DE ENVÍO -->
+          <div class="glass-panel" style="padding: 20px;">
+            <h3 style="margin-top:0; color:var(--primary); font-size:15px; display:flex; align-items:center; gap:8px;">
+              📢 Redactar y Enviar Aviso Push
+            </h3>
+            <small style="color:var(--text-muted); font-size:11px;">Envía avisos push con apertura directa de contenido según tu rango jerárquico.</small>
+            <hr style="border:0; border-top:1px solid var(--glass-border); margin:15px 0;">
+
+            <!-- 1. DESTINATARIOS JERÁRQUICOS -->
+            <label style="font-weight:bold; font-size:12px; color:var(--primary);">1. Destinatarios del Aviso</label>
+            <div id="web-target-checklist-container" style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:12px; border-radius:10px; margin:8px 0 15px 0; max-height:160px; overflow-y:auto;">
+              <!-- Se llena dinámicamente con checkboxes de Parroquia y Capillas según rango -->
+            </div>
+
+            <!-- 2. CONTENIDO -->
+            <label style="font-weight:bold; font-size:12px; color:var(--primary);">2. Mensaje del Aviso</label>
+            <input type="text" id="web-notif-title" placeholder="Título del Aviso (ej: Fiesta Patronal)" style="width:100%; margin:8px 0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <textarea id="web-notif-msg" rows="2" placeholder="Mensaje (ej: Sumate a rezar la novena especial hoy a las 19 hs)" style="width:100%; margin-bottom:15px; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;"></textarea>
+
+            <!-- 3. ACCIÓN INTERACTIVA -->
+            <label style="font-weight:bold; font-size:12px; color:var(--primary);">3. Acción Interactiva al Tocar</label>
+            <select id="web-notif-action-type" onchange="renderWebNotifActionInputs()" style="width:100%; margin:8px 0 12px 0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+              <option value="lecturas">📖 Abrir Lecturas del Día</option>
+              <option value="oracion">🛡️ Abrir Oración Específica</option>
+              <option value="cancion">🎵 Abrir Canción Específica</option>
+              <option value="anuncio">📢 Abrir Anuncios / Flyers</option>
+              <option value="biblia">📖 Abrir Cita / Versículo Bíblico</option>
+              <option value="link_web">🌐 Abrir Enlace Web Externo</option>
+            </select>
+
+            <div id="web-notif-action-fields" style="margin-bottom:15px;">
+              <!-- Campos dinámicos según acción elegida -->
+            </div>
+
+            <!-- 4. PROGRAMACIÓN -->
+            <label style="font-weight:bold; font-size:12px; color:var(--primary);">4. Momento de Envío</label>
+            <div style="display:flex; gap:15px; margin:8px 0 15px 0;">
+              <label style="font-size:12px; cursor:pointer;"><input type="radio" name="web-notif-sched" value="now" checked onchange="toggleWebSchedFields(false)"> 🚀 Inmediato</label>
+              <label style="font-size:12px; cursor:pointer;"><input type="radio" name="web-notif-sched" value="sched" onchange="toggleWebSchedFields(true)"> ⏰ Programar Fecha/Hora</label>
+            </div>
+
+            <div id="web-notif-sched-inputs" style="display:none; gap:10px; margin-bottom:15px;">
+              <input type="date" id="web-notif-date" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+              <input type="time" id="web-notif-time" value="18:00" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+            </div>
+
+            <button class="btn btn-save" style="width:100%; padding:12px; font-weight:bold;" onclick="sendWebNotifPush()">🚀 PUBLICAR Y ENVIAR AVISO PUSH</button>
+          </div>
+
+          <!-- COLUMNA 2: HISTORIAL Y PROGRAMADOS -->
+          <div class="glass-panel" style="padding: 20px;">
+            <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📋 Historial y Avisos Programados</h3>
+            <div id="web-notif-history-list" style="max-height:520px; overflow-y:auto; margin-top:15px;">
+              <!-- Se llena dinámicamente con las notificaciones guardadas en Firebase -->
+            </div>
+          </div>
+
+        </div>
       </section>
 
     </main>

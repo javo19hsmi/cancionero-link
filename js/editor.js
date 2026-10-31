@@ -487,12 +487,13 @@ function switchMod(mod) {
         } else {
             targetMain.style.display = 'grid'; 
         }
-    // PARA EL MÓDULO DE REPORTES
-    if (mod === 'reports') {
-        if (typeof renderReportsModule === 'function') {
-            renderReportsModule();
-        }
-      }
+    // PARA EL MÓDULO DE REPORTES Y NOTIFICACIONES
+    if (mod === 'reports' && typeof renderReportsModule === 'function') {
+        renderReportsModule();
+    }
+    if (mod === 'notifications' && typeof renderNotificationsModule === 'function') {
+        renderNotificationsModule();
+    }
     }
     
     // 4. Activamos visualmente el botón superior correspondiente
@@ -3289,4 +3290,207 @@ function exportReportToCSV() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+}
+
+/* ==========================================================
+   5. MÓDULO DE AVISOS PUSH INTERACTIVOS WEB
+   ========================================================== */
+function renderNotificationsModule() {
+    renderWebNotifTargets();
+    renderWebNotifActionInputs();
+    listenWebNotifHistory();
+}
+
+function renderWebNotifTargets() {
+    const container = document.getElementById('web-target-checklist-container');
+    if (!container) return;
+
+    let html = '';
+    const userRole = (typeof currentUserRole !== 'undefined') ? currentUserRole : 'admin';
+    const isSuper = (userRole === 'super_admin');
+
+    if (isSuper) {
+        html += `<label style="display:block; margin-bottom:6px; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="global" checked> 🌐 Todos los Usuarios (Global)</label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:6px 0;">`;
+    }
+
+    if (typeof allCommunitiesData !== 'undefined' && allCommunitiesData) {
+        Object.keys(allCommunitiesData).forEach(commKey => {
+            const commData = allCommunitiesData[commKey];
+            const commName = commData.nombre || commKey;
+
+            if (isSuper || (selectedCommunityPath && selectedCommunityPath.includes(commKey))) {
+                html += `<label style="display:block; margin:4px 0; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="${commKey}" ${!isSuper ? 'checked' : ''}> ⛪ Parroquia: ${commName}</label>`;
+
+                if (commData.sub_nodos) {
+                    Object.keys(commData.sub_nodos).forEach(capKey => {
+                        const capData = commData.sub_nodos[capKey];
+                        const capName = capData.nombre || capKey;
+                        html += `<label style="display:block; margin:3px 0 3px 20px; font-size:11px;"><input type="checkbox" name="web-target-chk" value="sub_${capKey}" ${!isSuper ? 'checked' : ''}> ↳ 💒 Capilla: ${capName}</label>`;
+                    });
+                }
+            }
+        });
+    } else {
+        html += `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${selectedCommunityId || 'default'}" checked> ⛪ Esta Parroquia / Capilla</label>`;
+    }
+
+    container.innerHTML = html;
+}
+
+function renderWebNotifActionInputs() {
+    const actionType = document.getElementById('web-notif-action-type')?.value;
+    const container = document.getElementById('web-notif-action-fields');
+    if (!container) return;
+
+    let html = '';
+    if (actionType === 'lecturas') {
+        const todayStr = new Date().toISOString().split('T')[0];
+        html = `<label style="font-size:11px;">Fecha de Lecturas de Misa:</label><input type="date" id="web-notif-action-date" value="${todayStr}" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+    } else if (actionType === 'oracion') {
+        html = `<label style="font-size:11px;">Elegir Oración:</label><select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        if (typeof allPrayers !== 'undefined' && allPrayers.length > 0) {
+            allPrayers.forEach(p => { html += `<option value="${p.titulo || p.id}">${p.titulo || p.id}</option>`; });
+        } else {
+            html += `<option value="Padre Nuestro">Padre Nuestro</option><option value="Ave María">Ave María</option>`;
+        }
+        html += `</select>`;
+    } else if (actionType === 'cancion') {
+        html = `<label style="font-size:11px;">Elegir Canción del Cancionero:</label><select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        if (typeof allSongs !== 'undefined' && allSongs.length > 0) {
+            allSongs.forEach(s => { html += `<option value="${s.title || s.id}">${s.title} - ${s.artist || 'Tradicional'}</option>`; });
+        } else {
+            html += `<option value="Canción Seleccionada">Canción Seleccionada</option>`;
+        }
+        html += `</select>`;
+    } else if (actionType === 'biblia') {
+        html = `<div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" id="web-notif-bible-book" placeholder="Libro (ej: San Juan)" value="San Juan" style="flex:2; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+            <input type="number" id="web-notif-bible-cap" placeholder="Cap." value="3" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+            <input type="number" id="web-notif-bible-ver" placeholder="Ver." value="16" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+        </div><small style="color:var(--primary); font-style:italic; font-size:11px; margin-top:4px; display:block;">Vista previa: "Porque tanto amó Dios al mundo, que entregó a su Hijo único..."</small>`;
+    } else if (actionType === 'link_web') {
+        html = `<input type="url" id="web-notif-action-url" placeholder="URL Web (ej: https://www.vistadelpapa.com.ar)" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+    }
+
+    container.innerHTML = html;
+}
+
+function toggleWebSchedFields(show) {
+    const div = document.getElementById('web-notif-sched-inputs');
+    if (div) {
+        div.style.display = show ? 'flex' : 'none';
+        if (show && !document.getElementById('web-notif-date').value) {
+            document.getElementById('web-notif-date').value = new Date().toISOString().split('T')[0];
+        }
+    }
+}
+
+function sendWebNotifPush() {
+    const title = document.getElementById('web-notif-title')?.value.trim();
+    const msg = document.getElementById('web-notif-msg')?.value.trim();
+    if (!title || !msg) return alert("⚠️ Por favor ingresá un título y mensaje para el aviso.");
+
+    const chks = document.querySelectorAll('input[name="web-target-chk"]:checked');
+    const selectedTargets = Array.from(chks).map(c => c.value);
+    if (selectedTargets.length === 0) return alert("⚠️ Seleccioná al menos un destinatario.");
+
+    const actionType = document.getElementById('web-notif-action-type')?.value;
+    let actionData = actionType;
+
+    if (actionType === 'lecturas') {
+        actionData = document.getElementById('web-notif-action-date')?.value || new Date().toISOString().split('T')[0];
+    } else if (actionType === 'oracion') {
+        actionData = document.getElementById('web-notif-action-prayer')?.value || 'oracion';
+    } else if (actionType === 'cancion') {
+        actionData = document.getElementById('web-notif-action-song')?.value || 'cancion';
+    } else if (actionType === 'biblia') {
+        const book = document.getElementById('web-notif-bible-book')?.value || 'San Juan';
+        const cap = document.getElementById('web-notif-bible-cap')?.value || '3';
+        const ver = document.getElementById('web-notif-bible-ver')?.value || '16';
+        actionData = `${book}|${cap}|${ver}`;
+    } else if (actionType === 'link_web') {
+        actionData = document.getElementById('web-notif-action-url')?.value || 'https://';
+    }
+
+    const isSched = document.querySelector('input[name="web-notif-sched"]:checked')?.value === 'sched';
+    let targetTime = Date.now();
+    if (isSched) {
+        const dateVal = document.getElementById('web-notif-date')?.value;
+        const timeVal = document.getElementById('web-notif-time')?.value || '18:00';
+        if (dateVal) {
+            targetTime = new Date(`${dateVal}T${timeVal}`).getTime();
+        }
+    }
+
+    const targetStr = selectedTargets.join(',');
+    const userEmail = (typeof currentUserEmail !== 'undefined') ? currentUserEmail : 'admin_web';
+
+    const notifObj = {
+        titulo: title,
+        mensaje: msg,
+        tipo_accion: actionType,
+        action_data: actionData,
+        comunidad_target: targetStr,
+        sender_email: userEmail,
+        programada: isSched,
+        enviada: !isSched,
+        timestamp_programado: targetTime,
+        timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    const isGlobal = selectedTargets.includes('global') || (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
+    const nodePath = isGlobal ? 'notificaciones_globales' : `${selectedCommunityPath}/notificaciones`;
+
+    firebase.database().ref(nodePath).push(notifObj).then(() => {
+        alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
+        document.getElementById('web-notif-title').value = '';
+        document.getElementById('web-notif-msg').value = '';
+    }).catch(err => {
+        alert("❌ Error al enviar notificación: " + err.message);
+    });
+}
+
+function listenWebNotifHistory() {
+    const listDiv = document.getElementById('web-notif-history-list');
+    if (!listDiv) return;
+
+    const isGlobal = (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
+    const nodePath = isGlobal ? 'notificaciones_globales' : `${selectedCommunityPath}/notificaciones`;
+
+    firebase.database().ref(nodePath).limitToLast(20).on('value', snap => {
+        if (!snap.exists()) {
+            listDiv.innerHTML = '<p style="color:#888; font-size:11px;">No hay avisos registrados aún.</p>';
+            return;
+        }
+
+        let html = '';
+        const raw = snap.val();
+        const keys = Object.keys(raw).reverse();
+
+        keys.forEach(k => {
+            const item = raw[k];
+            const isProg = item.programada && !item.enviada;
+            const dt = new Date(item.timestamp_programado || Date.now());
+            const dateStr = dt.toLocaleString();
+
+            html += `<div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong style="color:var(--text); font-size:12px;">${isProg ? '⏰ [Programada]' : '✅ [Enviada]'} ${item.titulo || 'Aviso'}</strong>
+                    <div style="font-size:11px; color:#aaa; margin-top:2px;">${item.mensaje || ''}</div>
+                    <small style="font-size:9px; color:#888; display:block; margin-top:3px;">📅 ${dateStr} | Por: ${item.sender_email || 'Admin'}</small>
+                </div>
+                ${isProg ? `<button class="btn" style="background:rgba(239,68,68,0.2); color:#FF8A8A; padding:4px 8px; font-size:10px;" onclick="deleteWebScheduledNotif('${nodePath}/${k}')">🗑️ Cancelar</button>` : ''}
+            </div>`;
+        });
+
+        listDiv.innerHTML = html;
+    });
+}
+
+function deleteWebScheduledNotif(fullPath) {
+    if (confirm("¿Querés cancelar este aviso programado?")) {
+        firebase.database().ref(fullPath).remove().then(() => {
+            alert("🗑️ Aviso programado cancelado.");
+        });
+    }
 }
