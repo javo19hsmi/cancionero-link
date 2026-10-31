@@ -3310,19 +3310,17 @@ function renderWebNotifTargets() {
     const userRole = (typeof currentUserRole !== 'undefined') ? currentUserRole : 'admin';
     const isSuper = (userRole === 'super_admin');
 
-    firebase.database().ref('comunidades').once('value').then(snap => {
+    const renderHtmlFromCommunities = (communities) => {
         let html = '';
         if (isSuper) {
             html += `<label style="display:block; margin-bottom:6px; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="global" checked> 🌐 Todos los Usuarios (Global)</label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:6px 0;">`;
         }
 
-        if (snap.exists()) {
-            const communities = snap.val();
+        if (communities && Object.keys(communities).length > 0) {
             Object.keys(communities).forEach(commKey => {
                 const commData = communities[commKey];
                 const commName = commData.nombre || commKey;
 
-                // Si es Súper Admin O si el usuario local tiene permiso en esta comunidad
                 const hasAuth = isSuper || (typeof authorizedCommunities !== 'undefined' && authorizedCommunities.some(c => c.id === commKey || (c.path && c.path.includes(commKey))));
 
                 if (hasAuth) {
@@ -3345,9 +3343,16 @@ function renderWebNotifTargets() {
         }
 
         container.innerHTML = html;
+    };
+
+    db.ref('comunidades').once('value').then(snap => {
+        if (snap.exists()) {
+            renderHtmlFromCommunities(snap.val());
+        } else {
+            renderHtmlFromCommunities({});
+        }
     }).catch(() => {
-        const fallbackId = (typeof selectedCommunityId !== 'undefined' && selectedCommunityId) ? selectedCommunityId : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].id : 'default');
-        container.innerHTML = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="${fallbackId}" checked> ⛪ Esta Parroquia / Capilla</label>`;
+        renderHtmlFromCommunities({});
     });
 }
 
@@ -3456,7 +3461,7 @@ function sendWebNotifPush() {
     const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
     const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
-    firebase.database().ref(nodePath).push(notifObj).then(() => {
+    db.ref(nodePath).push(notifObj).then(() => {
         alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
         document.getElementById('web-notif-title').value = '';
         document.getElementById('web-notif-msg').value = '';
@@ -3473,7 +3478,7 @@ function listenWebNotifHistory() {
     const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
     const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
-    firebase.database().ref(nodePath).limitToLast(20).on('value', snap => {
+    db.ref(nodePath).limitToLast(20).on('value', snap => {
         if (!snap.exists()) {
             listDiv.innerHTML = '<p style="color:#888; font-size:11px;">No hay avisos registrados aún.</p>';
             return;
@@ -3505,7 +3510,7 @@ function listenWebNotifHistory() {
 
 function deleteWebScheduledNotif(fullPath) {
     if (confirm("¿Querés cancelar este aviso programado?")) {
-        firebase.database().ref(fullPath).remove().then(() => {
+        db.ref(fullPath).remove().then(() => {
             alert("🗑️ Aviso programado cancelado.");
         });
     }
