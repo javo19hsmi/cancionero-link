@@ -94,6 +94,9 @@ auth.onAuthStateChanged(async user => {
         if (canS && document.getElementById('tab-reports')) {
             document.getElementById('tab-reports').style.display = 'block';
         }
+        if ((canA || userRole === 'super_admin') && document.getElementById('tab-notifications')) {
+            document.getElementById('tab-notifications').style.display = 'block';
+        }
         
         // ⚡ BOTÓN SUBIR VERSIÓN PÚBLICA (Habilitado para Súper Admin Y Músico Editor / Editor Global)
         if (canS || userRole === 'super_admin') {
