@@ -3449,6 +3449,7 @@ function sendWebNotifPush() {
         tipo_accion: actionType,
         action_data: actionData,
         comunidad_target: targetStr,
+        comunidad_id: targetStr,
         sender_email: userEmail,
         programada: isSched,
         enviada: false,
