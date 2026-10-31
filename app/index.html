@@ -19,6 +19,37 @@
 
   <title>Cancionero Parroquial</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- 🔔 HELPER NOTIFICACIONES ESCRITORIO HTML5 (Para Pestaña Minimizada) -->
+  <script>
+    window.showWebDesktopNotification = function(title, body) {
+      if (!("Notification" in window)) return;
+      if (Notification.permission === "granted") {
+        try {
+          var notif = new Notification(title, {
+            body: body,
+            icon: "favicon.png"
+          });
+          notif.onclick = function() {
+            window.focus();
+          };
+        } catch (e) {
+          console.warn("Error mostrando notificación de escritorio:", e);
+        }
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(function (permission) {
+          if (permission === "granted") {
+            window.showWebDesktopNotification(title, body);
+          }
+        });
+      }
+    };
+
+    // Pedir permiso de escritorio de entrada
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
