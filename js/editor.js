@@ -3461,12 +3461,34 @@ function sendWebNotifPush() {
     const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
     db.ref(nodePath).push(notifObj).then(() => {
+        logAuditoriaWeb(
+            isSched ? "Aviso Web Programado" : "Aviso Web Enviado",
+            `Aviso "${title}" enviado a ${targetStr} (${actionType})`,
+            (typeof selectedCommunityId !== 'undefined' ? selectedCommunityId : 'global')
+        );
         alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
         document.getElementById('web-notif-title').value = '';
         document.getElementById('web-notif-msg').value = '';
     }).catch(err => {
         alert("❌ Error al enviar notificación: " + err.message);
     });
+}
+
+function logAuditoriaWeb(accion, detalle, comunidadId) {
+    try {
+        const userEmail = (typeof currentUserEmail !== 'undefined' && currentUserEmail) ? currentUserEmail : 'admin_web';
+        const logData = {
+            timestamp: firebase.database.ServerValue.TIMESTAMP,
+            usuario_email: userEmail,
+            usuario_nombre: userEmail.split('@')[0],
+            accion: accion,
+            detalle: detalle,
+            comunidad_id: comunidadId || 'global'
+        };
+        db.ref('auditoria').push(logData);
+    } catch (e) {
+        console.warn("Error escribiendo auditoría web:", e);
+    }
 }
 
 function listenWebNotifHistory() {
