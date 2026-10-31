@@ -3451,7 +3451,7 @@ function sendWebNotifPush() {
         comunidad_target: targetStr,
         sender_email: userEmail,
         programada: isSched,
-        enviada: !isSched,
+        enviada: false,
         timestamp_programado: targetTime,
         timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
     };
