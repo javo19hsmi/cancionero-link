@@ -3458,36 +3458,26 @@ function sendWebNotifPush() {
         timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
     };
 
-    const promises = [];
     const isGlobal = selectedTargets.includes('global');
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+    // Escribimos en '/notificaciones' o 'notificaciones_globales' para que las Cloud Functions de Google activen el Push a los celulares Android
+    const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
 
-    if (isGlobal) {
-        console.log("🚀 [GESTION PUSH] Escribiendo aviso en 'notificaciones_globales':", notifObj);
-        promises.push(db.ref('notificaciones_globales').push(notifObj));
-    } else {
-        selectedTargets.forEach(targetVal => {
-            let cleanVal = targetVal.replace(/^sub_/, '');
-            if (cleanVal === 'pst_001') {
-                const p = 'comunidades/pst_001/notificaciones';
-                console.log("🚀 [GESTION PUSH] Escribiendo aviso en Sede Parroquial:", p, notifObj);
-                promises.push(db.ref(p).push(notifObj));
-            } else if (cleanVal.includes('cap_') || cleanVal.includes('sub_') || cleanVal.length > 10) {
-                const p = `comunidades/pst_001/sub_nodos/${cleanVal}/notificaciones`;
-                console.log("🚀 [GESTION PUSH] Escribiendo aviso en Capilla Sub-nodo:", p, notifObj);
-                promises.push(db.ref(p).push(notifObj));
-            } else {
-                const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
-                const p = `${safePath}/notificaciones`;
-                console.log("🚀 [GESTION PUSH] Escribiendo aviso en ruta segura:", p, notifObj);
-                promises.push(db.ref(p).push(notifObj));
-            }
-        });
-    }
+    console.log("🚀 [GESTION PUSH] Escribiendo aviso en Firebase en la ruta:", nodePath, notifObj);
 
-    Promise.all(promises).then(() => {
+    db.ref(nodePath).push(notifObj).then(() => {
         logAuditoriaWeb(
             isSched ? "Aviso Web Programado" : "Aviso Web Enviado",
             `Aviso "${title}" enviado a ${targetStr} (${actionType})`,
+            (typeof selectedCommunityId !== 'undefined' ? selectedCommunityId : 'global')
+        );
+        alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
+        document.getElementById('web-notif-title').value = '';
+        document.getElementById('web-notif-msg').value = '';
+    }).catch(err => {
+        console.error("❌ [GESTION PUSH ERROR]", err);
+        alert("❌ Error al enviar notificación: " + err.message);
+    });
             (typeof selectedCommunityId !== 'undefined' ? selectedCommunityId : 'global')
         );
         alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
