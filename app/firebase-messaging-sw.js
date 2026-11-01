@@ -2,13 +2,13 @@ importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js'
 importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
 
 firebase.initializeApp({
-  apiKey: "AIzaSyBYAV2LTgrNQnE3-5w-1_P780O9xP45b9A",
+  apiKey: "AIzaSyBYAV2LTgrNQnE3-5wafXQy7H7dj7oyWtI",
   authDomain: "cancionero-parroquial-269d0.firebaseapp.com",
   databaseURL: "https://cancionero-parroquial-269d0-default-rtdb.firebaseio.com",
   projectId: "cancionero-parroquial-269d0",
   storageBucket: "cancionero-parroquial-269d0.appspot.com",
   messagingSenderId: "485257131926",
-  appId: "1:485257131926:web:8a506bfb8e5c8e70"
+  appId: "1:485257131926:web:fb24321bad9f8dd2f00fb7"
 });
 
 const messaging = firebase.messaging();
