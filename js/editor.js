@@ -3478,15 +3478,6 @@ function sendWebNotifPush() {
         console.error("❌ [GESTION PUSH ERROR]", err);
         alert("❌ Error al enviar notificación: " + err.message);
     });
-            (typeof selectedCommunityId !== 'undefined' ? selectedCommunityId : 'global')
-        );
-        alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
-        document.getElementById('web-notif-title').value = '';
-        document.getElementById('web-notif-msg').value = '';
-    }).catch(err => {
-        console.error("❌ [GESTION PUSH ERROR]", err);
-        alert("❌ Error al enviar notificación: " + err.message);
-    });
 }
 
 function logAuditoriaWeb(accion, detalle, comunidadId) {
