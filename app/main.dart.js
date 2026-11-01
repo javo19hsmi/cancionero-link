@@ -72369,9 +72369,9 @@ B.eS().$1("Estado de permisos de notificaci\xf3n: "+m.c.j(0))
 s=8
 return B.e(n.gy7().xz(!0,!0,!0),$async$q_)
 case 8:s=9
-return B.e(n.gy7().n1(null),$async$q_)
+return B.e(n.gy7().n1("BH2_aGtJ4sPzZp0v_OsPAdnXONtNLS5AXn6p1CCr6-jRw79KuhNcqZ2VMQS01pu1HgTYvH6KwTJTo1oVVb4pDQk"),$async$q_)
 case 9:l=b
-B.eS().$1("\ud83d\udd11 FCM TOKEN DEL CELULAR: "+B.j(l))
+B.eS().$1("\ud83d\udd11 FCM TOKEN WEB: "+B.j(l))
 q=1
 s=6
 break
@@ -96223,12 +96223,13 @@ $1(a){return A.f.hU(a,"messaging/","")},
 $S:19}
 B.ab1.prototype={
 n1(a){return this.asw(a)},
-asw(a){var s=0,r=B.o(t.N),q,p=2,o=[],n=this,m,l,k,j,i
+asw(a){var s=0,r=B.o(t.N),q,p=2,o=[],n=this,m,l,k,j,i,h
 var $async$n1=B.k(function(b,c){if(b===1){o.push(c)
 s=p}while(true)switch(s){case 0:p=4
 k=v.G.firebase_messaging
+j=a==null?null:t.SF.a({vapidKey:a})
 s=7
-return B.e(B.eH(k.getToken(n.a,null),t.N),$async$n1)
+return B.e(B.eH(k.getToken(n.a,j),t.N),$async$n1)
 case 7:m=c
 q=m
 s=1
@@ -96237,12 +96238,12 @@ p=2
 s=6
 break
 case 4:p=3
-i=o.pop()
-l=B.al(i)
+h=o.pop()
+l=B.al(h)
 if(A.f.n(J.ap(l).toLowerCase(),"no active service worker")&&$.bZy){$.bZy=!1
 q=n.n1(a)
 s=1
-break}throw i
+break}throw h
 s=6
 break
 case 3:s=2
