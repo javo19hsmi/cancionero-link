@@ -3451,22 +3451,40 @@ function sendWebNotifPush() {
         comunidad_target: targetStr,
         comunidad_id: targetStr,
         sender_email: userEmail,
+        sender_nombre: (typeof currentUserEmail !== 'undefined' ? currentUserEmail.split('@')[0] : 'Admin Web'),
         programada: isSched,
         enviada: false,
         timestamp_programado: targetTime,
         timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
     };
 
+    const promises = [];
     const isGlobal = selectedTargets.includes('global');
-    let nodePath = 'notificaciones_globales';
-    if (!isGlobal) {
-        const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
-        nodePath = `${safePath}/notificaciones`;
+
+    if (isGlobal) {
+        console.log("🚀 [GESTION PUSH] Escribiendo aviso en 'notificaciones_globales':", notifObj);
+        promises.push(db.ref('notificaciones_globales').push(notifObj));
+    } else {
+        selectedTargets.forEach(targetVal => {
+            let cleanVal = targetVal.replace(/^sub_/, '');
+            if (cleanVal === 'pst_001') {
+                const p = 'comunidades/pst_001/notificaciones';
+                console.log("🚀 [GESTION PUSH] Escribiendo aviso en Sede Parroquial:", p, notifObj);
+                promises.push(db.ref(p).push(notifObj));
+            } else if (cleanVal.includes('cap_') || cleanVal.includes('sub_') || cleanVal.length > 10) {
+                const p = `comunidades/pst_001/sub_nodos/${cleanVal}/notificaciones`;
+                console.log("🚀 [GESTION PUSH] Escribiendo aviso en Capilla Sub-nodo:", p, notifObj);
+                promises.push(db.ref(p).push(notifObj));
+            } else {
+                const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+                const p = `${safePath}/notificaciones`;
+                console.log("🚀 [GESTION PUSH] Escribiendo aviso en ruta segura:", p, notifObj);
+                promises.push(db.ref(p).push(notifObj));
+            }
+        });
     }
 
-    console.log("🚀 [GESTION PUSH] Escribiendo aviso en Firebase en la ruta:", nodePath, notifObj);
-
-    db.ref(nodePath).push(notifObj).then(() => {
+    Promise.all(promises).then(() => {
         logAuditoriaWeb(
             isSched ? "Aviso Web Programado" : "Aviso Web Enviado",
             `Aviso "${title}" enviado a ${targetStr} (${actionType})`,
