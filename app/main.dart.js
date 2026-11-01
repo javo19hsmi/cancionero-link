@@ -75062,9 +75062,9 @@ m=J.as(s==null?"global":s)
 s=this.b
 l=B.e.gS(s.split("/"))
 if(c){A.dX().$1(f+b+"] Aviso antiguo de la base de datos al conectar: '"+r+"'")
-return}if(b==="PARROQUIA"&&B.h.n(s,"/sub_nodos/")){k=B.h.n(m,l)
-j=m==="pst_001"||m==="global"||B.h.n(m,"global")
-if(!k&&!j){A.dX().$1(f+b+"] Aviso no destinado a esta capilla ("+m+" != "+l+"): '"+r+"'")
+return}if(B.h.n(s,"/sub_nodos/")){k=B.h.n(m,l)
+j=m==="global"||B.h.n(m,"global")
+if(!k&&!j){A.dX().$1(f+b+"] Aviso exclusivo de Parroquia u otra capilla ("+m+" != "+l+"): '"+r+"'")
 return}}A.dX().$1("\ud83d\ude80 [WEB NOTIF EN VIVO DISPARADA - "+b+"] T\xedtulo: '"+r+"' | Mensaje: '"+q+"' | Tipo: "+p+" | Target: "+m)
 A.cvq(r,q)
 s=e.c.Z(t.q).f
