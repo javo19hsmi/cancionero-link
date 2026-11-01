@@ -3457,9 +3457,14 @@ function sendWebNotifPush() {
         timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
     };
 
-    const isGlobal = selectedTargets.includes('global') || (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
-    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
-    const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
+    const isGlobal = selectedTargets.includes('global');
+    let nodePath = 'notificaciones_globales';
+    if (!isGlobal) {
+        const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
+        nodePath = `${safePath}/notificaciones`;
+    }
+
+    console.log("🚀 [GESTION PUSH] Escribiendo aviso en Firebase en la ruta:", nodePath, notifObj);
 
     db.ref(nodePath).push(notifObj).then(() => {
         logAuditoriaWeb(
@@ -3471,6 +3476,7 @@ function sendWebNotifPush() {
         document.getElementById('web-notif-title').value = '';
         document.getElementById('web-notif-msg').value = '';
     }).catch(err => {
+        console.error("❌ [GESTION PUSH ERROR]", err);
         alert("❌ Error al enviar notificación: " + err.message);
     });
 }
