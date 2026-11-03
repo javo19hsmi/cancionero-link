@@ -3504,41 +3504,123 @@ function listenWebNotifHistory() {
     const isGlobal = (typeof currentUserRole !== 'undefined' && currentUserRole === 'super_admin');
     const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : ((typeof authorizedCommunities !== 'undefined' && authorizedCommunities.length > 0) ? authorizedCommunities[0].path : 'comunidades/pst_001');
     const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
+    const archiveNodePath = isGlobal ? 'notificaciones_globales_archivadas' : `${safePath}/notificaciones_archivadas`;
 
+    // 🧹 Purga automática de 60 días al conectar
+    try {
+        db.ref(archiveNodePath).once('value', snap => {
+            if (snap.exists()) {
+                const map = snap.val();
+                const limiteMs = Date.now() - (60 * 24 * 60 * 60 * 1000);
+                Object.keys(map).forEach(k => {
+                    const item = map[k];
+                    const ts = (item.timestamp_creacion || item.timestamp_programado || 0);
+                    if (ts > 0 && ts < limiteMs) {
+                        db.ref(`${archiveNodePath}/${k}`).remove();
+                    }
+                });
+            }
+        });
+    } catch (e) {}
+
+    // 1. Escuchar Avisos Activos / Enviados Recentemente
     db.ref(nodePath).limitToLast(20).on('value', snap => {
         if (!snap.exists()) {
-            listDiv.innerHTML = '<p style="color:#888; font-size:11px;">No hay avisos registrados aún.</p>';
+            listDiv.innerHTML = '<p style="color:#888; font-size:11px;">No hay avisos activos registrados aún.</p>';
+        } else {
+            let html = '';
+            const raw = snap.val();
+            const keys = Object.keys(raw).reverse();
+
+            keys.forEach(k => {
+                const item = raw[k];
+                const isProg = item.programada && !item.enviada;
+                const dt = new Date(item.timestamp_programado || Date.now());
+                const dateStr = dt.toLocaleString();
+
+                html += `<div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <strong style="color:var(--text); font-size:13px;">${isProg ? '⏰ [Programada]' : '✅ [Enviada]'} ${item.titulo || 'Aviso'}</strong>
+                            <div style="font-size:11px; color:#aaa; margin-top:4px;">${item.mensaje || ''}</div>
+                            <small style="font-size:9px; color:#888; display:block; margin-top:4px;">📅 ${dateStr} | Por: ${item.sender_email || 'Admin'}</small>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                        <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3);" onclick="reuseWebNotif('${nodePath}/${k}')">🔄 REENVIAR AVISO</button>
+                        <button class="btn" style="background:rgba(96,165,250,0.15); color:#60A5FA; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(96,165,250,0.3);" onclick="archiveWebNotif('${nodePath}/${k}', '${archiveNodePath}/${k}')">🗑️ ARCHIVAR</button>
+                    </div>
+                </div>`;
+            });
+
+            listDiv.innerHTML = html;
+        }
+
+        // 2. Renderizar Histórico de Archivados (60 días)
+        listenWebNotifArchive(archiveNodePath);
+    });
+}
+
+function listenWebNotifArchive(archiveNodePath) {
+    const archiveContainer = document.getElementById('web-notif-archive-list');
+    if (!archiveContainer) return;
+
+    db.ref(archiveNodePath).limitToLast(20).on('value', snap => {
+        if (!snap.exists()) {
+            archiveContainer.innerHTML = '<p style="color:#888; font-size:11px; font-style:italic;">No hay avisos archivados en los últimos 60 días.</p>';
             return;
         }
 
-        let html = '';
+        let html = '<h5 style="color:#aaa; font-size:11px; margin-top:15px; margin-bottom:10px; font-weight:bold;">📦 HISTÓRICO DE AVISOS ARCHIVADOS (60 DÍAS)</h5>';
         const raw = snap.val();
         const keys = Object.keys(raw).reverse();
 
         keys.forEach(k => {
             const item = raw[k];
-            const isProg = item.programada && !item.enviada;
             const dt = new Date(item.timestamp_programado || Date.now());
             const dateStr = dt.toLocaleString();
 
-            html += `<div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); padding:10px; border-radius:10px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                    <strong style="color:var(--text); font-size:12px;">${isProg ? '⏰ [Programada]' : '✅ [Enviada]'} ${item.titulo || 'Aviso'}</strong>
-                    <div style="font-size:11px; color:#aaa; margin-top:2px;">${item.mensaje || ''}</div>
-                    <small style="font-size:9px; color:#888; display:block; margin-top:3px;">📅 ${dateStr} | Por: ${item.sender_email || 'Admin'}</small>
+            html += `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px;">
+                <strong style="color:#888; font-size:12px;">📦 ${item.titulo || 'Aviso Archivado'}</strong>
+                <div style="font-size:11px; color:#888; margin-top:2px;">${item.mensaje || ''}</div>
+                <small style="font-size:9px; color:#666; display:block; margin-top:3px;">📅 Archivado | Enviado: ${dateStr}</small>
+                <div style="display:flex; justify-content:flex-end; margin-top:6px;">
+                    <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3);" onclick="reuseWebNotif('${archiveNodePath}/${k}')">🔄 REENVIAR AVISO</button>
                 </div>
-                ${isProg ? `<button class="btn" style="background:rgba(239,68,68,0.2); color:#FF8A8A; padding:4px 8px; font-size:10px;" onclick="deleteWebScheduledNotif('${nodePath}/${k}')">🗑️ Cancelar</button>` : ''}
             </div>`;
         });
 
-        listDiv.innerHTML = html;
+        archiveContainer.innerHTML = html;
     });
 }
 
-function deleteWebScheduledNotif(fullPath) {
-    if (confirm("¿Querés cancelar este aviso programado?")) {
-        db.ref(fullPath).remove().then(() => {
-            alert("🗑️ Aviso programado cancelado.");
-        });
-    }
+function reuseWebNotif(fullPath) {
+    db.ref(fullPath).once('value', snap => {
+        if (snap.exists()) {
+            const item = snap.val();
+            const titleEl = document.getElementById('web-notif-title');
+            const msgEl = document.getElementById('web-notif-msg');
+            const typeEl = document.getElementById('web-notif-action-type');
+
+            if (titleEl) titleEl.value = item.titulo || '';
+            if (msgEl) msgEl.value = item.mensaje || '';
+            if (typeEl) typeEl.value = item.tipo_accion || 'lecturas';
+
+            alert("✍️ Datos cargados en el formulario de arriba. Podés hacer ajustes y enviarlo.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    });
+}
+
+function archiveWebNotif(fromPath, toPath) {
+    db.ref(fromPath).once('value', snap => {
+        if (snap.exists()) {
+            const item = snap.val();
+            db.ref(toPath).set(item).then(() => {
+                db.ref(fromPath).remove().then(() => {
+                    alert("📦 Aviso movido al Histórico (60 días).");
+                });
+            });
+        }
+    });
 }
