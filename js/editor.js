@@ -3394,6 +3394,13 @@ function toggleWebCapillaAccordion(commKey, btn) {
     }
 }
 
+function selectAllWebTargets(select) {
+    const checkboxes = document.querySelectorAll('input[name="web-target-chk"]');
+    checkboxes.forEach(chk => {
+        chk.checked = select;
+    });
+}
+
 function handleWebTargetGlobalChange(globalChk) {
     const isChecked = globalChk.checked;
     const checkboxes = document.querySelectorAll('input[name="web-target-chk"]');
