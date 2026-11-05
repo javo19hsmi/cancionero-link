@@ -3477,10 +3477,14 @@ function renderWebNotifActionInputs() {
         populatePrayerOptionsDropdown();
         updateWebNotifLivePreview();
     } else if (actionType === 'cancion') {
-        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Canción del Cancionero:</label>
-        <select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
-            <option value="">Cargando canciones de la base de datos...</option>
-        </select>`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Buscar y Elegir Canción del Cancionero:</label>
+        <input type="hidden" id="web-notif-action-song" value="">
+        <div style="position:relative; width:100%; margin-top:4px;">
+            <input type="text" id="web-notif-song-search-input" oninput="filterWebNotifSongSuggestions()" onfocus="filterWebNotifSongSuggestions()" placeholder="🔍 Buscar por título o autor (ej: Zamba, Zezinho)..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <div id="web-notif-song-results" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:220px; overflow-y:auto; background:rgba(15,23,42,0.95); border:1px solid var(--primary); border-radius:8px; z-index:1000; box-shadow:0 8px 25px rgba(0,0,0,0.5); backdrop-filter:blur(10px);">
+                <!-- Se llena dinámicamente con las canciones sugeridas -->
+            </div>
+        </div>`;
         container.innerHTML = html;
         populateSongOptionsDropdown();
         updateWebNotifLivePreview();
@@ -3557,56 +3561,93 @@ function renderPrayerSelectOptions(select, list) {
     select.innerHTML = optionsHtml;
 }
 
+let cachedWebNotifSongs = [];
+
 function populateSongOptionsDropdown() {
-    const select = document.getElementById('web-notif-action-song');
-    if (!select) return;
-
-    const songList = [];
-    if (typeof allSongs !== 'undefined' && allSongs) {
-        if (Array.isArray(allSongs)) {
-            songList.push(...allSongs);
-        } else if (typeof allSongs === 'object') {
-            Object.values(allSongs).forEach(s => songList.push(s));
-        }
-    }
-
-    if (songList.length > 0) {
-        renderSongSelectOptions(select, songList);
-    } else {
-        db.ref('canciones').once('value').then(snap => {
-            const fetched = [];
-            if (snap.exists()) {
-                const map = snap.val();
-                Object.keys(map).forEach(k => fetched.push({ id: k, ...map[k] }));
-            }
-            renderSongSelectOptions(select, fetched);
-        }).catch(err => {
-            console.error("Error cargando canciones de Firebase:", err);
-            renderSongSelectOptions(select, [{ title: 'Canción Seleccionada' }]);
-        });
-    }
-}
-
-function renderSongSelectOptions(select, list) {
-    if (!select) return;
-    if (!list || list.length === 0) {
-        select.innerHTML = `<option value="">No hay canciones registradas</option>`;
+    if (typeof allSongs !== 'undefined' && allSongs && allSongs.length > 0) {
+        cachedWebNotifSongs = Array.isArray(allSongs) ? allSongs : Object.values(allSongs);
+        filterWebNotifSongSuggestions();
         return;
     }
-    const uniqueMap = {};
-    list.forEach(s => {
-        const title = s.title || s.titulo || s.id || 'Canción';
-        const artist = s.artist || s.artista || 'Tradicional';
-        if (!uniqueMap[title]) uniqueMap[title] = `${title} - ${artist}`;
+
+    db.ref('canciones').once('value').then(snap => {
+        const fetched = [];
+        if (snap.exists()) {
+            const map = snap.val();
+            Object.keys(map).forEach(k => fetched.push({ id: k, ...map[k] }));
+        }
+        cachedWebNotifSongs = fetched;
+        filterWebNotifSongSuggestions();
+    }).catch(err => {
+        console.error("Error cargando canciones de Firebase:", err);
+    });
+}
+
+function filterWebNotifSongSuggestions() {
+    const input = document.getElementById('web-notif-song-search-input');
+    const resultsDiv = document.getElementById('web-notif-song-results');
+    if (!input || !resultsDiv) return;
+
+    const query = input.value.trim().toLowerCase();
+    if (!cachedWebNotifSongs || cachedWebNotifSongs.length === 0) {
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = '<div style="padding:10px; font-size:11px; color:#888;">Cargando canciones de la base de datos...</div>';
+        return;
+    }
+
+    const matches = cachedWebNotifSongs.filter(s => {
+        const t = (s.title || s.titulo || '').toLowerCase();
+        const a = (s.artist || s.artista || '').toLowerCase();
+        return !query || t.includes(query) || a.includes(query);
+    }).slice(0, 15);
+
+    if (matches.length === 0) {
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = '<div style="padding:10px; font-size:11px; color:#888;">No se encontraron canciones para tu búsqueda.</div>';
+        return;
+    }
+
+    let html = '';
+    matches.forEach(s => {
+        const rawTitle = s.title || s.titulo || s.id || 'Canción';
+        const rawArtist = s.artist || s.artista || 'Tradicional';
+        const titleSafe = rawTitle.replace(/'/g, "\\'");
+        const artistSafe = rawArtist.replace(/'/g, "\\'");
+        const hasAudio = !!(s.audioUrl || s.audio || s.audio_url);
+
+        html += `<div class="song-suggestion-item" onclick="selectWebNotifSong('${titleSafe}', '${artistSafe}')" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.05); display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <strong style="color:#fff; font-size:12px; display:block;">🎵 ${rawTitle}</strong>
+                <small style="color:#94a3b8; font-size:10px;">👤 Autor: ${rawArtist}</small>
+            </div>
+            ${hasAudio ? '<span style="font-size:9px; background:rgba(16,185,129,0.2); color:#34d399; border:1px solid rgba(16,185,129,0.3); padding:2px 6px; border-radius:6px; font-weight:bold; flex-shrink:0;">🎧 Con Audio</span>' : ''}
+        </div>`;
     });
 
-    const sortedTitles = Object.keys(uniqueMap).sort((a, b) => a.localeCompare(b));
-    let optionsHtml = '';
-    sortedTitles.forEach(t => {
-        optionsHtml += `<option value="${t}">${uniqueMap[t]}</option>`;
-    });
-    select.innerHTML = optionsHtml;
+    resultsDiv.style.display = 'block';
+    resultsDiv.innerHTML = html;
 }
+
+function selectWebNotifSong(title, artist) {
+    const input = document.getElementById('web-notif-song-search-input');
+    const hiddenVal = document.getElementById('web-notif-action-song');
+    const resultsDiv = document.getElementById('web-notif-song-results');
+
+    const fullText = `${title} - ${artist}`;
+    if (input) input.value = fullText;
+    if (hiddenVal) hiddenVal.value = title;
+    if (resultsDiv) resultsDiv.style.display = 'none';
+
+    updateWebNotifLivePreview();
+}
+
+document.addEventListener('click', function(e) {
+    const resultsDiv = document.getElementById('web-notif-song-results');
+    const input = document.getElementById('web-notif-song-search-input');
+    if (resultsDiv && input && !input.contains(e.target) && !resultsDiv.contains(e.target)) {
+        resultsDiv.style.display = 'none';
+    }
+});
 
 function toggleWebSchedFields(show) {
     const div = document.getElementById('web-notif-sched-inputs');
