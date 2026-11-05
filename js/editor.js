@@ -3541,36 +3541,77 @@ function updateWebNotifLivePreview() {
     if (iconEl) iconEl.innerText = actionInfo.icon;
 }
 
+let catholicBibleData = null;
+
+function loadCatholicBibleJson() {
+    if (catholicBibleData) return Promise.resolve(catholicBibleData);
+
+    return fetch('app/assets/assets/biblia_lpd.json')
+        .then(res => res.json())
+        .then(data => {
+            catholicBibleData = data;
+            return data;
+        })
+        .catch(() => {
+            return fetch('assets/biblia_lpd.json')
+                .then(res => res.json())
+                .then(data => { catholicBibleData = data; return data; })
+                .catch(() => null);
+        });
+}
+
 function updateWebNotifBibleDropdowns() {
     const bookSelect = document.getElementById('web-notif-bible-book');
     const capSelect = document.getElementById('web-notif-bible-cap');
     const verSelect = document.getElementById('web-notif-bible-ver');
     if (!bookSelect || !capSelect) return;
 
-    const selectedOpt = bookSelect.options[bookSelect.selectedIndex];
-    const maxCaps = parseInt(selectedOpt?.getAttribute('data-caps') || '150');
-    const currentCap = parseInt(capSelect.value || '1');
+    const selectedBookName = bookSelect.value || 'San Juan';
 
-    // Llenar selector de capítulos reales (1 a maxCaps)
-    let capHtml = '';
-    for (let i = 1; i <= maxCaps; i++) {
-        const sel = (i === currentCap || (currentCap > maxCaps && i === 1)) ? 'selected' : '';
-        capHtml += `<option value="${i}" ${sel}>Capítulo ${i}</option>`;
-    }
-    capSelect.innerHTML = capHtml;
-
-    // Llenar selector de versículos
-    if (verSelect) {
-        const currentVer = parseInt(verSelect.value || '1');
-        let verHtml = '';
-        for (let v = 1; v <= 100; v++) {
-            const sel = (v === currentVer) ? 'selected' : '';
-            verHtml += `<option value="${v}" ${sel}>Versículo ${v}</option>`;
+    loadCatholicBibleJson().then(bible => {
+        let bookObj = null;
+        if (bible && Array.isArray(bible)) {
+            bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().trim() === selectedBookName.toLowerCase().trim());
+            if (!bookObj) {
+                bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().includes(selectedBookName.toLowerCase()));
+            }
         }
-        verSelect.innerHTML = verHtml;
-    }
 
-    updateWebNotifLivePreview();
+        const totalCaps = bookObj ? bookObj.capitulos.length : parseInt(bookSelect.options[bookSelect.selectedIndex]?.getAttribute('data-caps') || '21');
+        const currentCap = parseInt(capSelect.value || '1');
+        const targetCap = (currentCap > totalCaps || currentCap < 1) ? 1 : currentCap;
+
+        // 1. Rellenar selector de Capítulos
+        let capHtml = '';
+        for (let i = 1; i <= totalCaps; i++) {
+            const sel = (i === targetCap) ? 'selected' : '';
+            capHtml += `<option value="${i}" ${sel}>Capítulo ${i}</option>`;
+        }
+        capSelect.innerHTML = capHtml;
+
+        // 2. Rellenar selector de Versículos exactos
+        let totalVerses = 25; // fallback razonable
+        if (bookObj && bookObj.capitulos) {
+            const capObj = bookObj.capitulos.find(c => c.c == targetCap) || bookObj.capitulos[targetCap - 1] || bookObj.capitulos[0];
+            if (capObj && capObj.v) {
+                totalVerses = capObj.v.length;
+            }
+        }
+
+        if (verSelect) {
+            const currentVer = parseInt(verSelect.value || '1');
+            const targetVer = (currentVer > totalVerses || currentVer < 1) ? 1 : currentVer;
+
+            let verHtml = '';
+            for (let v = 1; v <= totalVerses; v++) {
+                const sel = (v === targetVer) ? 'selected' : '';
+                verHtml += `<option value="${v}" ${sel}>Versículo ${v}</option>`;
+            }
+            verSelect.innerHTML = verHtml;
+        }
+
+        updateWebNotifLivePreview();
+    });
 }
 
 function renderWebNotifActionInputs() {
@@ -3626,7 +3667,7 @@ function renderWebNotifActionInputs() {
             </div>
             <div>
                 <small style="font-size:10px; color:var(--primary); display:block;">Capítulo:</small>
-                <select id="web-notif-bible-cap" onchange="updateWebNotifLivePreview();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                <select id="web-notif-bible-cap" onchange="updateWebNotifBibleDropdowns();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
                     <option value="1">Capítulo 1</option>
                 </select>
             </div>
