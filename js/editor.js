@@ -3311,8 +3311,8 @@ function renderWebNotifTargets() {
 
     let html = '';
     if (isSuper) {
-        html += `<label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:bold; cursor:pointer; color:var(--primary); font-size:13px;">
-            <input type="checkbox" name="web-target-chk" value="global" checked onchange="handleWebTargetGlobalChange(this)"> 🌐 Todos los Usuarios (Global)
+        html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin-bottom:8px; font-weight:bold; cursor:pointer; color:var(--primary); font-size:13px; width:100%;">
+            <input type="checkbox" name="web-target-chk" value="global" checked onchange="handleWebTargetGlobalChange(this)" style="margin:0 !important;"> <span>🌐 Todos los Usuarios (Global)</span>
         </label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:8px 0;">`;
     }
 
@@ -3321,8 +3321,8 @@ function renderWebNotifTargets() {
             const isSub = c.id && c.id.startsWith('sub_');
             const prefix = isSub ? '↳ ⛪ Capilla:' : '🏛️ Parroquia:';
             const indent = isSub ? 'margin-left:22px; font-size:11px;' : 'font-size:12px; font-weight:bold;';
-            html += `<label style="display:flex; align-items:center; gap:8px; margin:6px 0; cursor:pointer; ${indent}">
-                <input type="checkbox" name="web-target-chk" value="${c.id}" checked> ${prefix} ${c.nombre || c.id}
+            html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:6px 0; cursor:pointer; width:100%; ${indent}">
+                <input type="checkbox" name="web-target-chk" value="${c.id}" checked style="margin:0 !important;"> <span>${prefix} ${c.nombre || c.id}</span>
             </label>`;
         });
         container.innerHTML = html;
@@ -3337,16 +3337,16 @@ function renderWebNotifTargets() {
                 const commData = communities[commKey];
                 const commName = commData.nombre || commKey;
 
-                html += `<label style="display:flex; align-items:center; gap:8px; margin:8px 0 4px 0; font-weight:bold; font-size:12px; cursor:pointer;">
-                    <input type="checkbox" name="web-target-chk" value="${commKey}" checked onchange="handleWebTargetParroquiaChange(this, '${commKey}')"> 🏛️ Parroquia: ${commName}
+                html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:8px 0 4px 0; font-weight:bold; font-size:12px; cursor:pointer; width:100%;">
+                    <input type="checkbox" name="web-target-chk" value="${commKey}" checked onchange="handleWebTargetParroquiaChange(this, '${commKey}')" style="margin:0 !important;"> <span>🏛️ Parroquia: ${commName}</span>
                 </label>`;
 
                 if (commData.sub_nodos) {
                     Object.keys(commData.sub_nodos).forEach(capKey => {
                         const capData = commData.sub_nodos[capKey];
                         const capName = capData.nombre || capKey;
-                        html += `<label style="display:flex; align-items:center; gap:8px; margin:4px 0 4px 22px; font-size:11px; cursor:pointer; color:var(--text-muted);">
-                            <input type="checkbox" name="web-target-chk" value="sub_${capKey}" data-parent="${commKey}" checked onchange="handleWebTargetCapillaChange(this, '${commKey}')"> ↳ ⛪ Capilla: ${capName}
+                        html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:4px 0 4px 22px; font-size:11px; cursor:pointer; color:var(--text-muted); width:100%;">
+                            <input type="checkbox" name="web-target-chk" value="sub_${capKey}" data-parent="${commKey}" checked onchange="handleWebTargetCapillaChange(this, '${commKey}')" style="margin:0 !important;"> <span>↳ ⛪ Capilla: ${capName}</span>
                         </label>`;
                     });
                 }
@@ -3354,15 +3354,15 @@ function renderWebNotifTargets() {
         }
 
         if (html === '') {
-            html = `<label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
-                <input type="checkbox" name="web-target-chk" value="default" checked> 🏛️ Esta Parroquia / Capilla
+            html = `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; font-size:12px; cursor:pointer;">
+                <input type="checkbox" name="web-target-chk" value="default" checked style="margin:0 !important;"> <span>🏛️ Esta Parroquia / Capilla</span>
             </label>`;
         }
 
         container.innerHTML = html;
     }).catch(() => {
-        container.innerHTML = `<label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
-            <input type="checkbox" name="web-target-chk" value="default" checked> 🏛️ Esta Parroquia / Capilla
+        container.innerHTML = `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; font-size:12px; cursor:pointer;">
+            <input type="checkbox" name="web-target-chk" value="default" checked style="margin:0 !important;"> <span>🏛️ Esta Parroquia / Capilla</span>
         </label>`;
     });
 }
