@@ -3430,6 +3430,82 @@ function updateGlobalChkStatus() {
     globalChk.checked = allChecked;
 }
 
+const CATHOLIC_BIBLE_BOOKS = [
+    { name: "San Mateo", caps: 28, testament: "NT" },
+    { name: "San Marcos", caps: 16, testament: "NT" },
+    { name: "San Lucas", caps: 24, testament: "NT" },
+    { name: "San Juan", caps: 21, testament: "NT" },
+    { name: "Hechos de los Apóstoles", caps: 28, testament: "NT" },
+    { name: "Romanos", caps: 16, testament: "NT" },
+    { name: "1 Corintios", caps: 16, testament: "NT" },
+    { name: "2 Corintios", caps: 13, testament: "NT" },
+    { name: "Gálatas", caps: 6, testament: "NT" },
+    { name: "Efesios", caps: 6, testament: "NT" },
+    { name: "Filipenses", caps: 4, testament: "NT" },
+    { name: "Colosenses", caps: 4, testament: "NT" },
+    { name: "1 Tesalonicenses", caps: 5, testament: "NT" },
+    { name: "2 Tesalonicenses", caps: 3, testament: "NT" },
+    { name: "1 Timoteo", caps: 6, testament: "NT" },
+    { name: "2 Timoteo", caps: 4, testament: "NT" },
+    { name: "Tito", caps: 3, testament: "NT" },
+    { name: "Filemón", caps: 1, testament: "NT" },
+    { name: "Hebreos", caps: 13, testament: "NT" },
+    { name: "Santiago", caps: 5, testament: "NT" },
+    { name: "1 San Pedro", caps: 5, testament: "NT" },
+    { name: "2 San Pedro", caps: 3, testament: "NT" },
+    { name: "1 San Juan", caps: 5, testament: "NT" },
+    { name: "2 San Juan", caps: 1, testament: "NT" },
+    { name: "3 San Juan", caps: 1, testament: "NT" },
+    { name: "San Judas", caps: 1, testament: "NT" },
+    { name: "Apocalipsis", caps: 22, testament: "NT" },
+    { name: "Génesis", caps: 50, testament: "AT" },
+    { name: "Éxodo", caps: 40, testament: "AT" },
+    { name: "Levítico", caps: 27, testament: "AT" },
+    { name: "Números", caps: 36, testament: "AT" },
+    { name: "Deuteronomio", caps: 34, testament: "AT" },
+    { name: "Josué", caps: 24, testament: "AT" },
+    { name: "Jueces", caps: 21, testament: "AT" },
+    { name: "Rut", caps: 4, testament: "AT" },
+    { name: "1 Samuel", caps: 31, testament: "AT" },
+    { name: "2 Samuel", caps: 24, testament: "AT" },
+    { name: "1 Reyes", caps: 22, testament: "AT" },
+    { name: "2 Reyes", caps: 25, testament: "AT" },
+    { name: "1 Crónicas", caps: 29, testament: "AT" },
+    { name: "2 Crónicas", caps: 36, testament: "AT" },
+    { name: "Esdras", caps: 10, testament: "AT" },
+    { name: "Nehemías", caps: 13, testament: "AT" },
+    { name: "Tobías", caps: 14, testament: "AT" },
+    { name: "Judit", caps: 16, testament: "AT" },
+    { name: "Ester", caps: 10, testament: "AT" },
+    { name: "1 Macabeos", caps: 16, testament: "AT" },
+    { name: "2 Macabeos", caps: 15, testament: "AT" },
+    { name: "Job", caps: 42, testament: "AT" },
+    { name: "Salmos", caps: 150, testament: "AT" },
+    { name: "Proverbios", caps: 31, testament: "AT" },
+    { name: "Eclesiastés", caps: 12, testament: "AT" },
+    { name: "Cantar de los Cantares", caps: 8, testament: "AT" },
+    { name: "Sabiduría", caps: 19, testament: "AT" },
+    { name: "Eclesiástico", caps: 51, testament: "AT" },
+    { name: "Isaías", caps: 66, testament: "AT" },
+    { name: "Jeremías", caps: 52, testament: "AT" },
+    { name: "Lamentaciones", caps: 5, testament: "AT" },
+    { name: "Baruc", caps: 6, testament: "AT" },
+    { name: "Ezequiel", caps: 48, testament: "AT" },
+    { name: "Daniel", caps: 14, testament: "AT" },
+    { name: "Oseas", caps: 14, testament: "AT" },
+    { name: "Joel", caps: 3, testament: "AT" },
+    { name: "Amós", caps: 9, testament: "AT" },
+    { name: "Abdías", caps: 1, testament: "AT" },
+    { name: "Jonás", caps: 4, testament: "AT" },
+    { name: "Miqueas", caps: 7, testament: "AT" },
+    { name: "Nahúm", caps: 3, testament: "AT" },
+    { name: "Habacuc", caps: 3, testament: "AT" },
+    { name: "Sofonías", caps: 3, testament: "AT" },
+    { name: "Ageo", caps: 2, testament: "AT" },
+    { name: "Zacarías", caps: 14, testament: "AT" },
+    { name: "Malaquías", caps: 4, testament: "AT" }
+];
+
 function updateWebNotifLivePreview() {
     const titleVal = document.getElementById('web-notif-title')?.value.trim() || 'Título del Aviso';
     const msgVal = document.getElementById('web-notif-msg')?.value.trim() || 'Escribí el mensaje para previsualizarlo...';
@@ -3448,13 +3524,34 @@ function updateWebNotifLivePreview() {
         'oracion': { text: '🛡️ Abrir Oración Específica', icon: '🛡️' },
         'cancion': { text: '🎵 Abrir Canción Específica', icon: '🎵' },
         'anuncio': { text: '📢 Abrir Anuncios / Flyers', icon: '📢' },
-        'biblia': { text: '📖 Abrir Cita / Versículo Bíblico', icon: '📖' },
+        'biblia': { text: '📖 Abrir Cita Bíblica', icon: '📖' },
         'link_web': { text: '🌐 Abrir Enlace Web Externo', icon: '🌐' }
     };
 
-    const actionInfo = actionMap[actionType] || actionMap['lecturas'];
+    const actionInfo = { ...(actionMap[actionType] || actionMap['lecturas']) };
+
+    if (actionType === 'biblia') {
+        const book = document.getElementById('web-notif-bible-book')?.value || 'San Juan';
+        const cap = document.getElementById('web-notif-bible-cap')?.value || '3';
+        const ver = document.getElementById('web-notif-bible-ver')?.value || '16';
+        actionInfo.text = `📖 Cita Bíblica: ${book} ${cap},${ver}`;
+    }
+
     if (tagEl) tagEl.innerText = actionInfo.text;
     if (iconEl) iconEl.innerText = actionInfo.icon;
+}
+
+function updateWebNotifBibleCapMax() {
+    const bookSelect = document.getElementById('web-notif-bible-book');
+    const capInput = document.getElementById('web-notif-bible-cap');
+    if (!bookSelect || !capInput) return;
+
+    const selectedOpt = bookSelect.options[bookSelect.selectedIndex];
+    const maxCaps = parseInt(selectedOpt?.getAttribute('data-caps') || '150');
+    capInput.max = maxCaps;
+    if (parseInt(capInput.value) > maxCaps) {
+        capInput.value = maxCaps;
+    }
 }
 
 function renderWebNotifActionInputs() {
@@ -3489,10 +3586,33 @@ function renderWebNotifActionInputs() {
         populateSongOptionsDropdown();
         updateWebNotifLivePreview();
     } else if (actionType === 'biblia') {
-        html = `<div style="display:flex; gap:8px; align-items:center;">
-            <input type="text" id="web-notif-bible-book" placeholder="Libro (ej: San Juan)" value="San Juan" style="flex:2; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
-            <input type="number" id="web-notif-bible-cap" placeholder="Cap." value="3" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
-            <input type="number" id="web-notif-bible-ver" placeholder="Ver." value="16" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
+        let optionsHtml = '<optgroup label="Nuevo Testamento">';
+        CATHOLIC_BIBLE_BOOKS.filter(b => b.testament === 'NT').forEach(b => {
+            const selected = (b.name === 'San Juan') ? 'selected' : '';
+            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}" ${selected}>${b.name} (${b.caps} cap.)</option>`;
+        });
+        optionsHtml += '</optgroup><optgroup label="Antiguo Testamento">';
+        CATHOLIC_BIBLE_BOOKS.filter(b => b.testament === 'AT').forEach(b => {
+            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}">${b.name} (${b.caps} cap.)</option>`;
+        });
+        optionsHtml += '</optgroup>';
+
+        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Cita Bíblica:</label>
+        <div style="display:grid; grid-template-columns: 2.2fr 1fr 1fr; gap:8px; align-items:center; margin-top:4px;">
+            <div>
+                <small style="font-size:10px; color:var(--primary); display:block;">Libro:</small>
+                <select id="web-notif-bible-book" onchange="updateWebNotifBibleCapMax(); updateWebNotifLivePreview();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                    ${optionsHtml}
+                </select>
+            </div>
+            <div>
+                <small style="font-size:10px; color:var(--primary); display:block;">Capítulo:</small>
+                <input type="number" id="web-notif-bible-cap" value="3" min="1" max="21" oninput="updateWebNotifLivePreview()" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            </div>
+            <div>
+                <small style="font-size:10px; color:var(--primary); display:block;">Versículo:</small>
+                <input type="number" id="web-notif-bible-ver" value="16" min="1" oninput="updateWebNotifLivePreview()" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            </div>
         </div>`;
         container.innerHTML = html;
         updateWebNotifLivePreview();
