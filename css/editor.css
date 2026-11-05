@@ -157,13 +157,23 @@ body {
   font-family: 'Segoe UI', Roboto, sans-serif; 
   background: var(--bg); 
   color: var(--text);
-  height: 100vh; 
+  min-height: 100vh;
   display: flex; 
   flex-direction: column; 
-  overflow: hidden; /* Evita que aparezca doble barra de scroll general */
+  overflow-y: auto !important;
 }
 
-.app-container { display: none; flex-direction: column; height: 100vh; }
+.app-container {
+  display: none;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-y: auto !important;
+}
+
+.module-section {
+  flex: 1;
+  overflow-y: auto !important;
+}
 
 header { 
   background: var(--bg); /* Cambiado a fondo sólido oscuro para que la letra no se mezcle por detrás */
@@ -709,3 +719,30 @@ input, select, textarea {
 .EasyMDEContainer .CodeMirror .cm-header-1 { font-size: 1.6em; line-height: 1.2; }
 .EasyMDEContainer .CodeMirror .cm-header-2 { font-size: 1.4em; line-height: 1.2; }
 .EasyMDEContainer .CodeMirror .cm-header-3 { font-size: 1.2em; line-height: 1.2; }
+
+/* Correcciones para el módulo de Avisos Push */
+#web-target-checklist-container {
+  max-height: 180px !important;
+  overflow-y: auto !important;
+  text-align: left !important;
+}
+
+#web-target-checklist-container label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  gap: 10px !important;
+  margin: 6px 0 !important;
+  cursor: pointer !important;
+  width: 100% !important;
+  text-transform: none !important;
+}
+
+#web-target-checklist-container input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  flex-shrink: 0 !important;
+}
