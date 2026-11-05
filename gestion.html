@@ -552,7 +552,7 @@
       <!-- MÓDULO 6: AVISOS PUSH E HISTORIAL                          -->
       <!-- ========================================================== -->
       <main id="mod-notifications" class="module-section" style="display:none; padding: 15px;">
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start;">
 
           <!-- COLUMNA 1: FORMULARIO DE ENVÍO -->
           <div class="glass-panel" style="padding: 20px;">
@@ -564,14 +564,34 @@
 
             <!-- 1. DESTINATARIOS JERÁRQUICOS -->
             <label style="font-weight:bold; font-size:12px; color:var(--primary);">1. Destinatarios del Aviso</label>
-            <div id="web-target-checklist-container" style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:12px; border-radius:10px; margin:8px 0 15px 0; max-height:160px; overflow-y:auto;">
-              <!-- Se llena dinámicamente con checkboxes de Parroquia y Capillas según rango -->
+            <div id="web-target-checklist-container" style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin:8px 0 15px 0;">
+              <!-- Se llena dinámicamente con checkboxes con casillas a la izquierda -->
             </div>
 
             <!-- 2. CONTENIDO -->
             <label style="font-weight:bold; font-size:12px; color:var(--primary);">2. Mensaje del Aviso</label>
-            <input type="text" id="web-notif-title" placeholder="Título del Aviso (ej: Fiesta Patronal)" style="width:100%; margin:8px 0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
-            <textarea id="web-notif-msg" rows="2" placeholder="Mensaje (ej: Sumate a rezar la novena especial hoy a las 19 hs)" style="width:100%; margin-bottom:15px; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;"></textarea>
+            <input type="text" id="web-notif-title" oninput="updateWebNotifLivePreview()" placeholder="Título del Aviso (ej: Fiesta Patronal)" style="width:100%; margin:8px 0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <textarea id="web-notif-msg" rows="2" oninput="updateWebNotifLivePreview()" placeholder="Mensaje (ej: Sumate a rezar la novena especial hoy a las 19 hs)" style="width:100%; margin-bottom:12px; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;"></textarea>
+
+            <!-- 📱 SIMULADOR / VISTA PREVIA EN VIVO EN EL CELULAR -->
+            <div style="background:rgba(15,23,42,0.85); border:1px solid rgba(255,255,255,0.15); border-radius:14px; padding:12px; margin-bottom:15px; box-shadow:0 4px 15px rgba(0,0,0,0.3);">
+              <div style="font-size:10px; color:#94a3b8; font-weight:bold; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span>📱 VISTA PREVIA EN EL CELULAR DEL USUARIO</span>
+                <span id="preview-notif-time" style="color:#64748b;">ahora</span>
+              </div>
+              <div style="display:flex; gap:12px; align-items:center;">
+                <div style="width:38px; height:38px; border-radius:50%; background:rgba(20,184,166,0.2); border:1px solid var(--primary); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                  <span id="preview-notif-icon" style="font-size:18px;">🔔</span>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <div id="preview-notif-title-text" style="font-weight:bold; font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Título del Aviso</div>
+                  <div id="preview-notif-msg-text" style="font-size:11px; color:#cbd5e1; margin-top:2px; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">Escribí el mensaje para previsualizarlo...</div>
+                </div>
+              </div>
+              <div id="preview-notif-action-tag" style="display:inline-block; font-size:10px; background:rgba(20,184,166,0.2); color:#2dd4bf; padding:3px 10px; border-radius:12px; margin-top:10px; font-weight:bold; border:1px solid rgba(45,212,191,0.3);">
+                📖 Abrir Lecturas del Día
+              </div>
+            </div>
 
             <!-- 3. ACCIÓN INTERACTIVA -->
             <label style="font-weight:bold; font-size:12px; color:var(--primary);">3. Acción Interactiva al Tocar</label>
@@ -590,9 +610,9 @@
 
             <!-- 4. PROGRAMACIÓN -->
             <label style="font-weight:bold; font-size:12px; color:var(--primary);">4. Momento de Envío</label>
-            <div style="display:flex; gap:15px; margin:8px 0 15px 0;">
-              <label style="font-size:12px; cursor:pointer;"><input type="radio" name="web-notif-sched" value="now" checked onchange="toggleWebSchedFields(false)"> 🚀 Inmediato</label>
-              <label style="font-size:12px; cursor:pointer;"><input type="radio" name="web-notif-sched" value="sched" onchange="toggleWebSchedFields(true)"> ⏰ Programar Fecha/Hora</label>
+            <div style="display:flex; gap:20px; margin:8px 0 15px 0;">
+              <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="web-notif-sched" value="now" checked onchange="toggleWebSchedFields(false)"> 🚀 Enviar Inmediatamente</label>
+              <label style="font-size:12px; cursor:pointer; display:flex; align-items:center; gap:6px;"><input type="radio" name="web-notif-sched" value="sched" onchange="toggleWebSchedFields(true)"> ⏰ Programar Fecha/Hora</label>
             </div>
 
             <div id="web-notif-sched-inputs" style="display:none; gap:10px; margin-bottom:15px;">
@@ -600,16 +620,18 @@
               <input type="time" id="web-notif-time" value="18:00" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
             </div>
 
-            <button class="btn btn-save" style="width:100%; padding:12px; font-weight:bold;" onclick="sendWebNotifPush()">🚀 PUBLICAR Y ENVIAR AVISO PUSH</button>
+            <button class="btn btn-save" style="width:100%; padding:14px; font-weight:bold; font-size:13px; letter-spacing:0.5px; border-radius:10px;" onclick="sendWebNotifPush()">🚀 PUBLICAR Y ENVIAR AVISO PUSH</button>
           </div>
 
           <!-- COLUMNA 2: HISTORIAL Y PROGRAMADOS -->
           <div class="glass-panel" style="padding: 20px;">
-            <h3 style="margin-top:0; color:var(--primary); font-size:15px;">📋 Historial y Avisos Programados</h3>
-            <div id="web-notif-history-list" style="max-height:300px; overflow-y:auto; margin-top:15px;">
+            <h3 style="margin-top:0; color:var(--primary); font-size:15px; display:flex; align-items:center; gap:8px;">
+              📋 Historial y Avisos Programados
+            </h3>
+            <div id="web-notif-history-list" style="margin-top:15px;">
               <!-- Se llena dinámicamente con las notificaciones guardadas en Firebase -->
             </div>
-            <div id="web-notif-archive-list" style="max-height:300px; overflow-y:auto; margin-top:15px;">
+            <div id="web-notif-archive-list" style="margin-top:15px;">
               <!-- Se llena dinámicamente con las notificaciones archivadas en Firebase -->
             </div>
           </div>

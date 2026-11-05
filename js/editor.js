@@ -3311,15 +3311,19 @@ function renderWebNotifTargets() {
 
     let html = '';
     if (isSuper) {
-        html += `<label style="display:block; margin-bottom:6px; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="global" checked> 🌐 Todos los Usuarios (Global)</label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:6px 0;">`;
+        html += `<label style="display:flex; align-items:center; gap:8px; margin-bottom:8px; font-weight:bold; cursor:pointer; color:var(--primary); font-size:13px;">
+            <input type="checkbox" name="web-target-chk" value="global" checked onchange="handleWebTargetGlobalChange(this)"> 🌐 Todos los Usuarios (Global)
+        </label><hr style="border:0; border-top:1px dashed var(--glass-border); margin:8px 0;">`;
     }
 
     if (!isSuper && authComms.length > 0) {
         authComms.forEach(c => {
             const isSub = c.id && c.id.startsWith('sub_');
-            const prefix = isSub ? '↳ 💒 Capilla:' : '⛪ Parroquia:';
-            const indent = isSub ? 'margin-left:18px;' : '';
-            html += `<label style="display:block; margin:4px 0; font-weight:bold; ${indent}"><input type="checkbox" name="web-target-chk" value="${c.id}" checked> ${prefix} ${c.nombre || c.id}</label>`;
+            const prefix = isSub ? '↳ ⛪ Capilla:' : '🏛️ Parroquia:';
+            const indent = isSub ? 'margin-left:22px; font-size:11px;' : 'font-size:12px; font-weight:bold;';
+            html += `<label style="display:flex; align-items:center; gap:8px; margin:6px 0; cursor:pointer; ${indent}">
+                <input type="checkbox" name="web-target-chk" value="${c.id}" checked> ${prefix} ${c.nombre || c.id}
+            </label>`;
         });
         container.innerHTML = html;
         return;
@@ -3333,26 +3337,90 @@ function renderWebNotifTargets() {
                 const commData = communities[commKey];
                 const commName = commData.nombre || commKey;
 
-                html += `<label style="display:block; margin:4px 0; font-weight:bold;"><input type="checkbox" name="web-target-chk" value="${commKey}"> ⛪ Parroquia: ${commName}</label>`;
+                html += `<label style="display:flex; align-items:center; gap:8px; margin:8px 0 4px 0; font-weight:bold; font-size:12px; cursor:pointer;">
+                    <input type="checkbox" name="web-target-chk" value="${commKey}" checked onchange="handleWebTargetParroquiaChange(this, '${commKey}')"> 🏛️ Parroquia: ${commName}
+                </label>`;
 
                 if (commData.sub_nodos) {
                     Object.keys(commData.sub_nodos).forEach(capKey => {
                         const capData = commData.sub_nodos[capKey];
                         const capName = capData.nombre || capKey;
-                        html += `<label style="display:block; margin:3px 0 3px 20px; font-size:11px;"><input type="checkbox" name="web-target-chk" value="sub_${capKey}"> ↳ 💒 Capilla: ${capName}</label>`;
+                        html += `<label style="display:flex; align-items:center; gap:8px; margin:4px 0 4px 22px; font-size:11px; cursor:pointer; color:var(--text-muted);">
+                            <input type="checkbox" name="web-target-chk" value="sub_${capKey}" data-parent="${commKey}" checked onchange="handleWebTargetCapillaChange(this, '${commKey}')"> ↳ ⛪ Capilla: ${capName}
+                        </label>`;
                     });
                 }
             });
         }
 
         if (html === '') {
-            html = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="default" checked> ⛪ Esta Parroquia / Capilla</label>`;
+            html = `<label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+                <input type="checkbox" name="web-target-chk" value="default" checked> 🏛️ Esta Parroquia / Capilla
+            </label>`;
         }
 
         container.innerHTML = html;
     }).catch(() => {
-        container.innerHTML = `<label style="display:block;"><input type="checkbox" name="web-target-chk" value="default" checked> ⛪ Esta Parroquia / Capilla</label>`;
+        container.innerHTML = `<label style="display:flex; align-items:center; gap:8px; font-size:12px; cursor:pointer;">
+            <input type="checkbox" name="web-target-chk" value="default" checked> 🏛️ Esta Parroquia / Capilla
+        </label>`;
     });
+}
+
+function handleWebTargetGlobalChange(globalChk) {
+    const isChecked = globalChk.checked;
+    const checkboxes = document.querySelectorAll('input[name="web-target-chk"]');
+    checkboxes.forEach(chk => {
+        chk.checked = isChecked;
+    });
+}
+
+function handleWebTargetParroquiaChange(parroquiaChk, commKey) {
+    const isChecked = parroquiaChk.checked;
+    const childCapillas = document.querySelectorAll(`input[data-parent="${commKey}"]`);
+    childCapillas.forEach(cap => {
+        cap.checked = isChecked;
+    });
+    updateGlobalChkStatus();
+}
+
+function handleWebTargetCapillaChange(capillaChk, commKey) {
+    updateGlobalChkStatus();
+}
+
+function updateGlobalChkStatus() {
+    const globalChk = document.querySelector('input[name="web-target-chk"][value="global"]');
+    if (!globalChk) return;
+    const allOtherChks = Array.from(document.querySelectorAll('input[name="web-target-chk"]')).filter(c => c.value !== 'global');
+    const allChecked = allOtherChks.length > 0 && allOtherChks.every(c => c.checked);
+    globalChk.checked = allChecked;
+}
+
+function updateWebNotifLivePreview() {
+    const titleVal = document.getElementById('web-notif-title')?.value.trim() || 'Título del Aviso';
+    const msgVal = document.getElementById('web-notif-msg')?.value.trim() || 'Escribí el mensaje para previsualizarlo...';
+    const actionType = document.getElementById('web-notif-action-type')?.value || 'lecturas';
+
+    const titleEl = document.getElementById('preview-notif-title-text');
+    const msgEl = document.getElementById('preview-notif-msg-text');
+    const tagEl = document.getElementById('preview-notif-action-tag');
+    const iconEl = document.getElementById('preview-notif-icon');
+
+    if (titleEl) titleEl.innerText = titleVal;
+    if (msgEl) msgEl.innerText = msgVal;
+
+    const actionMap = {
+        'lecturas': { text: '📖 Abrir Lecturas del Día', icon: '📖' },
+        'oracion': { text: '🛡️ Abrir Oración Específica', icon: '🛡️' },
+        'cancion': { text: '🎵 Abrir Canción Específica', icon: '🎵' },
+        'anuncio': { text: '📢 Abrir Anuncios / Flyers', icon: '📢' },
+        'biblia': { text: '📖 Abrir Cita / Versículo Bíblico', icon: '📖' },
+        'link_web': { text: '🌐 Abrir Enlace Web Externo', icon: '🌐' }
+    };
+
+    const actionInfo = actionMap[actionType] || actionMap['lecturas'];
+    if (tagEl) tagEl.innerText = actionInfo.text;
+    if (iconEl) iconEl.innerText = actionInfo.icon;
 }
 
 function renderWebNotifActionInputs() {
@@ -3363,9 +3431,9 @@ function renderWebNotifActionInputs() {
     let html = '';
     if (actionType === 'lecturas') {
         const todayStr = new Date().toISOString().split('T')[0];
-        html = `<label style="font-size:11px;">Fecha de Lecturas de Misa:</label><input type="date" id="web-notif-action-date" value="${todayStr}" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Fecha de Lecturas de Misa:</label><input type="date" id="web-notif-action-date" value="${todayStr}" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
     } else if (actionType === 'oracion') {
-        html = `<label style="font-size:11px;">Elegir Oración:</label><select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Oración:</label><select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
         if (typeof allPrayers !== 'undefined' && allPrayers.length > 0) {
             allPrayers.forEach(p => { html += `<option value="${p.titulo || p.id}">${p.titulo || p.id}</option>`; });
         } else {
@@ -3373,7 +3441,7 @@ function renderWebNotifActionInputs() {
         }
         html += `</select>`;
     } else if (actionType === 'cancion') {
-        html = `<label style="font-size:11px;">Elegir Canción del Cancionero:</label><select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Canción del Cancionero:</label><select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
         if (typeof allSongs !== 'undefined' && allSongs.length > 0) {
             allSongs.forEach(s => { html += `<option value="${s.title || s.id}">${s.title} - ${s.artist || 'Tradicional'}</option>`; });
         } else {
@@ -3385,12 +3453,13 @@ function renderWebNotifActionInputs() {
             <input type="text" id="web-notif-bible-book" placeholder="Libro (ej: San Juan)" value="San Juan" style="flex:2; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
             <input type="number" id="web-notif-bible-cap" placeholder="Cap." value="3" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
             <input type="number" id="web-notif-bible-ver" placeholder="Ver." value="16" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
-        </div><small style="color:var(--primary); font-style:italic; font-size:11px; margin-top:4px; display:block;">Vista previa: "Porque tanto amó Dios al mundo, que entregó a su Hijo único..."</small>`;
+        </div>`;
     } else if (actionType === 'link_web') {
         html = `<input type="url" id="web-notif-action-url" placeholder="URL Web (ej: https://www.vistadelpapa.com.ar)" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
     }
 
     container.innerHTML = html;
+    updateWebNotifLivePreview();
 }
 
 function toggleWebSchedFields(show) {
@@ -3454,16 +3523,14 @@ function sendWebNotifPush() {
         sender_nombre: (typeof currentUserEmail !== 'undefined' ? currentUserEmail.split('@')[0] : 'Admin Web'),
         programada: isSched,
         enviada: false,
+        vistas: 0,
         timestamp_programado: targetTime,
         timestamp_creacion: firebase.database.ServerValue.TIMESTAMP
     };
 
     const isGlobal = selectedTargets.includes('global');
     const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
-    // Escribimos en '/notificaciones' o 'notificaciones_globales' para que las Cloud Functions de Google activen el Push a los celulares Android
     const nodePath = isGlobal ? 'notificaciones_globales' : `${safePath}/notificaciones`;
-
-    console.log("🚀 [GESTION PUSH] Escribiendo aviso en Firebase en la ruta:", nodePath, notifObj);
 
     db.ref(nodePath).push(notifObj).then(() => {
         logAuditoriaWeb(
@@ -3474,6 +3541,7 @@ function sendWebNotifPush() {
         alert(isSched ? "⏰ Aviso push programado con éxito." : "🚀 Aviso push enviado con éxito.");
         document.getElementById('web-notif-title').value = '';
         document.getElementById('web-notif-msg').value = '';
+        updateWebNotifLivePreview();
     }).catch(err => {
         console.error("❌ [GESTION PUSH ERROR]", err);
         alert("❌ Error al enviar notificación: " + err.message);
@@ -3523,7 +3591,7 @@ function listenWebNotifHistory() {
         });
     } catch (e) {}
 
-    // 1. Escuchar Avisos Activos / Enviados Recentemente
+    // 1. Escuchar Avisos Activos / Enviados Recientemente
     db.ref(nodePath).limitToLast(20).on('value', snap => {
         if (!snap.exists()) {
             listDiv.innerHTML = '<p style="color:#888; font-size:11px;">No hay avisos activos registrados aún.</p>';
@@ -3532,23 +3600,41 @@ function listenWebNotifHistory() {
             const raw = snap.val();
             const keys = Object.keys(raw).reverse();
 
+            const actionBadges = {
+                'lecturas': { text: '📖 Lecturas', bg: 'rgba(20,184,166,0.2)', color: '#2dd4bf' },
+                'oracion': { text: '🛡️ Oración', bg: 'rgba(168,85,247,0.2)', color: '#c084fc' },
+                'cancion': { text: '🎵 Canción', bg: 'rgba(236,72,153,0.2)', color: '#f472b6' },
+                'anuncio': { text: '📢 Anuncio', bg: 'rgba(245,158,11,0.2)', color: '#fbbf24' },
+                'biblia': { text: '📖 Biblia', bg: 'rgba(59,130,246,0.2)', color: '#60a5fa' },
+                'link_web': { text: '🌐 Web', bg: 'rgba(16,185,129,0.2)', color: '#34d399' }
+            };
+
             keys.forEach(k => {
                 const item = raw[k];
                 const isProg = item.programada && !item.enviada;
                 const dt = new Date(item.timestamp_programado || Date.now());
                 const dateStr = dt.toLocaleString();
+                const vistasCount = item.vistas || 0;
+                const badge = actionBadges[item.tipo_accion] || actionBadges['lecturas'];
 
-                html += `<div style="background:rgba(255,255,255,0.04); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:10px;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
-                        <div>
-                            <strong style="color:var(--text); font-size:13px;">${isProg ? '⏰ [Programada]' : '✅ [Enviada]'} ${item.titulo || 'Aviso'}</strong>
-                            <div style="font-size:11px; color:#aaa; margin-top:4px;">${item.mensaje || ''}</div>
-                            <small style="font-size:9px; color:#888; display:block; margin-top:4px;">📅 ${dateStr} | Por: ${item.sender_email || 'Admin'}</small>
+                html += `<div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:12px; border-radius:12px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:10px;">
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                                <strong style="color:var(--text); font-size:13px;">${isProg ? '⏰' : '✅'} ${item.titulo || 'Aviso'}</strong>
+                                <span style="font-size:9px; background:${badge.bg}; color:${badge.color}; padding:2px 6px; border-radius:8px; font-weight:bold;">${badge.text}</span>
+                            </div>
+                            <div style="font-size:11px; color:#cbd5e1; margin-top:2px;">${item.mensaje || ''}</div>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                                <small style="font-size:10px; color:#94a3b8;">📅 ${dateStr} | Por: ${item.sender_email || 'Admin'}</small>
+                                <small style="font-size:10px; color:#2dd4bf; font-weight:bold; background:rgba(45,212,191,0.1); padding:2px 6px; border-radius:6px;">👁️ ${vistasCount} lecturas</small>
+                            </div>
                         </div>
                     </div>
-                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-                        <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3);" onclick="reuseWebNotif('${nodePath}/${k}')">🔄 REENVIAR AVISO</button>
-                        <button class="btn" style="background:rgba(96,165,250,0.15); color:#60A5FA; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(96,165,250,0.3);" onclick="archiveWebNotif('${nodePath}/${k}', '${archiveNodePath}/${k}')">🗑️ ARCHIVAR</button>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
+                        <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3); border-radius:6px;" onclick="reuseWebNotif('${nodePath}/${k}')">🔄 REENVIAR</button>
+                        <button class="btn" style="background:rgba(96,165,250,0.15); color:#60A5FA; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(96,165,250,0.3); border-radius:6px;" onclick="archiveWebNotif('${nodePath}/${k}', '${archiveNodePath}/${k}')">📦 ARCHIVAR</button>
+                        <button class="btn" style="background:rgba(239,68,68,0.15); color:#f87171; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(239,68,68,0.3); border-radius:6px;" onclick="deleteWebNotif('${nodePath}/${k}')">🗑️ ELIMINAR</button>
                     </div>
                 </div>`;
             });
@@ -3571,7 +3657,7 @@ function listenWebNotifArchive(archiveNodePath) {
             return;
         }
 
-        let html = '<h5 style="color:#aaa; font-size:11px; margin-top:15px; margin-bottom:10px; font-weight:bold;">📦 HISTÓRICO DE AVISOS ARCHIVADOS (60 DÍAS)</h5>';
+        let html = '<h5 style="color:#aaa; font-size:11px; margin-top:18px; margin-bottom:10px; font-weight:bold;">📦 HISTÓRICO DE AVISOS ARCHIVADOS (60 DÍAS)</h5>';
         const raw = snap.val();
         const keys = Object.keys(raw).reverse();
 
@@ -3579,18 +3665,32 @@ function listenWebNotifArchive(archiveNodePath) {
             const item = raw[k];
             const dt = new Date(item.timestamp_programado || Date.now());
             const dateStr = dt.toLocaleString();
+            const vistasCount = item.vistas || 0;
 
-            html += `<div style="background:rgba(0,0,0,0.2); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px;">
-                <strong style="color:#888; font-size:12px;">📦 ${item.titulo || 'Aviso Archivado'}</strong>
-                <div style="font-size:11px; color:#888; margin-top:2px;">${item.mensaje || ''}</div>
-                <small style="font-size:9px; color:#666; display:block; margin-top:3px;">📅 Archivado | Enviado: ${dateStr}</small>
-                <div style="display:flex; justify-content:flex-end; margin-top:6px;">
-                    <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3);" onclick="reuseWebNotif('${archiveNodePath}/${k}')">🔄 REENVIAR AVISO</button>
+            html += `<div style="background:rgba(0,0,0,0.25); border:1px solid rgba(255,255,255,0.05); padding:10px; border-radius:10px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <strong style="color:#aaa; font-size:12px;">📦 ${item.titulo || 'Aviso Archivado'}</strong>
+                    <small style="font-size:9px; color:#2dd4bf; background:rgba(45,212,191,0.1); padding:2px 6px; border-radius:6px;">👁️ ${vistasCount} lecturas</small>
+                </div>
+                <div style="font-size:11px; color:#888; margin-top:4px;">${item.mensaje || ''}</div>
+                <small style="font-size:9px; color:#666; display:block; margin-top:4px;">📅 Archivado | Enviado: ${dateStr}</small>
+                <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:8px;">
+                    <button class="btn" style="background:rgba(77,182,172,0.15); color:#4DB6AC; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(77,182,172,0.3); border-radius:6px;" onclick="reuseWebNotif('${archiveNodePath}/${k}')">🔄 REENVIAR</button>
+                    <button class="btn" style="background:rgba(239,68,68,0.15); color:#f87171; padding:4px 10px; font-size:10px; font-weight:bold; border:1px solid rgba(239,68,68,0.3); border-radius:6px;" onclick="deleteWebNotif('${archiveNodePath}/${k}')">🗑️ ELIMINAR</button>
                 </div>
             </div>`;
         });
 
         archiveContainer.innerHTML = html;
+    });
+}
+
+function deleteWebNotif(fullPath) {
+    if (!confirm("¿Vas a eliminar este aviso del historial?")) return;
+    db.ref(fullPath).remove().then(() => {
+        alert("🗑️ Aviso eliminado.");
+    }).catch(err => {
+        alert("❌ Error al eliminar: " + err.message);
     });
 }
 
