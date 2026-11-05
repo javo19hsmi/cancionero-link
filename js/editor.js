@@ -3332,27 +3332,40 @@ function renderWebNotifTargets() {
         return;
     }
 
-    // Si es Super Admin, traemos el árbol completo de Firebase
+    // Si es Super Admin, traemos el árbol completo en modo Acordeón Acoplable
     db.ref('comunidades').once('value').then(snap => {
         if (snap.exists()) {
             const communities = snap.val();
             Object.keys(communities).forEach(commKey => {
                 const commData = communities[commKey];
                 const commName = commData.nombre || commKey;
+                const subNodos = commData.sub_nodos ? Object.keys(commData.sub_nodos) : [];
+                const hasSub = subNodos.length > 0;
 
-                html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:8px 0 4px 0; font-weight:bold; font-size:12px; cursor:pointer; width:100%;">
-                    <input type="checkbox" name="web-target-chk" value="${commKey}" checked onchange="handleWebTargetParroquiaChange(this, '${commKey}')" style="margin:0 !important;"> <span>🏛️ Parroquia: ${commName}</span>
-                </label>`;
-
-                if (commData.sub_nodos) {
-                    Object.keys(commData.sub_nodos).forEach(capKey => {
+                let capillasHtml = '';
+                if (hasSub) {
+                    subNodos.forEach(capKey => {
                         const capData = commData.sub_nodos[capKey];
                         const capName = capData.nombre || capKey;
-                        html += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:4px 0 4px 22px; font-size:11px; cursor:pointer; color:var(--text-muted); width:100%;">
-                            <input type="checkbox" name="web-target-chk" value="sub_${capKey}" data-parent="${commKey}" checked onchange="handleWebTargetCapillaChange(this, '${commKey}')" style="margin:0 !important;"> <span>↳ ⛪ Capilla: ${capName}</span>
+                        capillasHtml += `<label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:4px 0; font-size:11px; cursor:pointer; color:var(--text-muted); width:100%;">
+                            <input type="checkbox" name="web-target-chk" value="sub_${capKey}" data-parent="${commKey}" checked onchange="handleWebTargetCapillaChange(this, '${commKey}')" style="margin:0 !important;">
+                            <span>↳ ⛪ Capilla: ${capName}</span>
                         </label>`;
                     });
                 }
+
+                html += `<div style="margin-bottom:6px; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
+                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; text-align:left !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1;">
+                            <input type="checkbox" name="web-target-chk" value="${commKey}" checked onchange="handleWebTargetParroquiaChange(this, '${commKey}')" style="margin:0 !important;">
+                            <span>🏛️ Parroquia: ${commName}</span>
+                        </label>
+                        ${hasSub ? `<button type="button" onclick="toggleWebCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:2px 8px; font-size:10px; cursor:pointer; font-weight:bold; flex-shrink:0;">▶ ${subNodos.length} capillas</button>` : ''}
+                    </div>
+                    ${hasSub ? `<div id="accordion-capillas-${commKey}" style="display:none; margin-top:6px; margin-left:14px; padding-left:8px; border-left:2px solid var(--primary);">
+                        ${capillasHtml}
+                    </div>` : ''}
+                </div>`;
             });
         }
 
@@ -3368,6 +3381,17 @@ function renderWebNotifTargets() {
             <input type="checkbox" name="web-target-chk" value="default" checked style="margin:0 !important;"> <span>🏛️ Esta Parroquia / Capilla</span>
         </label>`;
     });
+}
+
+function toggleWebCapillaAccordion(commKey, btn) {
+    const div = document.getElementById(`accordion-capillas-${commKey}`);
+    if (!div) return;
+    const isHidden = div.style.display === 'none' || div.style.display === '';
+    div.style.display = isHidden ? 'block' : 'none';
+    if (btn) {
+        const count = div.querySelectorAll('input[type="checkbox"]').length;
+        btn.innerText = isHidden ? `▼ ${count} capillas` : `▶ ${count} capillas`;
+    }
 }
 
 function handleWebTargetGlobalChange(globalChk) {
