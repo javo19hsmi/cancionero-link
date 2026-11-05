@@ -3604,6 +3604,15 @@ function extractPrayerTextWeb(p) {
     return p.titulo || p.id || 'Oración católica seleccionada';
 }
 
+function normalizeBookName(name) {
+    if (!name) return '';
+    return removeDiacriticsWeb(name)
+        .replace(/^san\s+/i, '')
+        .replace(/^santa\s+/i, '')
+        .replace(/^santo\s+/i, '')
+        .trim();
+}
+
 function renderWebNotifContentVerificationBox(actionType) {
     const box = document.getElementById('web-notif-content-verification-box');
     if (!box) return;
@@ -3676,8 +3685,8 @@ function renderWebNotifContentVerificationBox(actionType) {
         loadCatholicBibleJson().then(bible => {
             let verseText = '';
             if (bible && Array.isArray(bible)) {
-                const bookNorm = removeDiacriticsWeb(bookName);
-                const bookObj = bible.find(b => b.nombre && removeDiacriticsWeb(b.nombre) === bookNorm) || bible.find(b => b.nombre && removeDiacriticsWeb(b.nombre).includes(bookNorm));
+                const bookNorm = normalizeBookName(bookName);
+                const bookObj = bible.find(b => b.nombre && normalizeBookName(b.nombre) === bookNorm) || bible.find(b => b.nombre && normalizeBookName(b.nombre).includes(bookNorm));
                 if (bookObj && bookObj.capitulos) {
                     const capObj = bookObj.capitulos.find(c => c.c == capNum) || bookObj.capitulos[capNum - 1] || bookObj.capitulos[0];
                     if (capObj && capObj.v) {
@@ -3710,10 +3719,8 @@ function updateWebNotifBibleDropdowns() {
     loadCatholicBibleJson().then(bible => {
         let bookObj = null;
         if (bible && Array.isArray(bible)) {
-            bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().trim() === selectedBookName.toLowerCase().trim());
-            if (!bookObj) {
-                bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().includes(selectedBookName.toLowerCase()));
-            }
+            const bookNorm = normalizeBookName(selectedBookName);
+            bookObj = bible.find(b => b.nombre && normalizeBookName(b.nombre) === bookNorm) || bible.find(b => b.nombre && normalizeBookName(b.nombre).includes(bookNorm));
         }
 
         const totalCaps = bookObj ? bookObj.capitulos.length : parseInt(bookSelect.options[bookSelect.selectedIndex]?.getAttribute('data-caps') || '21');
@@ -3766,7 +3773,7 @@ function renderWebNotifActionInputs() {
         updateWebNotifLivePreview();
     } else if (actionType === 'oracion') {
         html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Oración:</label>
-        <select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+        <select id="web-notif-action-prayer" onchange="updateWebNotifLivePreview();" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
             <option value="">Cargando oraciones de la base de datos...</option>
         </select>`;
         container.innerHTML = html;
@@ -3789,11 +3796,11 @@ function renderWebNotifActionInputs() {
         let optionsHtml = '<optgroup label="Nuevo Testamento">';
         CATHOLIC_BIBLE_BOOKS.filter(b => b.testament === 'NT').forEach(b => {
             const selected = (b.name === 'San Juan') ? 'selected' : '';
-            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}" ${selected}>${b.name} (${b.caps} cap.)</option>`;
+            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}" ${selected}>${b.name}</option>`;
         });
         optionsHtml += '</optgroup><optgroup label="Antiguo Testamento">';
         CATHOLIC_BIBLE_BOOKS.filter(b => b.testament === 'AT').forEach(b => {
-            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}">${b.name} (${b.caps} cap.)</option>`;
+            optionsHtml += `<option value="${b.name}" data-caps="${b.caps}">${b.name}</option>`;
         });
         optionsHtml += '</optgroup>';
 
@@ -3818,6 +3825,9 @@ function renderWebNotifActionInputs() {
                 </select>
             </div>
         </div>`;
+        container.innerHTML = html;
+        updateWebNotifBibleDropdowns();
+    } else if (actionType === 'link_web') {
         container.innerHTML = html;
         updateWebNotifBibleDropdowns();
     } else if (actionType === 'link_web') {
