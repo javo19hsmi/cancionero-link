@@ -3590,6 +3590,20 @@ function updateWebNotifLivePreview() {
     renderWebNotifContentVerificationBox(actionType);
 }
 
+function extractPrayerTextWeb(p) {
+    if (!p) return 'Oración católica seleccionada';
+    if (typeof p.contenido === 'string') return p.contenido;
+    if (typeof p.texto === 'string') return p.texto;
+    if (typeof p === 'string') return p;
+
+    // Si es un objeto o array de bloques (versículos V. y R.)
+    if (p.contenido && typeof p.contenido === 'object') {
+        const blocks = Array.isArray(p.contenido) ? p.contenido : Object.values(p.contenido);
+        return blocks.map(b => (b.texto || b.v || b.r || '')).filter(Boolean).join('\n');
+    }
+    return p.titulo || p.id || 'Oración católica seleccionada';
+}
+
 function renderWebNotifContentVerificationBox(actionType) {
     const box = document.getElementById('web-notif-content-verification-box');
     if (!box) return;
@@ -3643,8 +3657,8 @@ function renderWebNotifContentVerificationBox(actionType) {
 
         if (foundPrayer || selectedTitle) {
             const title = foundPrayer ? (foundPrayer.titulo || foundPrayer.id) : selectedTitle;
-            const bodyText = foundPrayer ? (foundPrayer.contenido || foundPrayer.texto || 'Oración católica de la comunidad') : 'Oración católica seleccionada';
-            const cleanText = bodyText.replace(/<[^>]*>/g, '');
+            const bodyText = extractPrayerTextWeb(foundPrayer);
+            const cleanText = String(bodyText).replace(/<[^>]*>/g, '');
             const snippet = cleanText.split('\n').filter(l => l.trim().length > 0).slice(0, 4).join('<br>');
 
             box.style.display = 'block';
