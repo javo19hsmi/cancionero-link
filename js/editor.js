@@ -3466,34 +3466,146 @@ function renderWebNotifActionInputs() {
     if (actionType === 'lecturas') {
         const todayStr = new Date().toISOString().split('T')[0];
         html = `<label style="font-size:11px; color:var(--text-muted);">Fecha de Lecturas de Misa:</label><input type="date" id="web-notif-action-date" value="${todayStr}" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        container.innerHTML = html;
+        updateWebNotifLivePreview();
     } else if (actionType === 'oracion') {
-        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Oración:</label><select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
-        if (typeof allPrayers !== 'undefined' && allPrayers.length > 0) {
-            allPrayers.forEach(p => { html += `<option value="${p.titulo || p.id}">${p.titulo || p.id}</option>`; });
-        } else {
-            html += `<option value="Padre Nuestro">Padre Nuestro</option><option value="Ave María">Ave María</option>`;
-        }
-        html += `</select>`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Oración:</label>
+        <select id="web-notif-action-prayer" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <option value="">Cargando oraciones de la base de datos...</option>
+        </select>`;
+        container.innerHTML = html;
+        populatePrayerOptionsDropdown();
+        updateWebNotifLivePreview();
     } else if (actionType === 'cancion') {
-        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Canción del Cancionero:</label><select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
-        if (typeof allSongs !== 'undefined' && allSongs.length > 0) {
-            allSongs.forEach(s => { html += `<option value="${s.title || s.id}">${s.title} - ${s.artist || 'Tradicional'}</option>`; });
-        } else {
-            html += `<option value="Canción Seleccionada">Canción Seleccionada</option>`;
-        }
-        html += `</select>`;
+        html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Canción del Cancionero:</label>
+        <select id="web-notif-action-song" style="width:100%; margin-top:4px; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <option value="">Cargando canciones de la base de datos...</option>
+        </select>`;
+        container.innerHTML = html;
+        populateSongOptionsDropdown();
+        updateWebNotifLivePreview();
     } else if (actionType === 'biblia') {
         html = `<div style="display:flex; gap:8px; align-items:center;">
             <input type="text" id="web-notif-bible-book" placeholder="Libro (ej: San Juan)" value="San Juan" style="flex:2; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
             <input type="number" id="web-notif-bible-cap" placeholder="Cap." value="3" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
             <input type="number" id="web-notif-bible-ver" placeholder="Ver." value="16" style="flex:1; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text);">
         </div>`;
+        container.innerHTML = html;
+        updateWebNotifLivePreview();
     } else if (actionType === 'link_web') {
         html = `<input type="url" id="web-notif-action-url" placeholder="URL Web (ej: https://www.vistadelpapa.com.ar)" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
+        container.innerHTML = html;
+        updateWebNotifLivePreview();
+    } else {
+        container.innerHTML = '';
+        updateWebNotifLivePreview();
+    }
+}
+
+function populatePrayerOptionsDropdown() {
+    const select = document.getElementById('web-notif-action-prayer');
+    if (!select) return;
+
+    const prayerList = [];
+    if (typeof allPrayers !== 'undefined' && allPrayers) {
+        if (Array.isArray(allPrayers)) {
+            prayerList.push(...allPrayers);
+        } else if (typeof allPrayers === 'object') {
+            Object.values(allPrayers).forEach(p => prayerList.push(p));
+        }
     }
 
-    container.innerHTML = html;
-    updateWebNotifLivePreview();
+    if (prayerList.length > 0) {
+        renderPrayerSelectOptions(select, prayerList);
+    } else {
+        const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+        Promise.all([
+            db.ref('oraciones_oficiales').once('value'),
+            db.ref('oraciones_publicas').once('value'),
+            db.ref(`${safePath}/oraciones`).once('value')
+        ]).then(([snapOf, snapPub, snapLoc]) => {
+            const fetched = [];
+            if (snapOf.exists()) Object.values(snapOf.val()).forEach(p => fetched.push(p));
+            if (snapPub.exists()) Object.values(snapPub.val()).forEach(p => fetched.push(p));
+            if (snapLoc.exists()) Object.values(snapLoc.val()).forEach(p => fetched.push(p));
+
+            renderPrayerSelectOptions(select, fetched);
+        }).catch(err => {
+            console.error("Error cargando oraciones de Firebase:", err);
+            renderPrayerSelectOptions(select, [{ titulo: 'Padre Nuestro' }, { titulo: 'Ave María' }]);
+        });
+    }
+}
+
+function renderPrayerSelectOptions(select, list) {
+    if (!select) return;
+    if (!list || list.length === 0) {
+        select.innerHTML = `<option value="">No hay oraciones registradas</option>`;
+        return;
+    }
+    const uniqueMap = {};
+    list.forEach(p => {
+        const title = p.titulo || p.id || 'Oración';
+        if (!uniqueMap[title]) uniqueMap[title] = p;
+    });
+
+    const sortedTitles = Object.keys(uniqueMap).sort((a, b) => a.localeCompare(b));
+    let optionsHtml = '';
+    sortedTitles.forEach(t => {
+        optionsHtml += `<option value="${t}">${t}</option>`;
+    });
+    select.innerHTML = optionsHtml;
+}
+
+function populateSongOptionsDropdown() {
+    const select = document.getElementById('web-notif-action-song');
+    if (!select) return;
+
+    const songList = [];
+    if (typeof allSongs !== 'undefined' && allSongs) {
+        if (Array.isArray(allSongs)) {
+            songList.push(...allSongs);
+        } else if (typeof allSongs === 'object') {
+            Object.values(allSongs).forEach(s => songList.push(s));
+        }
+    }
+
+    if (songList.length > 0) {
+        renderSongSelectOptions(select, songList);
+    } else {
+        db.ref('canciones').once('value').then(snap => {
+            const fetched = [];
+            if (snap.exists()) {
+                const map = snap.val();
+                Object.keys(map).forEach(k => fetched.push({ id: k, ...map[k] }));
+            }
+            renderSongSelectOptions(select, fetched);
+        }).catch(err => {
+            console.error("Error cargando canciones de Firebase:", err);
+            renderSongSelectOptions(select, [{ title: 'Canción Seleccionada' }]);
+        });
+    }
+}
+
+function renderSongSelectOptions(select, list) {
+    if (!select) return;
+    if (!list || list.length === 0) {
+        select.innerHTML = `<option value="">No hay canciones registradas</option>`;
+        return;
+    }
+    const uniqueMap = {};
+    list.forEach(s => {
+        const title = s.title || s.titulo || s.id || 'Canción';
+        const artist = s.artist || s.artista || 'Tradicional';
+        if (!uniqueMap[title]) uniqueMap[title] = `${title} - ${artist}`;
+    });
+
+    const sortedTitles = Object.keys(uniqueMap).sort((a, b) => a.localeCompare(b));
+    let optionsHtml = '';
+    sortedTitles.forEach(t => {
+        optionsHtml += `<option value="${t}">${uniqueMap[t]}</option>`;
+    });
+    select.innerHTML = optionsHtml;
 }
 
 function toggleWebSchedFields(show) {
