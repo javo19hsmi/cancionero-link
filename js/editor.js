@@ -3506,6 +3506,53 @@ const CATHOLIC_BIBLE_BOOKS = [
     { name: "Malaquías", caps: 4, testament: "AT" }
 ];
 
+function stripChordProWeb(text) {
+    if (!text) return '';
+    return text
+        .replace(/\[[^\]]*\]/g, '')
+        .replace(/\{[^\}]*\}/g, '')
+        .replace(/\*{2}/g, '')
+        .replace(/\n\s*\n/g, '\n')
+        .trim();
+}
+
+function removeDiacriticsWeb(str) {
+    if (!str) return '';
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+let catholicBibleData = null;
+
+function loadCatholicBibleJson() {
+    if (catholicBibleData) return Promise.resolve(catholicBibleData);
+
+    const possibleUrls = [
+        'app/assets/assets/biblia_lpd.json',
+        './app/assets/assets/biblia_lpd.json',
+        '/cancionero-link/app/assets/assets/biblia_lpd.json',
+        'https://raw.githubusercontent.com/javo19hsmi/cancionero-link/main/app/assets/assets/biblia_lpd.json'
+    ];
+
+    function tryFetch(index) {
+        if (index >= possibleUrls.length) return Promise.resolve(null);
+        return fetch(possibleUrls[index])
+            .then(res => {
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                return res.json();
+            })
+            .then(data => {
+                catholicBibleData = data;
+                return data;
+            })
+            .catch(() => tryFetch(index + 1));
+    }
+
+    return tryFetch(0);
+}
+
+// Carga preventiva al arrancar
+loadCatholicBibleJson();
+
 function updateWebNotifLivePreview() {
     const titleVal = document.getElementById('web-notif-title')?.value.trim() || 'Título del Aviso';
     const msgVal = document.getElementById('web-notif-msg')?.value.trim() || 'Escribí el mensaje para previsualizarlo...';
@@ -3553,9 +3600,10 @@ function renderWebNotifContentVerificationBox(actionType) {
 
         let foundSong = null;
         if (cachedWebNotifSongs && cachedWebNotifSongs.length > 0) {
+            const songTitleNorm = removeDiacriticsWeb(songTitle);
             foundSong = cachedWebNotifSongs.find(s => {
-                const t = (s.title || s.titulo || '').toLowerCase();
-                return t === songTitle.toLowerCase() || t.includes(songTitle.toLowerCase());
+                const t = removeDiacriticsWeb(s.title || s.titulo || '');
+                return t === songTitleNorm || t.includes(songTitleNorm);
             });
         }
 
@@ -3563,7 +3611,9 @@ function renderWebNotifContentVerificationBox(actionType) {
             const title = foundSong.title || foundSong.titulo || 'Canción';
             const artist = foundSong.artist || foundSong.artista || 'Tradicional';
             const audioUrl = foundSong.audioUrl || foundSong.audio || foundSong.audio_url;
-            const lyricsSnippet = (foundSong.lyrics || foundSong.letra || '').split('\n').slice(0, 4).join('<br>');
+            const rawLyrics = foundSong.lyrics || foundSong.letra || '';
+            const cleanLyrics = stripChordProWeb(rawLyrics);
+            const lyricsSnippet = cleanLyrics.split('\n').filter(l => l.trim().length > 0).slice(0, 4).join('<br>');
 
             box.style.display = 'block';
             box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
@@ -3573,7 +3623,7 @@ function renderWebNotifContentVerificationBox(actionType) {
             <div style="font-size:13px; font-weight:bold; color:#fff;">${title}</div>
             <div style="font-size:11px; color:#94a3b8; margin-top:2px;">👤 Autor / Artista: ${artist}</div>
             ${audioUrl ? `<audio controls src="${audioUrl}" style="width:100%; height:32px; margin-top:8px; border-radius:6px;"></audio>` : '<div style="font-size:10px; color:#64748b; margin-top:4px; font-style:italic;">(Esta canción no cuenta con archivo de audio grabado)</div>'}
-            ${lyricsSnippet ? `<div style="font-size:11px; color:#cbd5e1; margin-top:8px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">${lyricsSnippet}...</div>` : ''}`;
+            ${lyricsSnippet ? `<div style="font-size:11px; color:#cbd5e1; margin-top:8px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary); line-height:1.4;">${lyricsSnippet}...</div>` : ''}`;
         } else {
             box.style.display = 'none';
         }
@@ -3584,18 +3634,23 @@ function renderWebNotifContentVerificationBox(actionType) {
 
         if (typeof allPrayers !== 'undefined' && allPrayers) {
             const list = Array.isArray(allPrayers) ? allPrayers : Object.values(allPrayers);
-            foundPrayer = list.find(p => (p.titulo || p.id) === selectedTitle);
+            const targetNorm = removeDiacriticsWeb(selectedTitle);
+            foundPrayer = list.find(p => {
+                const tNorm = removeDiacriticsWeb(p.titulo || p.id || '');
+                return tNorm === targetNorm || tNorm.includes(targetNorm);
+            });
         }
 
         if (foundPrayer || selectedTitle) {
             const title = foundPrayer ? (foundPrayer.titulo || foundPrayer.id) : selectedTitle;
             const bodyText = foundPrayer ? (foundPrayer.contenido || foundPrayer.texto || 'Oración católica de la comunidad') : 'Oración católica seleccionada';
-            const snippet = bodyText.replace(/<[^>]*>/g, '').split('\n').slice(0, 4).join('<br>');
+            const cleanText = bodyText.replace(/<[^>]*>/g, '');
+            const snippet = cleanText.split('\n').filter(l => l.trim().length > 0).slice(0, 4).join('<br>');
 
             box.style.display = 'block';
             box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px;">🛡️ ORACIÓN SELECCIONADA PARA APERTURA</div>
             <div style="font-size:13px; font-weight:bold; color:#fff;">${title}</div>
-            <div style="font-size:11px; color:#cbd5e1; margin-top:6px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">${snippet}...</div>`;
+            <div style="font-size:11px; color:#cbd5e1; margin-top:6px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary); line-height:1.4;">${snippet}...</div>`;
         } else {
             box.style.display = 'none';
         }
@@ -3605,9 +3660,10 @@ function renderWebNotifContentVerificationBox(actionType) {
         const verNum = parseInt(document.getElementById('web-notif-bible-ver')?.value || '16');
 
         loadCatholicBibleJson().then(bible => {
-            let verseText = 'Cargando texto bíblico...';
+            let verseText = '';
             if (bible && Array.isArray(bible)) {
-                const bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().trim() === bookName.toLowerCase().trim()) || bible.find(b => b.nombre && b.nombre.toLowerCase().includes(bookName.toLowerCase()));
+                const bookNorm = removeDiacriticsWeb(bookName);
+                const bookObj = bible.find(b => b.nombre && removeDiacriticsWeb(b.nombre) === bookNorm) || bible.find(b => b.nombre && removeDiacriticsWeb(b.nombre).includes(bookNorm));
                 if (bookObj && bookObj.capitulos) {
                     const capObj = bookObj.capitulos.find(c => c.c == capNum) || bookObj.capitulos[capNum - 1] || bookObj.capitulos[0];
                     if (capObj && capObj.v) {
@@ -3622,7 +3678,7 @@ function renderWebNotifContentVerificationBox(actionType) {
             box.style.display = 'block';
             box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px;">📖 VERSIÓN EXACTA DEL VERSÍCULO A RESALTAR</div>
             <div style="font-size:13px; font-weight:bold; color:#2dd4bf;">${bookName} ${capNum}, ${verNum}</div>
-            <div style="font-size:12px; color:#fff; margin-top:6px; font-style:italic; background:rgba(45,212,191,0.1); padding:10px; border-radius:8px; border-left:3px solid #2dd4bf; line-height:1.4;">“${verseText}”</div>`;
+            <div style="font-size:12px; color:#fff; margin-top:6px; font-style:italic; background:rgba(45,212,191,0.1); padding:10px; border-radius:8px; border-left:3px solid #2dd4bf; line-height:1.4;">${verseText ? `“${verseText}”` : '<span style="color:#94a3b8;">Cargando versículo de la Biblia...</span>'}</div>`;
         });
     } else {
         box.style.display = 'none';
@@ -3725,7 +3781,8 @@ function renderWebNotifActionInputs() {
         html = `<label style="font-size:11px; color:var(--text-muted);">Buscar y Elegir Canción del Cancionero:</label>
         <input type="hidden" id="web-notif-action-song" value="">
         <div style="position:relative; width:100%; margin-top:4px;">
-            <input type="text" id="web-notif-song-search-input" oninput="filterWebNotifSongSuggestions()" onfocus="filterWebNotifSongSuggestions()" placeholder="🔍 Buscar por título o autor (ej: Zamba, Zezinho)..." style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <input type="text" id="web-notif-song-search-input" oninput="filterWebNotifSongSuggestions()" onfocus="filterWebNotifSongSuggestions()" placeholder="🔍 Buscar por título o autor (ej: Zamba, Zezinho)..." style="width:100%; padding:10px 32px 10px 10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <button type="button" onclick="clearWebNotifSongSearch()" title="Borrar búsqueda" style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; color:#94a3b8; font-size:14px; cursor:pointer; padding:4px;">❌</button>
             <div id="web-notif-song-results" style="display:none; position:absolute; top:100%; left:0; right:0; max-height:220px; overflow-y:auto; background:rgba(15,23,42,0.95); border:1px solid var(--primary); border-radius:8px; z-index:1000; box-shadow:0 8px 25px rgba(0,0,0,0.5); backdrop-filter:blur(10px);">
                 <!-- Se llena dinámicamente con las canciones sugeridas -->
             </div>
@@ -3910,6 +3967,15 @@ function selectWebNotifSong(title, artist) {
     if (hiddenVal) hiddenVal.value = title;
     if (resultsDiv) resultsDiv.style.display = 'none';
 
+    updateWebNotifLivePreview();
+}
+
+function clearWebNotifSongSearch() {
+    const input = document.getElementById('web-notif-song-search-input');
+    const hiddenVal = document.getElementById('web-notif-action-song');
+    if (input) input.value = '';
+    if (hiddenVal) hiddenVal.value = '';
+    filterWebNotifSongSuggestions();
     updateWebNotifLivePreview();
 }
 
