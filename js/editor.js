@@ -3541,17 +3541,36 @@ function updateWebNotifLivePreview() {
     if (iconEl) iconEl.innerText = actionInfo.icon;
 }
 
-function updateWebNotifBibleCapMax() {
+function updateWebNotifBibleDropdowns() {
     const bookSelect = document.getElementById('web-notif-bible-book');
-    const capInput = document.getElementById('web-notif-bible-cap');
-    if (!bookSelect || !capInput) return;
+    const capSelect = document.getElementById('web-notif-bible-cap');
+    const verSelect = document.getElementById('web-notif-bible-ver');
+    if (!bookSelect || !capSelect) return;
 
     const selectedOpt = bookSelect.options[bookSelect.selectedIndex];
     const maxCaps = parseInt(selectedOpt?.getAttribute('data-caps') || '150');
-    capInput.max = maxCaps;
-    if (parseInt(capInput.value) > maxCaps) {
-        capInput.value = maxCaps;
+    const currentCap = parseInt(capSelect.value || '1');
+
+    // Llenar selector de capítulos reales (1 a maxCaps)
+    let capHtml = '';
+    for (let i = 1; i <= maxCaps; i++) {
+        const sel = (i === currentCap || (currentCap > maxCaps && i === 1)) ? 'selected' : '';
+        capHtml += `<option value="${i}" ${sel}>Capítulo ${i}</option>`;
     }
+    capSelect.innerHTML = capHtml;
+
+    // Llenar selector de versículos
+    if (verSelect) {
+        const currentVer = parseInt(verSelect.value || '1');
+        let verHtml = '';
+        for (let v = 1; v <= 100; v++) {
+            const sel = (v === currentVer) ? 'selected' : '';
+            verHtml += `<option value="${v}" ${sel}>Versículo ${v}</option>`;
+        }
+        verSelect.innerHTML = verHtml;
+    }
+
+    updateWebNotifLivePreview();
 }
 
 function renderWebNotifActionInputs() {
@@ -3598,24 +3617,28 @@ function renderWebNotifActionInputs() {
         optionsHtml += '</optgroup>';
 
         html = `<label style="font-size:11px; color:var(--text-muted);">Elegir Cita Bíblica:</label>
-        <div style="display:grid; grid-template-columns: 2.2fr 1fr 1fr; gap:8px; align-items:center; margin-top:4px;">
+        <div style="display:grid; grid-template-columns: 2.2fr 1.2fr 1.5fr; gap:8px; align-items:center; margin-top:4px;">
             <div>
                 <small style="font-size:10px; color:var(--primary); display:block;">Libro:</small>
-                <select id="web-notif-bible-book" onchange="updateWebNotifBibleCapMax(); updateWebNotifLivePreview();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                <select id="web-notif-bible-book" onchange="updateWebNotifBibleDropdowns();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
                     ${optionsHtml}
                 </select>
             </div>
             <div>
                 <small style="font-size:10px; color:var(--primary); display:block;">Capítulo:</small>
-                <input type="number" id="web-notif-bible-cap" value="3" min="1" max="21" oninput="updateWebNotifLivePreview()" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                <select id="web-notif-bible-cap" onchange="updateWebNotifLivePreview();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                    <option value="1">Capítulo 1</option>
+                </select>
             </div>
             <div>
                 <small style="font-size:10px; color:var(--primary); display:block;">Versículo:</small>
-                <input type="number" id="web-notif-bible-ver" value="16" min="1" oninput="updateWebNotifLivePreview()" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                <select id="web-notif-bible-ver" onchange="updateWebNotifLivePreview();" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+                    <option value="1">Versículo 1</option>
+                </select>
             </div>
         </div>`;
         container.innerHTML = html;
-        updateWebNotifLivePreview();
+        updateWebNotifBibleDropdowns();
     } else if (actionType === 'link_web') {
         html = `<input type="url" id="web-notif-action-url" placeholder="URL Web (ej: https://www.vistadelpapa.com.ar)" style="width:100%; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">`;
         container.innerHTML = html;
