@@ -3685,25 +3685,6 @@ function renderWebNotifContentVerificationBox(actionType) {
     }
 }
 
-let catholicBibleData = null;
-
-function loadCatholicBibleJson() {
-    if (catholicBibleData) return Promise.resolve(catholicBibleData);
-
-    return fetch('app/assets/assets/biblia_lpd.json')
-        .then(res => res.json())
-        .then(data => {
-            catholicBibleData = data;
-            return data;
-        })
-        .catch(() => {
-            return fetch('assets/biblia_lpd.json')
-                .then(res => res.json())
-                .then(data => { catholicBibleData = data; return data; })
-                .catch(() => null);
-        });
-}
-
 function updateWebNotifBibleDropdowns() {
     const bookSelect = document.getElementById('web-notif-bible-book');
     const capSelect = document.getElementById('web-notif-bible-cap');
