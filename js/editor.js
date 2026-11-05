@@ -3539,6 +3539,94 @@ function updateWebNotifLivePreview() {
 
     if (tagEl) tagEl.innerText = actionInfo.text;
     if (iconEl) iconEl.innerText = actionInfo.icon;
+
+    renderWebNotifContentVerificationBox(actionType);
+}
+
+function renderWebNotifContentVerificationBox(actionType) {
+    const box = document.getElementById('web-notif-content-verification-box');
+    if (!box) return;
+
+    if (actionType === 'cancion') {
+        const songInputVal = document.getElementById('web-notif-song-search-input')?.value.trim() || '';
+        const songTitle = songInputVal.split(' - ')[0] || songInputVal;
+
+        let foundSong = null;
+        if (cachedWebNotifSongs && cachedWebNotifSongs.length > 0) {
+            foundSong = cachedWebNotifSongs.find(s => {
+                const t = (s.title || s.titulo || '').toLowerCase();
+                return t === songTitle.toLowerCase() || t.includes(songTitle.toLowerCase());
+            });
+        }
+
+        if (foundSong) {
+            const title = foundSong.title || foundSong.titulo || 'Canción';
+            const artist = foundSong.artist || foundSong.artista || 'Tradicional';
+            const audioUrl = foundSong.audioUrl || foundSong.audio || foundSong.audio_url;
+            const lyricsSnippet = (foundSong.lyrics || foundSong.letra || '').split('\n').slice(0, 4).join('<br>');
+
+            box.style.display = 'block';
+            box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px; display:flex; justify-content:space-between; align-items:center;">
+                <span>🎵 CANCIÓN SELECCIONADA PARA APERTURA</span>
+                ${audioUrl ? '<span style="color:#34d399; background:rgba(16,185,129,0.2); padding:2px 6px; border-radius:6px; font-size:9px;">🎧 REPRODUCTOR DE AUDIO LISTO</span>' : ''}
+            </div>
+            <div style="font-size:13px; font-weight:bold; color:#fff;">${title}</div>
+            <div style="font-size:11px; color:#94a3b8; margin-top:2px;">👤 Autor / Artista: ${artist}</div>
+            ${audioUrl ? `<audio controls src="${audioUrl}" style="width:100%; height:32px; margin-top:8px; border-radius:6px;"></audio>` : '<div style="font-size:10px; color:#64748b; margin-top:4px; font-style:italic;">(Esta canción no cuenta con archivo de audio grabado)</div>'}
+            ${lyricsSnippet ? `<div style="font-size:11px; color:#cbd5e1; margin-top:8px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">${lyricsSnippet}...</div>` : ''}`;
+        } else {
+            box.style.display = 'none';
+        }
+    } else if (actionType === 'oracion') {
+        const prayerSelect = document.getElementById('web-notif-action-prayer');
+        const selectedTitle = prayerSelect?.value;
+        let foundPrayer = null;
+
+        if (typeof allPrayers !== 'undefined' && allPrayers) {
+            const list = Array.isArray(allPrayers) ? allPrayers : Object.values(allPrayers);
+            foundPrayer = list.find(p => (p.titulo || p.id) === selectedTitle);
+        }
+
+        if (foundPrayer || selectedTitle) {
+            const title = foundPrayer ? (foundPrayer.titulo || foundPrayer.id) : selectedTitle;
+            const bodyText = foundPrayer ? (foundPrayer.contenido || foundPrayer.texto || 'Oración católica de la comunidad') : 'Oración católica seleccionada';
+            const snippet = bodyText.replace(/<[^>]*>/g, '').split('\n').slice(0, 4).join('<br>');
+
+            box.style.display = 'block';
+            box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px;">🛡️ ORACIÓN SELECCIONADA PARA APERTURA</div>
+            <div style="font-size:13px; font-weight:bold; color:#fff;">${title}</div>
+            <div style="font-size:11px; color:#cbd5e1; margin-top:6px; font-style:italic; background:rgba(0,0,0,0.3); padding:8px; border-radius:6px; border-left:3px solid var(--primary);">${snippet}...</div>`;
+        } else {
+            box.style.display = 'none';
+        }
+    } else if (actionType === 'biblia') {
+        const bookName = document.getElementById('web-notif-bible-book')?.value || 'San Juan';
+        const capNum = parseInt(document.getElementById('web-notif-bible-cap')?.value || '3');
+        const verNum = parseInt(document.getElementById('web-notif-bible-ver')?.value || '16');
+
+        loadCatholicBibleJson().then(bible => {
+            let verseText = 'Cargando texto bíblico...';
+            if (bible && Array.isArray(bible)) {
+                const bookObj = bible.find(b => b.nombre && b.nombre.toLowerCase().trim() === bookName.toLowerCase().trim()) || bible.find(b => b.nombre && b.nombre.toLowerCase().includes(bookName.toLowerCase()));
+                if (bookObj && bookObj.capitulos) {
+                    const capObj = bookObj.capitulos.find(c => c.c == capNum) || bookObj.capitulos[capNum - 1] || bookObj.capitulos[0];
+                    if (capObj && capObj.v) {
+                        const verObj = capObj.v.find(v => v.n == verNum) || capObj.v[verNum - 1] || capObj.v[0];
+                        if (verObj && verObj.t) {
+                            verseText = verObj.t;
+                        }
+                    }
+                }
+            }
+
+            box.style.display = 'block';
+            box.innerHTML = `<div style="font-size:11px; color:var(--primary); font-weight:bold; margin-bottom:6px;">📖 VERSIÓN EXACTA DEL VERSÍCULO A RESALTAR</div>
+            <div style="font-size:13px; font-weight:bold; color:#2dd4bf;">${bookName} ${capNum}, ${verNum}</div>
+            <div style="font-size:12px; color:#fff; margin-top:6px; font-style:italic; background:rgba(45,212,191,0.1); padding:10px; border-radius:8px; border-left:3px solid #2dd4bf; line-height:1.4;">“${verseText}”</div>`;
+        });
+    } else {
+        box.style.display = 'none';
+    }
 }
 
 let catholicBibleData = null;
