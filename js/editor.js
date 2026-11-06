@@ -3207,43 +3207,75 @@ async function saveBatchSelectedToBorrador() {
    ========================================================== */
 let activeReportFilter = 'all';
 let isListeningOtaConfig = false;
+let currentPublishedOtaVersion = "3.015";
 
 function listenAppOtaVersionConfig() {
-    if (isListeningOtaConfig) return;
+    const card = document.getElementById('web-ota-card');
+    const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
+    const isSuper = (userRole === 'super_admin');
+
+    // 🔒 RESTRICCIÓN DE SEGURIDAD: Solo visible para Súper Admin
+    if (card) {
+        card.style.display = isSuper ? 'block' : 'none';
+    }
+
+    if (!isSuper || isListeningOtaConfig) return;
     isListeningOtaConfig = true;
 
     db.ref('app_config/version_info').on('value', snap => {
         if (snap.exists()) {
             const data = snap.val();
-            const verInput = document.getElementById('web-ota-version-input');
+            currentPublishedOtaVersion = (data.latest_version || '3.015').toString().trim();
+            const changelogText = data.changelog || 'Mejoras y correcciones en la aplicación.';
+
+            const verSpan = document.getElementById('web-ota-current-ver');
             const changeInput = document.getElementById('web-ota-changelog-input');
-            if (verInput && document.activeElement !== verInput) {
-                verInput.value = data.latest_version || '3.015';
-            }
+            const pubBtn = document.getElementById('web-ota-publish-btn');
+
+            if (verSpan) verSpan.innerText = `v${currentPublishedOtaVersion}`;
             if (changeInput && document.activeElement !== changeInput) {
-                changeInput.value = data.changelog || 'Mejoras y correcciones generales.';
+                changeInput.value = changelogText;
+            }
+
+            // Calcular siguiente versión (+0.001)
+            const nextVer = calculateNextVersionNumber(currentPublishedOtaVersion);
+            if (pubBtn) {
+                pubBtn.innerHTML = `🚀 PUBLICAR SIGUIENTE VERSIÓN (v${nextVer})`;
+                pubBtn.setAttribute('data-next-ver', nextVer);
             }
         }
     });
 }
 
-function saveAppOtaVersionConfig() {
-    const verVal = document.getElementById('web-ota-version-input')?.value.trim();
+function calculateNextVersionNumber(verStr) {
+    try {
+        const num = parseFloat(verStr);
+        if (isNaN(num)) return "3.016";
+        const nextNum = (num + 0.001).toFixed(3);
+        return nextNum.toString();
+    } catch (_) {
+        return "3.016";
+    }
+}
+
+function publishNextAppOtaVersion() {
+    const pubBtn = document.getElementById('web-ota-publish-btn');
+    const nextVer = pubBtn?.getAttribute('data-next-ver') || calculateNextVersionNumber(currentPublishedOtaVersion);
     const changeVal = document.getElementById('web-ota-changelog-input')?.value.trim();
 
-    if (!verVal) return alert("⚠️ Por favor ingresá el número de versión (ej: 3.015).");
+    if (!confirm(`🚀 ¿Vas a publicar la versión v${nextVer} para todos los celulares de los usuarios?`)) return;
 
     const updateObj = {
-        latest_version: verVal,
-        changelog: changeVal || 'Mejoras y correcciones en la aplicación.',
+        latest_version: nextVer,
+        changelog: changeVal || 'Mejoras y correcciones generales en la aplicación.',
         apk_url: 'https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view',
         force_update: false,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
 
     db.ref('app_config/version_info').update(updateObj).then(() => {
-        logAuditoriaWeb("Versión App Publicada", `Publicada versión v${verVal} OTA`, "global");
-        alert(`🚀 ¡Versión v${verVal} publicada con éxito! A todos los usuarios de la app les aparecerá el cartel automático para actualizar.`);
+        logAuditoriaWeb("Versión App Publicada", `Publicada versión v${nextVer} OTA`, "global");
+        alert(`🚀 ¡Versión v${nextVer} publicada con éxito en la nube!\n\nA partir de este instante, a todos los usuarios que abran la aplicación les aparecerá el cartel automático para actualizar a la v${nextVer} en 1 solo clic.`);
     }).catch(err => {
         console.error("Error publicando versión OTA:", err);
         alert("❌ Error al publicar versión: " + err.message);

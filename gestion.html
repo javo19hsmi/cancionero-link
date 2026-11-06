@@ -466,22 +466,26 @@
         <!-- MÓDULO 6: REPORTES Y AUDITORÍA DE SALUD DEL CANCIONERO -->
     <main id="mod-reports" style="display:none; flex-direction:column; padding:15px; gap:15px; overflow-y:auto; flex:1;">
       
-      <!-- 🚀 TARJETA DE GESTIÓN DE ACTUALIZACIONES OTA DE LA APP -->
-      <div class="glass-panel" style="padding:15px; margin-bottom:10px;">
-        <h4 style="margin:0 0 10px 0; color:var(--primary); font-size:13px; display:flex; align-items:center; gap:8px;">
-          🚀 Publicar Nueva Versión de la Aplicación Móvil (Actualización Automática OTA)
-        </h4>
-        <div style="display:grid; grid-template-columns: 1fr 2fr 1.2fr; gap:12px; align-items:center;">
+      <!-- 🚀 TARJETA DE GESTIÓN DE ACTUALIZACIONES OTA DE LA APP (SOLO SUPER ADMIN) -->
+      <div id="web-ota-card" class="glass-panel" style="display:none; padding:18px; margin-bottom:12px; border:1px solid rgba(16,185,129,0.3); background:rgba(15,23,42,0.85);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
+          <h4 style="margin:0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:8px;">
+            🚀 Actualización Automática de la App Móvil (Gestor OTA)
+          </h4>
+          <span style="font-size:11px; background:rgba(16,185,129,0.15); color:#34d399; padding:4px 10px; border-radius:8px; border:1px solid rgba(16,185,129,0.3); font-weight:bold;">
+            VERSIÓN EN LA NUBE: <span id="web-ota-current-ver" style="color:#fff;">v3.015</span>
+          </span>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 2.5fr 1.2fr; gap:15px; align-items:flex-end;">
           <div>
-            <label style="font-size:10px; color:var(--primary); font-weight:bold; display:block;">Número de Versión:</label>
-            <input type="text" id="web-ota-version-input" placeholder="ej: 3.015" style="width:100%; margin:4px 0 0 0; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+            <label style="font-size:11px; color:var(--primary); font-weight:bold; display:block; margin-bottom:4px;">Notas de los Cambios (Changelog):</label>
+            <input type="text" id="web-ota-changelog-input" placeholder="ej: Correcciones en el proyector IP, lecturas y Biblia" style="width:100%; margin:0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
           </div>
           <div>
-            <label style="font-size:10px; color:var(--primary); font-weight:bold; display:block;">Notas del Cambio (Changelog):</label>
-            <input type="text" id="web-ota-changelog-input" placeholder="ej: Correcciones en el proyector IP, lecturas y notificaciones" style="width:100%; margin:4px 0 0 0; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
-          </div>
-          <div style="text-align:right;">
-            <button class="btn btn-save" onclick="saveAppOtaVersionConfig()" style="width:100%; padding:10px 14px; font-size:11px; font-weight:bold; background:#10B981; color:white; border-radius:8px; margin-top:14px;">🚀 PUBLICAR VERSIÓN OTA</button>
+            <button id="web-ota-publish-btn" class="btn btn-save" onclick="publishNextAppOtaVersion()" style="width:100%; padding:12px; font-size:12px; font-weight:bold; background:#10B981; color:white; border-radius:8px; box-shadow:0 4px 12px rgba(16,185,129,0.25);">
+              🚀 PUBLICAR SIGUIENTE VERSIÓN (v3.016)
+            </button>
           </div>
         </div>
       </div>
