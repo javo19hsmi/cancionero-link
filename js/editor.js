@@ -2174,8 +2174,91 @@ function moveBlockUp(btn) {
 }
 
 function abrirCentroProyeccion() {
-    const commPath = (typeof comunidadPath !== 'undefined' && comunidadPath) ? comunidadPath : 'comunidades/san_cayetano';
-    window.open('operador.html?comunidad=' + encodeURIComponent(commPath), '_blank');
+    const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
+    const isSuper = (userRole === 'super_admin');
+    const authComms = (typeof authorizedCommunities !== 'undefined' && authorizedCommunities) ? authorizedCommunities : (window.authorizedCommunities || []);
+
+    // Si administra 1 sola comunidad y no es Super Admin, abre directamente la consola de esa comunidad
+    if (!isSuper && authComms.length === 1) {
+        const commPath = authComms[0].path || `comunidades/${authComms[0].id}`;
+        window.open('operador.html?comunidad=' + encodeURIComponent(commPath), '_blank');
+        return;
+    }
+
+    // Si administra múltiples comunidades o es Super Admin, abre el modal selector inteligente
+    openProyectorSelectorModal();
+}
+
+function openProyectorSelectorModal() {
+    const modal = document.getElementById('proyector-selector-modal');
+    const select = document.getElementById('proyector-comm-select');
+    if (!modal || !select) return;
+
+    const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
+    const isSuper = (userRole === 'super_admin');
+    const authComms = (typeof authorizedCommunities !== 'undefined' && authorizedCommunities) ? authorizedCommunities : (window.authorizedCommunities || []);
+    const activePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+
+    let optionsHtml = '';
+
+    // Si no es Super Admin, listamos las comunidades autorizadas
+    if (!isSuper && authComms.length > 0) {
+        authComms.forEach(c => {
+            const path = c.path || `comunidades/${c.id}`;
+            const selected = (path === activePath) ? 'selected' : '';
+            const isSub = c.id && c.id.startsWith('sub_');
+            const prefix = isSub ? '↳ ⛪ Capilla:' : '🏛️ Parroquia:';
+            optionsHtml += `<option value="${path}" ${selected}>${prefix} ${c.nombre || c.id}</option>`;
+        });
+        select.innerHTML = optionsHtml;
+        modal.style.display = 'flex';
+        return;
+    }
+
+    // Si es Super Admin, traemos el árbol completo de comunidades de Firebase
+    db.ref('comunidades').once('value').then(snap => {
+        if (snap.exists()) {
+            const communities = snap.val();
+            Object.keys(communities).forEach(commKey => {
+                const commData = communities[commKey];
+                const commName = commData.nombre || commKey;
+                const path = `comunidades/${commKey}`;
+                const selected = (path === activePath) ? 'selected' : '';
+
+                optionsHtml += `<option value="${path}" ${selected}>🏛️ Parroquia: ${commName}</option>`;
+
+                if (commData.sub_nodos) {
+                    Object.keys(commData.sub_nodos).forEach(capKey => {
+                        const capData = commData.sub_nodos[capKey];
+                        const capName = capData.nombre || capKey;
+                        const subPath = `comunidades/${commKey}/sub_nodos/${capKey}`;
+                        const subSelected = (subPath === activePath) ? 'selected' : '';
+                        optionsHtml += `<option value="${subPath}" ${subSelected}>   ↳ ⛪ Capilla: ${capName}</option>`;
+                    });
+                }
+            });
+        }
+        if (optionsHtml === '') {
+            optionsHtml = `<option value="${activePath}">🏛️ ${activePath}</option>`;
+        }
+        select.innerHTML = optionsHtml;
+        modal.style.display = 'flex';
+    }).catch(() => {
+        select.innerHTML = `<option value="${activePath}">🏛️ ${activePath}</option>`;
+        modal.style.display = 'flex';
+    });
+}
+
+function closeProyectorSelectorModal() {
+    const modal = document.getElementById('proyector-selector-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function confirmAbrirProyeccion() {
+    const select = document.getElementById('proyector-comm-select');
+    const chosenPath = select?.value || (typeof selectedCommunityPath !== 'undefined' ? selectedCommunityPath : 'comunidades/pst_001');
+    closeProyectorSelectorModal();
+    window.open('operador.html?comunidad=' + encodeURIComponent(chosenPath), '_blank');
 }
 
 function moveBlockDown(btn) {
