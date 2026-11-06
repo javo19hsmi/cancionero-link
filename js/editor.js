@@ -2215,7 +2215,7 @@ function openProyectorSelectorModal() {
         return;
     }
 
-    // Si es Super Admin, traemos el árbol completo de comunidades de Firebase
+    // Si es Super Admin, traemos el árbol completo de comunidades de Firebase organizadas en grupos
     db.ref('comunidades').once('value').then(snap => {
         if (snap.exists()) {
             const communities = snap.val();
@@ -2225,16 +2225,19 @@ function openProyectorSelectorModal() {
                 const path = `comunidades/${commKey}`;
                 const selected = (path === activePath) ? 'selected' : '';
 
-                optionsHtml += `<option value="${path}" ${selected}>🏛️ Parroquia: ${commName}</option>`;
-
                 if (commData.sub_nodos) {
+                    optionsHtml += `<optgroup label="🏛️ ${commName}">`;
+                    optionsHtml += `<option value="${path}" ${selected}>🏛️ Sede Principal: ${commName}</option>`;
                     Object.keys(commData.sub_nodos).forEach(capKey => {
                         const capData = commData.sub_nodos[capKey];
                         const capName = capData.nombre || capKey;
                         const subPath = `comunidades/${commKey}/sub_nodos/${capKey}`;
                         const subSelected = (subPath === activePath) ? 'selected' : '';
-                        optionsHtml += `<option value="${subPath}" ${subSelected}>   ↳ ⛪ Capilla: ${capName}</option>`;
+                        optionsHtml += `<option value="${subPath}" ${subSelected}>↳ ⛪ Capilla: ${capName}</option>`;
                     });
+                    optionsHtml += `</optgroup>`;
+                } else {
+                    optionsHtml += `<option value="${path}" ${selected}>🏛️ Parroquia: ${commName}</option>`;
                 }
             });
         }
