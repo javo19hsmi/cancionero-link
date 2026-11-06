@@ -3206,9 +3206,53 @@ async function saveBatchSelectedToBorrador() {
    16. MÓDULO DE REPORTES Y AUDITORÍA DEL CANCIONERO
    ========================================================== */
 let activeReportFilter = 'all';
+let isListeningOtaConfig = false;
+
+function listenAppOtaVersionConfig() {
+    if (isListeningOtaConfig) return;
+    isListeningOtaConfig = true;
+
+    db.ref('app_config/version_info').on('value', snap => {
+        if (snap.exists()) {
+            const data = snap.val();
+            const verInput = document.getElementById('web-ota-version-input');
+            const changeInput = document.getElementById('web-ota-changelog-input');
+            if (verInput && document.activeElement !== verInput) {
+                verInput.value = data.latest_version || '3.015';
+            }
+            if (changeInput && document.activeElement !== changeInput) {
+                changeInput.value = data.changelog || 'Mejoras y correcciones generales.';
+            }
+        }
+    });
+}
+
+function saveAppOtaVersionConfig() {
+    const verVal = document.getElementById('web-ota-version-input')?.value.trim();
+    const changeVal = document.getElementById('web-ota-changelog-input')?.value.trim();
+
+    if (!verVal) return alert("⚠️ Por favor ingresá el número de versión (ej: 3.015).");
+
+    const updateObj = {
+        latest_version: verVal,
+        changelog: changeVal || 'Mejoras y correcciones en la aplicación.',
+        apk_url: 'https://drive.google.com/file/d/1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c/view',
+        force_update: false,
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+    };
+
+    db.ref('app_config/version_info').update(updateObj).then(() => {
+        logAuditoriaWeb("Versión App Publicada", `Publicada versión v${verVal} OTA`, "global");
+        alert(`🚀 ¡Versión v${verVal} publicada con éxito! A todos los usuarios de la app les aparecerá el cartel automático para actualizar.`);
+    }).catch(err => {
+        console.error("Error publicando versión OTA:", err);
+        alert("❌ Error al publicar versión: " + err.message);
+    });
+}
 
 // 1. Renderiza las métricas y la tabla de reportes
 function renderReportsModule() {
+    listenAppOtaVersionConfig();
     if (!allSongs || allSongs.length === 0) return;
 
     const total = allSongs.length;

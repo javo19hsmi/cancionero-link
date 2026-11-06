@@ -466,6 +466,26 @@
         <!-- MÓDULO 6: REPORTES Y AUDITORÍA DE SALUD DEL CANCIONERO -->
     <main id="mod-reports" style="display:none; flex-direction:column; padding:15px; gap:15px; overflow-y:auto; flex:1;">
       
+      <!-- 🚀 TARJETA DE GESTIÓN DE ACTUALIZACIONES OTA DE LA APP -->
+      <div class="glass-panel" style="padding:15px; margin-bottom:10px;">
+        <h4 style="margin:0 0 10px 0; color:var(--primary); font-size:13px; display:flex; align-items:center; gap:8px;">
+          🚀 Publicar Nueva Versión de la Aplicación Móvil (Actualización Automática OTA)
+        </h4>
+        <div style="display:grid; grid-template-columns: 1fr 2fr 1.2fr; gap:12px; align-items:center;">
+          <div>
+            <label style="font-size:10px; color:var(--primary); font-weight:bold; display:block;">Número de Versión:</label>
+            <input type="text" id="web-ota-version-input" placeholder="ej: 3.015" style="width:100%; margin:4px 0 0 0; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--primary); font-weight:bold; display:block;">Notas del Cambio (Changelog):</label>
+            <input type="text" id="web-ota-changelog-input" placeholder="ej: Correcciones en el proyector IP, lecturas y notificaciones" style="width:100%; margin:4px 0 0 0; padding:8px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+          </div>
+          <div style="text-align:right;">
+            <button class="btn btn-save" onclick="saveAppOtaVersionConfig()" style="width:100%; padding:10px 14px; font-size:11px; font-weight:bold; background:#10B981; color:white; border-radius:8px; margin-top:14px;">🚀 PUBLICAR VERSIÓN OTA</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 1. TARJETAS DE SALUD GENERAL EN TIEMPO REAL -->
       <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
         
