@@ -3319,6 +3319,8 @@ function renderReportsModule() {
     document.getElementById('rep-pct-artist').innerText = `${Math.round((countArtist / total) * 100)}% del catálogo`;
 }
 
+const expandedReportAccordions = new Set();
+
 function selectAllReportCommunities(select) {
     const chks = document.querySelectorAll('input[name="rep-comm-filter-chk"]');
     chks.forEach(c => c.checked = select);
@@ -3327,12 +3329,20 @@ function selectAllReportCommunities(select) {
 
 function toggleReportCapillaAccordion(commKey, btn) {
     const div = document.getElementById(`rep-accordion-capillas-${commKey}`);
-    if (!div) return;
-    const isHidden = div.style.display === 'none' || div.style.display === '';
-    div.style.display = isHidden ? 'block' : 'none';
-    if (btn) {
-        const count = div.querySelectorAll('input[type="checkbox"]').length;
-        btn.innerText = isHidden ? `▼ ${count} capillas` : `▶ ${count} capillas`;
+    if (expandedReportAccordions.has(commKey)) {
+        expandedReportAccordions.delete(commKey);
+        if (div) div.style.display = 'none';
+        if (btn) {
+            const count = div ? div.querySelectorAll('input[type="checkbox"]').length : '';
+            btn.innerText = `▶ ${count} capillas`;
+        }
+    } else {
+        expandedReportAccordions.add(commKey);
+        if (div) div.style.display = 'table-row';
+        if (btn) {
+            const count = div ? div.querySelectorAll('input[type="checkbox"]').length : '';
+            btn.innerText = `▼ ${count} capillas`;
+        }
     }
 }
 
@@ -3392,6 +3402,7 @@ function renderPastoralImpactMetrics() {
             const isLive = c.estado_vivo === true || (c.proyeccion_vivo && c.proyeccion_vivo.modo && c.proyeccion_vivo.modo !== 'NEGRA');
             const subNodosKeys = c.sub_nodos ? Object.keys(c.sub_nodos) : [];
             const hasSub = subNodosKeys.length > 0;
+            const isExpanded = expandedReportAccordions.has(commKey);
 
             let capillasRows = '';
             if (hasSub) {
@@ -3434,7 +3445,7 @@ function renderPastoralImpactMetrics() {
                             <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important;">
                             <span style="color:#fff;">🏛️ Parroquia: ${cName}</span>
                         </label>
-                        ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:1px 6px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0;">▶ ${subNodosKeys.length} capillas</button>` : ''}
+                        ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:1px 6px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0;">${isExpanded ? '▼' : '▶'} ${subNodosKeys.length} capillas</button>` : ''}
                     </div>
                 </td>
                 <td style="padding:8px 10px; text-align:center; color:var(--primary); font-weight:bold;">${filteredHist.length} Misas</td>
@@ -3444,7 +3455,7 @@ function renderPastoralImpactMetrics() {
             </tr>`;
 
             if (hasSub) {
-                commRowsHtml += `<tr id="rep-accordion-capillas-${commKey}" style="display:none;"><td colspan="5" style="padding:0;"><table style="width:100%; border-collapse:collapse;">${capillasRows}</table></td></tr>`;
+                commRowsHtml += `<tr id="rep-accordion-capillas-${commKey}" style="display:${isExpanded ? 'table-row' : 'none'};"><td colspan="5" style="padding:0;"><table style="width:100%; border-collapse:collapse;">${capillasRows}</table></td></tr>`;
             }
         });
 
