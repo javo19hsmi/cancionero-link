@@ -3607,6 +3607,30 @@ function exportPastoralReportCSV() {
     });
 }
 
+let reportSortBy = 'title'; // 'title', 'artist', 'moment', 'usage'
+let reportSortAsc = true;
+
+function sortReportTableBy(col) {
+    if (reportSortBy === col) {
+        reportSortAsc = !reportSortAsc; // Alternar dirección A-Z / Z-A
+    } else {
+        reportSortBy = col;
+        reportSortAsc = (col === 'usage') ? false : true; // Por defecto el uso ordena de mayor a menor
+    }
+
+    const iconTitle = document.getElementById('sort-icon-title');
+    const iconArtist = document.getElementById('sort-icon-artist');
+    const iconMoment = document.getElementById('sort-icon-moment');
+    const iconUsage = document.getElementById('sort-icon-usage');
+
+    if (iconTitle) iconTitle.innerText = (col === 'title') ? (reportSortAsc ? '▲' : '▼') : '↕️';
+    if (iconArtist) iconArtist.innerText = (col === 'artist') ? (reportSortAsc ? '▲' : '▼') : '↕️';
+    if (iconMoment) iconMoment.innerText = (col === 'moment') ? (reportSortAsc ? '▲' : '▼') : '↕️';
+    if (iconUsage) iconUsage.innerText = (col === 'usage') ? (reportSortAsc ? '▲' : '▼') : '↕️';
+
+    filterReportList(activeReportFilter, false);
+}
+
 let reportCurrentPage = 1;
 const REPORT_PAGE_SIZE = 20;
 
@@ -3646,6 +3670,28 @@ function filterReportList(filterType, resetPage) {
         if (filterType === 'no-artist') return !hasArtist;
         if (filterType === 'no-moment') return !hasMoment;
         return true; // 'all'
+    });
+
+    // Ordenamiento dinámico según columna elegida
+    filtered.sort((a, b) => {
+        let valA = '', valB = '';
+        if (reportSortBy === 'title') {
+            valA = (a.title || a.titulo || '').toLowerCase();
+            valB = (b.title || b.titulo || '').toLowerCase();
+        } else if (reportSortBy === 'artist') {
+            valA = (a.artist || a.artista || 'zzz').toLowerCase();
+            valB = (b.artist || b.artista || 'zzz').toLowerCase();
+        } else if (reportSortBy === 'moment') {
+            valA = (a.moments && a.moments.length > 0) ? a.moments[0].toLowerCase() : 'zzz';
+            valB = (b.moments && b.moments.length > 0) ? b.moments[0].toLowerCase() : 'zzz';
+        } else if (reportSortBy === 'usage') {
+            const usageA = (typeof songUsageMap !== 'undefined' && songUsageMap[a.title]) ? songUsageMap[a.title] : 0;
+            const usageB = (typeof songUsageMap !== 'undefined' && songUsageMap[b.title]) ? songUsageMap[b.title] : 0;
+            return reportSortAsc ? (usageA - usageB) : (usageB - usageA);
+        }
+
+        const comp = valA.localeCompare(valB);
+        return reportSortAsc ? comp : -comp;
     });
 
     const totalPages = Math.ceil(filtered.length / REPORT_PAGE_SIZE) || 1;
