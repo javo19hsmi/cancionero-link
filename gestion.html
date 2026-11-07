@@ -611,21 +611,21 @@
         </div>
 
         <div id="rep-table-container" style="overflow-x:auto;">
-          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:5px;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:5px; table-layout:fixed;">
             <thead>
               <tr style="text-align:left; color:var(--primary); border-bottom:1px solid var(--glass-border);">
-                <th style="padding:8px; user-select:none;">
+                <th style="padding:8px; user-select:none; width:34%;">
                   <span onclick="sortReportTableBy('title')" style="cursor:pointer;" title="Ordenar por Título de Canción">TÍTULO <span id="sort-icon-title">↕️</span></span> /
                   <span onclick="sortReportTableBy('artist')" style="cursor:pointer;" title="Ordenar por Autor / Artista">ARTISTA <span id="sort-icon-artist">↕️</span></span>
                 </th>
-                <th onclick="sortReportTableBy('moment')" style="padding:8px; cursor:pointer; user-select:none;" title="Ordenar por Momento Litúrgico">
+                <th onclick="sortReportTableBy('moment')" style="padding:8px; cursor:pointer; user-select:none; width:18%;" title="Ordenar por Momento Litúrgico">
                   MOMENTOS <span id="sort-icon-moment">↕️</span>
                 </th>
-                <th style="padding:8px; text-align:center;">ESTADO DE COMPLETITUD</th>
-                <th onclick="sortReportTableBy('usage')" style="padding:8px; text-align:center; cursor:pointer; user-select:none;" title="Ordenar por Frecuencia de Uso en Misas">
+                <th style="padding:8px; text-align:center; width:24%;">ESTADO DE COMPLETITUD</th>
+                <th onclick="sortReportTableBy('usage')" style="padding:8px; text-align:center; cursor:pointer; user-select:none; width:12%;" title="Ordenar por Frecuencia de Uso en Misas">
                   RANKING / USO <span id="sort-icon-usage">↕️</span>
                 </th>
-                <th style="padding:8px; text-align:right;">ACCIÓN</th>
+                <th style="padding:8px; text-align:right; width:12%;">ACCIÓN</th>
               </tr>
             </thead>
             <tbody id="rep-table-body">

@@ -3726,12 +3726,12 @@ function filterReportList(filterType, resetPage) {
         const barWidth = Math.min(100, usageCount * 10);
 
         tr.innerHTML = `
-            <td style="padding:10px;">
+            <td style="padding:10px; max-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${s.title} - ${hasArtist ? s.artist : 'Sin Autor'}">
                 <b style="font-size:13px; color:var(--text);">${s.title}</b>
-                <div style="font-size:10px; color:var(--text-muted);">👤 ${hasArtist ? s.artist : 'Sin Autor'}</div>
+                <div style="font-size:10px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">👤 ${hasArtist ? s.artist : 'Sin Autor'}</div>
             </td>
-            <td style="padding:10px; font-size:11px; color:var(--text-muted);">📍 ${momentText}</td>
-            <td style="padding:10px; text-align:center;">
+            <td style="padding:10px; font-size:11px; color:var(--text-muted); max-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${momentText}">📍 ${momentText}</td>
+            <td style="padding:10px; text-align:center; white-space:nowrap;">
                 <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasAudio ? 'background:rgba(16,185,129,0.2); color:#34d399;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasAudio ? '🎧 Audio' : '🎧 Sin Audio'}</span>
                 <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasSheet ? 'background:rgba(59,130,246,0.2); color:#60a5fa;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasSheet ? '🎼 Partitura' : '🎼 Sin Partitura'}</span>
                 <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasChords ? 'background:rgba(168,85,247,0.2); color:#c084fc;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasChords ? '🎸 Acordes' : '🎸 Sin Acordes'}</span>
