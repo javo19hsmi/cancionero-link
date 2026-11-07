@@ -3285,7 +3285,242 @@ function publishNextAppOtaVersion() {
 // 1. Renderiza las métricas y la tabla de reportes
 function renderReportsModule() {
     listenAppOtaVersionConfig();
+    renderPastoralImpactMetrics();
+    renderTransmissionsHistoryCards();
+    renderTopSongsRanking();
+
     if (!allSongs || allSongs.length === 0) return;
+
+    const total = allSongs.length;
+    let countAudio = 0, countSheet = 0, countChords = 0, countArtist = 0;
+
+    allSongs.forEach(s => {
+        if (s.link && s.link.trim() !== '') countAudio++;
+        if (s.sheetMusicLink && s.sheetMusicLink.trim() !== '') countSheet++;
+        if (s.lyrics && s.lyrics.includes('[')) countChords++;
+        if (s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido') countArtist++;
+    });
+
+    // Actualizar métricas del Dashboard
+    const totalEl = document.getElementById('rep-total-songs');
+    if (totalEl) totalEl.innerText = total;
+
+    document.getElementById('rep-count-audio').innerText = countAudio;
+    document.getElementById('rep-pct-audio').innerText = `${Math.round((countAudio / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-sheet').innerText = countSheet;
+    document.getElementById('rep-pct-sheet').innerText = `${Math.round((countSheet / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-chords').innerText = countChords;
+    document.getElementById('rep-pct-chords').innerText = `${Math.round((countChords / total) * 100)}% del catálogo`;
+
+    document.getElementById('rep-count-artist').innerText = countArtist;
+    document.getElementById('rep-pct-artist').innerText = `${Math.round((countArtist / total) * 100)}% del catálogo`;
+}
+
+function renderPastoralImpactMetrics() {
+    const impactBox = document.getElementById('rep-monthly-impact-content');
+    if (!impactBox) return;
+
+    const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
+    const isSuper = (userRole === 'super_admin');
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+
+    if (isSuper) {
+        db.ref('comunidades').once('value').then(snap => {
+            if (!snap.exists()) {
+                impactBox.innerHTML = '<p style="color:#aaa; font-size:12px;">No hay datos comunitarios registrados.</p>';
+                return;
+            }
+
+            const comms = snap.val();
+            let totalFielesGlobal = 0;
+            let totalMisasGlobal = 0;
+            let commRows = '';
+
+            Object.keys(comms).forEach(k => {
+                const c = comms[k];
+                const cName = c.nombre || k;
+                const hist = c.historial_transmisiones ? Object.values(c.historial_transmisiones) : [];
+
+                let sumPicos = 0;
+                hist.forEach(h => {
+                    sumPicos += (h.audiencia_pico || 0);
+                });
+
+                totalFielesGlobal += sumPicos;
+                totalMisasGlobal += hist.length;
+
+                commRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                    <td style="padding:10px; font-weight:bold; color:#fff;">🏛️ ${cName}</td>
+                    <td style="padding:10px; text-align:center; color:var(--primary); font-weight:bold;">${hist.length} Misas</td>
+                    <td style="padding:10px; text-align:center; color:#2dd4bf; font-weight:bold;">👥 ${sumPicos} fieles acompañados</td>
+                    <td style="padding:10px; text-align:center; color:#cbd5e1;">${hist.length > 0 ? Math.round(sumPicos / hist.length) : 0} promedio</td>
+                </tr>`;
+            });
+
+            impactBox.innerHTML = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:15px;">
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">TOTAL FIELES ACOMPAÑADOS (DIÓCESIS)</small>
+                    <div style="font-size:22px; font-weight:bold; color:#2dd4bf; margin-top:4px;">👥 ${totalFielesGlobal}</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">TOTAL CELEBRACIONES EN VIVO</small>
+                    <div style="font-size:22px; font-weight:bold; color:var(--primary); margin-top:4px;">📜 ${totalMisasGlobal} Misas</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">PROMEDIO POR CELEBRACIÓN</small>
+                    <div style="font-size:22px; font-weight:bold; color:#f59e0b; margin-top:4px;">👥 ${totalMisasGlobal > 0 ? Math.round(totalFielesGlobal / totalMisasGlobal) : 0}</div>
+                </div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr style="background:rgba(255,255,255,0.05); color:var(--primary); text-align:left;">
+                        <th style="padding:8px;">Comunidad / Parroquia</th>
+                        <th style="padding:8px; text-align:center;">Misas Transmitidas</th>
+                        <th style="padding:8px; text-align:center;">Participantes Totales</th>
+                        <th style="padding:8px; text-align:center;">Promedio/Misa</th>
+                    </tr>
+                </thead>
+                <tbody>${commRows}</tbody>
+            </table>`;
+        });
+    } else {
+        db.ref(`${safePath}/historial_transmisiones`).once('value').then(snap => {
+            if (!snap.exists()) {
+                impactBox.innerHTML = '<p style="color:#aaa; font-size:12px; font-style:italic;">Aún no se han registrado transmisiones finalizadas en esta comunidad.</p>';
+                return;
+            }
+
+            const hist = Object.values(snap.val());
+            let sumPicos = 0;
+            hist.forEach(h => sumPicos += (h.audiencia_pico || 0));
+
+            impactBox.innerHTML = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">FIELES ACOMPAÑADOS ESTE MES</small>
+                    <div style="font-size:22px; font-weight:bold; color:#2dd4bf; margin-top:4px;">👥 ${sumPicos}</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">MISAS TRANSMITIDAS</small>
+                    <div style="font-size:22px; font-weight:bold; color:var(--primary); margin-top:4px;">📜 ${hist.length}</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
+                    <small style="color:#94a3b8; font-size:10px;">PROMEDIO POR MISA</small>
+                    <div style="font-size:22px; font-weight:bold; color:#f59e0b; margin-top:4px;">👥 ${Math.round(sumPicos / hist.length)}</div>
+                </div>
+            </div>`;
+        });
+    }
+}
+
+function renderTransmissionsHistoryCards() {
+    const container = document.getElementById('rep-transmissions-history-list');
+    if (!container) return;
+
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+
+    db.ref(`${safePath}/historial_transmisiones`).limitToLast(12).once('value').then(snap => {
+        if (!snap.exists()) {
+            container.innerHTML = '<p style="color:#888; font-size:12px; font-style:italic;">No hay historial de transmisiones guardado aún.</p>';
+            return;
+        }
+
+        let html = '';
+        const raw = snap.val();
+        const keys = Object.keys(raw).reverse();
+
+        keys.forEach(k => {
+            const h = raw[k];
+            const des = h.desglose || { android: 0, ios_web: 0, web_qr: 0 };
+            const canciones = h.canciones_cantadas || [];
+
+            html += `<div style="background:rgba(15,23,42,0.85); border:1px solid var(--glass-border); padding:14px; border-radius:12px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <strong style="color:#fff; font-size:13px;">📅 ${h.fecha || 'Misa'}</strong>
+                    <span style="font-size:11px; background:rgba(45,212,191,0.15); color:#2dd4bf; padding:3px 8px; border-radius:8px; font-weight:bold;">👥 ${h.audiencia_pico || 0} conectados</span>
+                </div>
+                <div style="font-size:11px; color:#94a3b8; margin-bottom:8px;">
+                    ⏱️ Duración: <b>${h.duracion_minutos || 0} min</b> | Operador: <b>${h.operador_email ? h.operador_email.split('@')[0] : 'Admin'}</b>
+                </div>
+                <div style="display:flex; gap:8px; font-size:10px; margin-bottom:8px; background:rgba(0,0,0,0.3); padding:6px 10px; border-radius:8px;">
+                    <span>🤖 Android: <b>${des.android || 0}</b></span>
+                    <span>🍏 iOS Web: <b>${des.ios_web || 0}</b></span>
+                    <span>🌐 Web QR: <b>${des.web_qr || 0}</b></span>
+                </div>
+                ${canciones.length > 0 ? `<div style="font-size:10px; color:#cbd5e1; font-style:italic;">🎶 Cantos: ${canciones.slice(0, 3).join(', ')}${canciones.length > 3 ? '...' : ''}</div>` : ''}
+            </div>`;
+        });
+
+        container.innerHTML = html;
+    });
+}
+
+function renderTopSongsRanking() {
+    const container = document.getElementById('rep-top-songs-list');
+    if (!container) return;
+
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+
+    db.ref(`${safePath}/historial_transmisiones`).once('value').then(snap => {
+        if (!snap.exists()) {
+            container.innerHTML = '<p style="color:#888; font-size:12px; font-style:italic;">Aún no hay canciones registradas en el historial de Misas.</p>';
+            return;
+        }
+
+        const songCounts = {};
+        const map = snap.val();
+        Object.values(map).forEach(h => {
+            const songs = h.canciones_cantadas || [];
+            songs.forEach(s => {
+                if (s && s.trim()) {
+                    songCounts[s] = (songCounts[s] || 0) + 1;
+                }
+            });
+        });
+
+        const sorted = Object.entries(songCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+        if (sorted.length === 0) {
+            container.innerHTML = '<p style="color:#888; font-size:12px; font-style:italic;">Aún no se registraron cantos proyectados.</p>';
+            return;
+        }
+
+        let html = '<div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:10px;">';
+        sorted.forEach(([title, count], idx) => {
+            html += `<div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); padding:10px; border-radius:10px; display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; font-weight:bold; color:#fff;">#${idx + 1} 🎵 ${title}</span>
+                <span style="font-size:10px; background:rgba(20,184,166,0.2); color:#2dd4bf; padding:2px 8px; border-radius:8px; font-weight:bold;">${count} Misas</span>
+            </div>`;
+        });
+        html += '</div>';
+
+        container.innerHTML = html;
+    });
+}
+
+function exportPastoralReportCSV() {
+    const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
+
+    db.ref(`${safePath}/historial_transmisiones`).once('value').then(snap => {
+        if (!snap.exists()) return alert("⚠️ No hay historial de celebraciones para exportar.");
+
+        let csv = "Fecha,Pico Audiencia,Android,iOS Web,Web QR,Duracion Minutos,Canciones\n";
+        const map = snap.val();
+        Object.values(map).forEach(h => {
+            const des = h.desglose || {};
+            const songs = (h.canciones_cantadas || []).join("; ");
+            csv += `"${h.fecha || ''}","${h.audiencia_pico || 0}","${des.android || 0}","${des.ios_web || 0}","${des.web_qr || 0}","${h.duracion_minutos || 0}","${songs}"\n`;
+        });
+
+        const encodedUri = encodeURI("data:text/csv;charset=utf-8," + csv);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `Informe_Pastoral_${Date.now()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
+}
 
     const total = allSongs.length;
     let countAudio = 0, countSheet = 0, countChords = 0, countArtist = 0;
