@@ -3427,7 +3427,7 @@ function renderPastoralImpactMetrics() {
 
                     capillasRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03); background:rgba(0,0,0,0.15);">
                         <td style="padding:6px 10px 6px 24px; font-size:11px; color:#cbd5e1;">
-                            <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; white-space:nowrap;">
+                            <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; white-space:nowrap; position:static !important;">
                                 <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important; flex-shrink:0;">
                                 <span style="white-space:nowrap;">↳ ⛪ Capilla: ${capName}</span>
                             </label>
@@ -3443,7 +3443,7 @@ function renderPastoralImpactMetrics() {
             commRowsHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
                 <td style="padding:8px 10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
-                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1; white-space:nowrap;">
+                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1; white-space:nowrap; position:static !important;">
                             <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important; flex-shrink:0;">
                             <span style="color:#fff; white-space:nowrap;">🏛️ Parroquia: ${cName}</span>
                         </label>
