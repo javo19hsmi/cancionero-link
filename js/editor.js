@@ -3426,14 +3426,16 @@ function renderPastoralImpactMetrics() {
                     const capLive = cap.estado_vivo === true;
 
                     capillasRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03); background:rgba(0,0,0,0.15);">
-                        <td style="padding:6px 10px; font-size:11px; color:#cbd5e1; display:flex; align-items:center; gap:6px;">
-                            <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important;">
-                            <span>↳ ⛪ Capilla: ${capName}</span>
+                        <td style="padding:6px 10px 6px 24px; font-size:11px; color:#cbd5e1;">
+                            <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; white-space:nowrap;">
+                                <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important; flex-shrink:0;">
+                                <span style="white-space:nowrap;">↳ ⛪ Capilla: ${capName}</span>
+                            </label>
                         </td>
-                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#aaa;">${capFilteredHist.length} Misas</td>
-                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#2dd4bf;">👥 ${capPicos} fieles</td>
-                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#94a3b8;">${capFilteredHist.length > 0 ? Math.round(capPicos / capFilteredHist.length) : 0} promedio</td>
-                        <td style="padding:6px 10px; text-align:center;">${capLive ? '<span style="color:#34d399; font-size:10px;">🟢</span>' : '<span style="color:#64748b; font-size:9px;">⚪</span>'}</td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#aaa; white-space:nowrap;">${capFilteredHist.length} Misas</td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#2dd4bf; white-space:nowrap;">👥 ${capPicos} fieles</td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#94a3b8; white-space:nowrap;">${capFilteredHist.length > 0 ? Math.round(capPicos / capFilteredHist.length) : 0} promedio</td>
+                        <td style="padding:6px 10px; text-align:center; white-space:nowrap;">${capLive ? '<span style="color:#34d399; font-size:10px;">🟢</span>' : '<span style="color:#64748b; font-size:9px;">⚪</span>'}</td>
                     </tr>`;
                 });
             }
@@ -3441,17 +3443,17 @@ function renderPastoralImpactMetrics() {
             commRowsHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
                 <td style="padding:8px 10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
-                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:6px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1;">
-                            <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important;">
-                            <span style="color:#fff;">🏛️ Parroquia: ${cName}</span>
+                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1; white-space:nowrap;">
+                            <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important; flex-shrink:0;">
+                            <span style="color:#fff; white-space:nowrap;">🏛️ Parroquia: ${cName}</span>
                         </label>
-                        ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:1px 6px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0;">${isExpanded ? '▼' : '▶'} ${subNodosKeys.length} capillas</button>` : ''}
+                        ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:2px 8px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0; white-space:nowrap;">${isExpanded ? '▼' : '▶'} ${subNodosKeys.length} capillas</button>` : ''}
                     </div>
                 </td>
-                <td style="padding:8px 10px; text-align:center; color:var(--primary); font-weight:bold;">${filteredHist.length} Misas</td>
-                <td style="padding:8px 10px; text-align:center; color:#2dd4bf; font-weight:bold;">👥 ${sumPicos} fieles</td>
-                <td style="padding:8px 10px; text-align:center; color:#cbd5e1;">${filteredHist.length > 0 ? Math.round(sumPicos / filteredHist.length) : 0} promedio</td>
-                <td style="padding:8px 10px; text-align:center;">${isLive ? '<span style="color:#34d399; font-size:12px;">🟢</span>' : '<span style="color:#64748b; font-size:10px;">⚪</span>'}</td>
+                <td style="padding:8px 10px; text-align:center; color:var(--primary); font-weight:bold; white-space:nowrap;">${filteredHist.length} Misas</td>
+                <td style="padding:8px 10px; text-align:center; color:#2dd4bf; font-weight:bold; white-space:nowrap;">👥 ${sumPicos} fieles</td>
+                <td style="padding:8px 10px; text-align:center; color:#cbd5e1; white-space:nowrap;">${filteredHist.length > 0 ? Math.round(sumPicos / filteredHist.length) : 0} promedio</td>
+                <td style="padding:8px 10px; text-align:center; white-space:nowrap;">${isLive ? '<span style="color:#34d399; font-size:12px;">🟢</span>' : '<span style="color:#64748b; font-size:10px;">⚪</span>'}</td>
             </tr>`;
 
             if (hasSub) {
@@ -3483,14 +3485,14 @@ function renderPastoralImpactMetrics() {
         }
 
         if (tableBox) {
-            tableBox.innerHTML = `<table style="width:100%; border-collapse:collapse; font-size:11px; color:#fff;">
+            tableBox.innerHTML = `<table style="width:100%; border-collapse:collapse; font-size:11px; color:#fff; table-layout:auto;">
                 <thead>
                     <tr style="border-bottom:1px solid var(--glass-border); color:var(--primary); text-align:left;">
-                        <th style="padding:6px 10px;">Comunidad / Parroquia & Capillas</th>
-                        <th style="padding:6px 10px; text-align:center;">Misas</th>
-                        <th style="padding:6px 10px; text-align:center;">Participantes</th>
-                        <th style="padding:6px 10px; text-align:center;">Promedio</th>
-                        <th style="padding:6px 10px; text-align:center;">Señal</th>
+                        <th style="padding:6px 10px; width:50%;">Comunidad / Parroquia & Capillas</th>
+                        <th style="padding:6px 10px; text-align:center; width:12%;">Misas</th>
+                        <th style="padding:6px 10px; text-align:center; width:18%;">Participantes</th>
+                        <th style="padding:6px 10px; text-align:center; width:12%;">Promedio</th>
+                        <th style="padding:6px 10px; text-align:center; width:8%;">Señal</th>
                     </tr>
                 </thead>
                 <tbody>${commRowsHtml}</tbody>
