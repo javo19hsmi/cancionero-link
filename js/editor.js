@@ -3544,7 +3544,7 @@ function filterReportList(filterType, resetPage) {
         activeBtn.classList.add('active');
     }
 
-    const tbody = document.getElementById('reports-tbody');
+    const tbody = document.getElementById('rep-table-body') || document.getElementById('reports-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
@@ -3570,10 +3570,11 @@ function filterReportList(filterType, resetPage) {
     const pageInd = document.getElementById('rep-page-indicator');
     if (pageInd) pageInd.innerText = `Pág ${reportCurrentPage} de ${totalPages}`;
 
-    document.getElementById('rep-list-count').innerText = `Mostrando ${filtered.length} canciones`;
+    const countEl = document.getElementById('rep-list-count');
+    if (countEl) countEl.innerText = `Mostrando ${filtered.length} canciones`;
 
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; opacity:0.5;">🎉 ¡Impecable! No hay canciones que necesiten este ajuste.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; opacity:0.5;">🎉 ¡Impecable! No hay canciones que necesiten este ajuste.</td></tr>';
         return;
     }
 
@@ -3590,6 +3591,8 @@ function filterReportList(filterType, resetPage) {
         tr.style.borderBottom = '1px solid var(--glass-border)';
 
         const momentText = (s.moments && s.moments.length > 0) ? s.moments.join(', ') : 'Varios';
+        const usageCount = (typeof songUsageMap !== 'undefined' && songUsageMap[s.title]) ? songUsageMap[s.title] : 0;
+        const barWidth = Math.min(100, usageCount * 10);
 
         tr.innerHTML = `
             <td style="padding:10px;">
@@ -3598,12 +3601,18 @@ function filterReportList(filterType, resetPage) {
             </td>
             <td style="padding:10px; font-size:11px; color:var(--text-muted);">📍 ${momentText}</td>
             <td style="padding:10px; text-align:center;">
-                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasAudio ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasAudio ? '🎧 Audio' : '🎧 Sin Audio'}</span>
-                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasSheet ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasSheet ? '🎼 Partitura' : '🎼 Sin Partitura'}</span>
-                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasChords ? 'background:rgba(77,182,172,0.2); color:var(--primary);' : 'background:rgba(255,82,82,0.15); color:var(--danger);'}">${hasChords ? '🎸 Acordes' : '🎸 Sin Acordes'}</span>
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasAudio ? 'background:rgba(16,185,129,0.2); color:#34d399;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasAudio ? '🎧 Audio' : '🎧 Sin Audio'}</span>
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasSheet ? 'background:rgba(59,130,246,0.2); color:#60a5fa;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasSheet ? '🎼 Partitura' : '🎼 Sin Partitura'}</span>
+                <span style="padding:2px 6px; border-radius:10px; font-size:10px; margin:0 2px; ${hasChords ? 'background:rgba(168,85,247,0.2); color:#c084fc;' : 'background:rgba(239,68,68,0.15); color:#f87171;'}">${hasChords ? '🎸 Acordes' : '🎸 Sin Acordes'}</span>
             </td>
-            <td style="padding:10px; text-align:center;">
-                <button class="btn btn-save" style="padding:4px 10px; font-size:10px; font-weight:bold;" onclick="jumpToEditSongFromReport('${s.id}')">✏️ Ir a Editar</button>
+            <td style="padding:10px; text-align:center; width:120px;">
+                <div style="font-size:10px; color:#2dd4bf; font-weight:bold; margin-bottom:2px;">⭐ uso ${usageCount}</div>
+                <div style="background:rgba(255,255,255,0.1); height:6px; border-radius:3px; overflow:hidden;">
+                    <div style="width:${barWidth}%; background:#2dd4bf; height:100%; border-radius:3px;"></div>
+                </div>
+            </td>
+            <td style="padding:10px; text-align:right;">
+                <button class="btn btn-save" style="padding:4px 10px; font-size:10px; font-weight:bold; background:rgba(2,132,199,0.2); border:1px solid #0284C7; color:#38bdf8; border-radius:6px;" onclick="jumpToEditSongFromReport('${s.id}')">Ir a Editar</button>
             </td>
         `;
         tbody.appendChild(tr);

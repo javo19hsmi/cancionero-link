@@ -466,148 +466,150 @@
         <!-- MÓDULO 6: REPORTES Y AUDITORÍA DE SALUD DEL CANCIONERO -->
     <main id="mod-reports" style="display:none; flex-direction:column; padding:15px; gap:15px; overflow-y:auto; flex:1;">
       
-      <!-- 🚀 TARJETA DE GESTIÓN DE ACTUALIZACIONES OTA DE LA APP (SOLO SUPER ADMIN) -->
-      <div id="web-ota-card" class="glass-panel" style="display:none; padding:18px; margin-bottom:12px; border:1px solid rgba(16,185,129,0.3); background:rgba(15,23,42,0.85);">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
-          <h4 style="margin:0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:8px;">
-            🚀 Actualización Automática de la App Móvil (Gestor OTA)
+    <!-- MÓDULO 6: REPORTES Y AUDITORÍA DE SALUD DEL CANCIONERO -->
+    <main id="mod-reports" style="display:none; flex-direction:column; padding:15px; gap:15px; overflow-y:auto; flex:1;">
+
+      <!-- FILA 1: ESTADO DE CANCIONES (IZQ) + GESTOR OTA (DER) -->
+      <div style="display:grid; grid-template-columns: 2.2fr 1fr; gap:15px; align-items:stretch;">
+
+        <!-- ESTADO DEL CATÁLOGO DE CANCIONES -->
+        <div class="glass-panel" style="padding:15px; display:flex; flex-direction:column; justify-content:center;">
+          <h4 style="margin:0 0 12px 0; color:var(--primary); font-size:13px; font-weight:bold; display:flex; align-items:center; gap:6px;">
+            🎵 Estado del Catálogo de Canciones
           </h4>
-          <span style="font-size:11px; background:rgba(16,185,129,0.15); color:#34d399; padding:4px 10px; border-radius:8px; border:1px solid rgba(16,185,129,0.3); font-weight:bold;">
-            VERSIÓN EN LA NUBE: <span id="web-ota-current-ver" style="color:#fff;">v3.015</span>
-          </span>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 2.5fr 1.2fr; gap:15px; align-items:flex-end;">
-          <div>
-            <label style="font-size:11px; color:var(--primary); font-weight:bold; display:block; margin-bottom:4px;">Notas de los Cambios (Changelog):</label>
-            <input type="text" id="web-ota-changelog-input" placeholder="ej: Correcciones en el proyector IP, lecturas y Biblia" style="width:100%; margin:0; padding:10px; border-radius:8px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); box-sizing:border-box;">
+          <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap:10px; text-align:center;">
+            <div style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:10px; border-radius:10px;">
+              <small style="color:#aaa; font-size:9px; font-weight:bold;">TOTAL CANCIONES</small>
+              <div id="rep-total-songs" style="font-size:20px; font-weight:bold; color:white; margin:2px 0;">0</div>
+              <span style="font-size:9px; color:var(--primary);">Borradores activos</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:10px; border-radius:10px;">
+              <small style="color:#aaa; font-size:9px; font-weight:bold;">CON AUDIOS / MP3</small>
+              <div id="rep-count-audio" style="font-size:20px; font-weight:bold; color:white; margin:2px 0;">0</div>
+              <span id="rep-pct-audio" style="font-size:9px; color:#34d399;">0% del catálogo</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:10px; border-radius:10px;">
+              <small style="color:#aaa; font-size:9px; font-weight:bold;">CON PARTITURAS (PDF)</small>
+              <div id="rep-count-sheet" style="font-size:20px; font-weight:bold; color:white; margin:2px 0;">0</div>
+              <span id="rep-pct-sheet" style="font-size:9px; color:#60a5fa;">0% del catálogo</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:10px; border-radius:10px;">
+              <small style="color:#aaa; font-size:9px; font-weight:bold;">CON ACORDES [CHORDPRO]</small>
+              <div id="rep-count-chords" style="font-size:20px; font-weight:bold; color:white; margin:2px 0;">0</div>
+              <span id="rep-pct-chords" style="font-size:9px; color:#f87171;">0% del catálogo</span>
+            </div>
+            <div style="background:rgba(0,0,0,0.2); border:1px solid var(--glass-border); padding:10px; border-radius:10px;">
+              <small style="color:#aaa; font-size:9px; font-weight:bold;">CON AUTOR / ARTISTA</small>
+              <div id="rep-count-artist" style="font-size:20px; font-weight:bold; color:white; margin:2px 0;">0</div>
+              <span id="rep-pct-artist" style="font-size:9px; color:#c084fc;">0% del catálogo</span>
+            </div>
           </div>
-          <div>
-            <button id="web-ota-publish-btn" class="btn btn-save" onclick="publishNextAppOtaVersion()" style="width:100%; padding:12px; font-size:12px; font-weight:bold; background:#10B981; color:white; border-radius:8px; box-shadow:0 4px 12px rgba(16,185,129,0.25);">
-              🚀 PUBLICAR SIGUIENTE VERSIÓN (v3.016)
-            </button>
+        </div>
+
+        <!-- 🚀 GESTOR OTA COMPACTO AL LADO (SOLO SUPER ADMIN) -->
+        <div id="web-ota-card" class="glass-panel" style="display:none; padding:15px; border:1px solid rgba(16,185,129,0.3); background:rgba(15,23,42,0.85);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h4 style="margin:0; color:var(--primary); font-size:12px; font-weight:bold; display:flex; align-items:center; gap:6px;">
+              🚀 Gestor de Actualización OTA (App Móvil)
+            </h4>
+            <span style="font-size:10px; background:rgba(16,185,129,0.15); color:#34d399; padding:2px 6px; border-radius:6px; font-weight:bold;">
+              VERSIÓN EN LA NUBE: <span id="web-ota-current-ver" style="color:#fff;">v3.015</span>
+            </span>
           </div>
-        </div>
-      </div>
-
-      <!-- 1. TARJETAS DE SALUD GENERAL EN TIEMPO REAL -->
-      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-        
-        <div class="glass-panel" style="padding:15px; text-align:center; height:auto;">
-          <small style="color:#aaa; font-size:10px;">TOTAL CANCIONES</small>
-          <div id="rep-total-songs" style="font-size:24px; font-weight:bold; color:white; margin:5px 0;">0</div>
-          <span style="font-size:10px; color:var(--primary);">Borradores activos</span>
-        </div>
-
-        <div class="glass-panel" style="padding:15px; text-align:center; height:auto;">
-          <small style="color:#aaa; font-size:10px;">CON AUDIOS / MP3</small>
-          <div id="rep-count-audio" style="font-size:24px; font-weight:bold; color:white; margin:5px 0;">0</div>
-          <span id="rep-pct-audio" style="font-size:10px; color:var(--primary);">0% del catálogo</span>
-        </div>
-
-        <div class="glass-panel" style="padding:15px; text-align:center; height:auto;">
-          <small style="color:#aaa; font-size:10px;">CON PARTITURAS (PDF)</small>
-          <div id="rep-count-sheet" style="font-size:24px; font-weight:bold; color:white; margin:5px 0;">0</div>
-          <span id="rep-pct-sheet" style="font-size:10px; color:var(--primary);">0% del catálogo</span>
-        </div>
-
-        <div class="glass-panel" style="padding:15px; text-align:center; height:auto;">
-          <small style="color:#aaa; font-size:10px;">CON ACORDES [CHORDPRO]</small>
-          <div id="rep-count-chords" style="font-size:24px; font-weight:bold; color:white; margin:5px 0;">0</div>
-          <span id="rep-pct-chords" style="font-size:10px; color:var(--primary);">0% del catálogo</span>
-        </div>
-
-        <div class="glass-panel" style="padding:15px; text-align:center; height:auto;">
-          <small style="color:#aaa; font-size:10px;">CON AUTOR / ARTISTA</small>
-          <div id="rep-count-artist" style="font-size:24px; font-weight:bold; color:white; margin:5px 0;">0</div>
-          <span id="rep-pct-artist" style="font-size:10px; color:var(--primary);">0% del catálogo</span>
+          <label style="font-size:9px; color:var(--text-muted); font-weight:bold; display:block; margin-bottom:2px;">NOTAS DE LOS CAMBIOS (CHANGELOG):</label>
+          <input type="text" id="web-ota-changelog-input" placeholder="ej: Correcciones en el proyector IP, lecturas y Biblia" style="width:100%; margin:0 0 8px 0; padding:6px; border-radius:6px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:var(--text); font-size:11px; box-sizing:border-box;">
+          <button id="web-ota-publish-btn" class="btn btn-save" onclick="publishNextAppOtaVersion()" style="width:100%; padding:8px; font-size:11px; font-weight:bold; background:#10B981; color:white; border-radius:6px;">
+            🚀 PUBLICAR SIGUIENTE VERSIÓN (v3.016)
+          </button>
         </div>
 
       </div>
 
-      <!-- 📈 TARJETA DE IMPACTO PASTORAL Y ASISTENCIA MENSUAL -->
-      <div id="rep-monthly-impact-card" class="glass-panel" style="padding:20px; margin-top:15px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:10px;">
-          <h4 style="margin:0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:8px;">
-            📈 Métrica de Impacto Pastoral y Asistencia Mensual
+      <!-- FILA 2: MÉTRICAS DE TRANSMISIONES Y REPORTES DE VIVOS (3 COLUMNAS) -->
+      <div class="glass-panel" style="padding:18px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+          <h4 style="margin:0; color:var(--primary); font-size:14px; font-weight:bold; display:flex; align-items:center; gap:8px;">
+            📈 Métricas de Transmisiones en Vivo y Reportes de Vivos
           </h4>
           <button class="btn btn-save" onclick="exportPastoralReportCSV()" style="padding:6px 12px; font-size:11px; background:#0891B2; color:white; border-radius:8px;">
             📊 DESCARGAR INFORME PASTORAL (CSV)
           </button>
         </div>
-        <div id="rep-monthly-impact-content">
-          <!-- Carga dinámicamente según rol local o Súper Admin -->
+
+        <div style="display:grid; grid-template-columns: 1.1fr 2fr 1.2fr; gap:15px; align-items:start;">
+
+          <!-- COLUMNA 1: TOTALES Y GRÁFICO ANIMADO DE BARRAS -->
+          <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:12px;" id="rep-left-impact-box">
+            <!-- Carga el total de fieles con minigráfico de barras -->
+          </div>
+
+          <!-- COLUMNA 2: TABLA DE PARROQUIAS Y CAPILLAS SUB-NODOS -->
+          <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:12px; overflow-x:auto;">
+            <div style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:8px;">Métricas por Parroquia / Comunidad & Capillas:</div>
+            <div id="rep-community-table-content">
+              <!-- Se llena dinámicamente con Parroquias y Capillas sub-nodos -->
+            </div>
+          </div>
+
+          <!-- COLUMNA 3: HISTORIAL DE CELEBRACIONES Y VIVOS PASADOS -->
+          <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:12px; max-height:280px; overflow-y:auto;">
+            <div style="font-size:11px; font-weight:bold; color:var(--primary); margin-bottom:8px;">Historial de Celebraciones y Vivos Pasados:</div>
+            <div id="rep-transmissions-history-list" style="display:flex; flex-direction:column; gap:8px;">
+              <!-- Tarjetas compactas pasadas -->
+            </div>
+          </div>
+
         </div>
       </div>
 
-      <!-- 📜 TARJETA DE HISTORIAL DE CELEBRACIONES Y MISAS PASADAS -->
-      <div class="glass-panel" style="padding:20px; margin-top:15px;">
-        <h4 style="margin:0 0 15px 0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:8px;">
-          📜 Historial de Celebraciones y Misas Pasadas
-        </h4>
-        <div id="rep-transmissions-history-list" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px;">
-          <!-- Tarjetas con pico de audiencia y desglose por dispositivo -->
-        </div>
-      </div>
-
-      <!-- 🎵 TOP 10 CANCIONES MÁS CANTADAS EN EL MES -->
-      <div class="glass-panel" style="padding:20px; margin-top:15px;">
-        <h4 style="margin:0 0 15px 0; color:var(--primary); font-size:14px; display:flex; align-items:center; gap:8px;">
-          🎵 Top 10 Canciones Más Cantadas en las Misas del Mes
-        </h4>
-        <div id="rep-top-songs-list">
-          <!-- Ranking de canciones -->
-        </div>
-      </div>
-
-      <!-- 2. BOTONERA DE FILTROS RÁPIDOS DE AUDITORÍA -->
+      <!-- FILA 3: AUDITORÍA DE DATOS FALTANTES + TABLA DE CANCIONES Y RANKING -->
       <section class="glass-panel" style="padding:15px; height:auto; display:flex; flex-direction:column; gap:10px;">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
           <label style="margin:0; font-size:12px; color:var(--primary);">AUDITORÍA DE DATOS FALTANTES (SELECCIONAR FILTRO):</label>
+          <div id="rep-top-songs-header-ranking" style="font-size:12px; font-weight:bold; color:#2dd4bf; display:flex; align-items:center; gap:6px;">
+            <span>🎵 Top 10 Canciones Más Cantadas en las Misas del Mes</span>
+          </div>
         </div>
 
         <div style="display:flex; flex-wrap:wrap; gap:8px;">
           <button class="btn rep-filter-btn active" id="btn-rep-all" onclick="filterReportList('all')" style="background:var(--primary); color:black; font-size:11px; padding:6px 12px;">👁️ Mostrar Todas</button>
-          <button class="btn rep-filter-btn" id="btn-rep-no-audio" onclick="filterReportList('no-audio')" style="background:rgba(255,255,255,0.05); color:white; font-size:11px; padding:6px 12px; border:1px solid var(--glass-border);">🎧 Sin Audio</button>
-          <button class="btn rep-filter-btn" id="btn-rep-no-sheet" onclick="filterReportList('no-sheet')" style="background:rgba(255,255,255,0.05); color:white; font-size:11px; padding:6px 12px; border:1px solid var(--glass-border);">🎼 Sin Partitura</button>
-          <button class="btn rep-filter-btn" id="btn-rep-no-chords" onclick="filterReportList('no-chords')" style="background:rgba(255,255,255,0.05); color:white; font-size:11px; padding:6px 12px; border:1px solid var(--glass-border);">🎸 Sin Acordes</button>
-          <button class="btn rep-filter-btn" id="btn-rep-no-artist" onclick="filterReportList('no-artist')" style="background:rgba(255,255,255,0.05); color:white; font-size:11px; padding:6px 12px; border:1px solid var(--glass-border);">👤 Sin Autor</button>
-          <button class="btn rep-filter-btn" id="btn-rep-no-moment" onclick="filterReportList('no-moment')" style="background:rgba(255,255,255,0.05); color:white; font-size:11px; padding:6px 12px; border:1px solid var(--glass-border);">📍 Sin Momento Litúrgico</button>
+          <button class="btn rep-filter-btn" id="btn-rep-no-audio" onclick="filterReportList('no-audio')" style="font-size:11px; padding:6px 12px;">🎧 Sin Audio</button>
+          <button class="btn rep-filter-btn" id="btn-rep-no-sheet" onclick="filterReportList('no-sheet')" style="font-size:11px; padding:6px 12px;">🎼 Sin Partitura</button>
+          <button class="btn rep-filter-btn" id="btn-rep-no-chords" onclick="filterReportList('no-chords')" style="font-size:11px; padding:6px 12px;">🎸 Sin Acordes</button>
+          <button class="btn rep-filter-btn" id="btn-rep-no-artist" onclick="filterReportList('no-artist')" style="font-size:11px; padding:6px 12px;">👤 Sin Autor</button>
+          <button class="btn rep-filter-btn" id="btn-rep-no-moment" onclick="filterReportList('no-moment')" style="font-size:11px; padding:6px 12px;">📍 Sin Momento Litúrgico</button>
         </div>
-      </section>
 
-      <!-- 3. TABLA RESULTADOS DE AUDITORÍA CON PAGINACIÓN Y ENCABEZADO FIJO (STICKY) -->
-      <section class="glass-panel" style="flex:1; overflow-y:auto; padding:15px; min-height:300px; position:relative;">
-        <div style="position:sticky; top:-15px; z-index:20; background:var(--card-bg); padding:10px 0 5px 0; border-bottom:1px solid var(--glass-border); margin-bottom:10px;">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px;">
-            <span id="rep-list-title" style="font-size:12px; font-weight:bold; color:var(--text);">LISTADO DE CANCIONES</span>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <button class="btn" style="padding:3px 10px; font-size:11px; background:var(--card-bg); color:var(--text); border:1px solid var(--glass-border);" onclick="prevReportPage()">&lt; Anterior</button>
-              <span id="rep-page-indicator" style="font-size:11px; color:var(--text-muted); font-weight:bold;">Pág 1 de 1</span>
-              <button class="btn" style="padding:3px 10px; font-size:11px; background:var(--card-bg); color:var(--text); border:1px solid var(--glass-border);" onclick="nextReportPage()">Siguiente &gt;</button>
-            </div>
-            <span id="rep-list-count" style="font-size:11px; color:var(--text-muted);">Mostrando 0 canciones</span>
+        <!-- LISTADO DE CANCIONES -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+          <b style="font-size:12px;" id="rep-list-title">LISTADO DE CANCIONES</b>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <button class="btn" onclick="changeReportPage(-1)" style="padding:4px 8px; font-size:11px;">&lt; Anterior</button>
+            <span id="rep-page-indicator" style="font-size:11px; font-weight:bold;">Pág 1 de 1</span>
+            <button class="btn" onclick="changeReportPage(1)" style="padding:4px 8px; font-size:11px;">Siguiente &gt;</button>
           </div>
+          <small id="rep-list-count" style="color:#aaa; font-size:11px;">Mostrando 0 canciones</small>
+        </div>
 
-          <table style="width:100%; border-collapse:collapse; font-size:12px; color:var(--text);">
+        <div id="rep-table-container" style="overflow-x:auto;">
+          <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:5px;">
             <thead>
-              <tr style="text-align:left; opacity:0.85;">
-                <th style="padding:4px 10px;">TÍTULO Y ARTISTA</th>
-                <th style="padding:4px 10px;">MOMENTOS</th>
-                <th style="padding:4px 10px; text-align:center;">ESTADO DE COMPLETITUD</th>
-                <th style="padding:4px 10px; text-align:center; width:110px;">ACCIÓN</th>
+              <tr style="text-align:left; color:var(--primary); border-bottom:1px solid var(--glass-border);">
+                <th style="padding:8px;">TÍTULO Y ARTISTA</th>
+                <th style="padding:8px;">MOMENTOS</th>
+                <th style="padding:8px;">ESTADO DE COMPLETITUD</th>
+                <th style="padding:8px; text-align:center;">RANKING / USO</th>
+                <th style="padding:8px; text-align:right;">ACCIÓN</th>
               </tr>
             </thead>
+            <tbody id="rep-table-body">
+              <!-- Se llena dinámicamente -->
+            </tbody>
           </table>
         </div>
-
-        <table style="width:100%; border-collapse:collapse; font-size:12px; color:var(--text);" id="rep-table-container">
-          <tbody id="reports-tbody">
-            <!-- Filas inyectadas dinámicamente -->
-          </tbody>
-        </table>
       </section>
-      </main>
+
+    </main>
       <!-- ========================================================== -->
       <!-- MÓDULO 6: AVISOS PUSH E HISTORIAL                          -->
       <!-- ========================================================== -->
