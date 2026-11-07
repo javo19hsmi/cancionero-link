@@ -3522,36 +3522,6 @@ function exportPastoralReportCSV() {
     });
 }
 
-    const total = allSongs.length;
-    let countAudio = 0, countSheet = 0, countChords = 0, countArtist = 0;
-
-    allSongs.forEach(s => {
-        if (s.link && s.link.trim() !== '') countAudio++;
-        if (s.sheetMusicLink && s.sheetMusicLink.trim() !== '') countSheet++;
-        if (s.lyrics && s.lyrics.includes('[')) countChords++;
-        if (s.artist && s.artist.trim() !== '' && s.artist.toLowerCase() !== 'desconocido') countArtist++;
-    });
-
-    // Actualizar métricas del Dashboard
-    const totalEl = document.getElementById('rep-total-songs');
-    if (totalEl) totalEl.innerText = total;
-
-    document.getElementById('rep-count-audio').innerText = countAudio;
-    document.getElementById('rep-pct-audio').innerText = `${Math.round((countAudio / total) * 100)}% del catálogo`;
-
-    document.getElementById('rep-count-sheet').innerText = countSheet;
-    document.getElementById('rep-pct-sheet').innerText = `${Math.round((countSheet / total) * 100)}% del catálogo`;
-
-    document.getElementById('rep-count-chords').innerText = countChords;
-    document.getElementById('rep-pct-chords').innerText = `${Math.round((countChords / total) * 100)}% del catálogo`;
-
-    document.getElementById('rep-count-artist').innerText = countArtist;
-    document.getElementById('rep-pct-artist').innerText = `${Math.round((countArtist / total) * 100)}% del catálogo`;
-
-    // Renderizar la tabla con el filtro activo
-    filterReportList(activeReportFilter);
-}
-
 let reportCurrentPage = 1;
 const REPORT_PAGE_SIZE = 20;
 
