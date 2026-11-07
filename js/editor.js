@@ -3319,100 +3319,173 @@ function renderReportsModule() {
     document.getElementById('rep-pct-artist').innerText = `${Math.round((countArtist / total) * 100)}% del catálogo`;
 }
 
+function selectAllReportCommunities(select) {
+    const chks = document.querySelectorAll('input[name="rep-comm-filter-chk"]');
+    chks.forEach(c => c.checked = select);
+    renderPastoralImpactMetrics();
+}
+
+function toggleReportCapillaAccordion(commKey, btn) {
+    const div = document.getElementById(`rep-accordion-capillas-${commKey}`);
+    if (!div) return;
+    const isHidden = div.style.display === 'none' || div.style.display === '';
+    div.style.display = isHidden ? 'block' : 'none';
+    if (btn) {
+        const count = div.querySelectorAll('input[type="checkbox"]').length;
+        btn.innerText = isHidden ? `▼ ${count} capillas` : `▶ ${count} capillas`;
+    }
+}
+
+function handleReportParroquiaChkChange(parroquiaChk, commKey) {
+    const isChecked = parroquiaChk.checked;
+    const childCapillas = document.querySelectorAll(`input[data-rep-parent="${commKey}"]`);
+    childCapillas.forEach(cap => {
+        cap.checked = isChecked;
+    });
+    renderPastoralImpactMetrics();
+}
+
 function renderPastoralImpactMetrics() {
-    const impactBox = document.getElementById('rep-monthly-impact-content');
-    if (!impactBox) return;
+    const leftBox = document.getElementById('rep-left-impact-box');
+    const tableBox = document.getElementById('rep-community-table-content');
+    if (!leftBox && !tableBox) return;
 
     const userRole = (typeof currentUserRole !== 'undefined' && currentUserRole) ? currentUserRole : (window.currentUserRole || 'admin');
     const isSuper = (userRole === 'super_admin');
     const safePath = (typeof selectedCommunityPath !== 'undefined' && selectedCommunityPath) ? selectedCommunityPath : 'comunidades/pst_001';
 
-    if (isSuper) {
-        db.ref('comunidades').once('value').then(snap => {
-            if (!snap.exists()) {
-                impactBox.innerHTML = '<p style="color:#aaa; font-size:12px;">No hay datos comunitarios registrados.</p>';
-                return;
+    const dateRange = document.getElementById('rep-date-range-filter')?.value || 'month';
+    const now = Date.now();
+    let minTimestamp = 0;
+    if (dateRange === 'month') {
+        minTimestamp = new Date(new Date().getFullYear(), new Date().getMonth(), 1).getTime();
+    } else if (dateRange === '3months') {
+        minTimestamp = now - (90 * 24 * 60 * 60 * 1000);
+    }
+
+    db.ref('comunidades').once('value').then(snap => {
+        if (!snap.exists()) return;
+
+        const comms = snap.val();
+        let totalFielesGlobal = 0;
+        let totalMisasGlobal = 0;
+        let commRowsHtml = '';
+
+        Object.keys(comms).forEach(commKey => {
+            const c = comms[commKey];
+            const cName = c.nombre || commKey;
+
+            const parrChk = document.querySelector(`input[name="rep-comm-filter-chk"][value="${commKey}"]`);
+            const isParrChecked = parrChk ? parrChk.checked : true;
+
+            const allHist = c.historial_transmisiones ? Object.values(c.historial_transmisiones) : [];
+            const filteredHist = allHist.filter(h => (h.timestamp || 0) >= minTimestamp);
+
+            let sumPicos = 0;
+            filteredHist.forEach(h => sumPicos += (h.audiencia_pico || 0));
+
+            if (isParrChecked) {
+                totalFielesGlobal += sumPicos;
+                totalMisasGlobal += filteredHist.length;
             }
 
-            const comms = snap.val();
-            let totalFielesGlobal = 0;
-            let totalMisasGlobal = 0;
-            let commRows = '';
+            const isLive = c.estado_vivo === true || (c.proyeccion_vivo && c.proyeccion_vivo.modo && c.proyeccion_vivo.modo !== 'NEGRA');
+            const subNodosKeys = c.sub_nodos ? Object.keys(c.sub_nodos) : [];
+            const hasSub = subNodosKeys.length > 0;
 
-            Object.keys(comms).forEach(k => {
-                const c = comms[k];
-                const cName = c.nombre || k;
-                const hist = c.historial_transmisiones ? Object.values(c.historial_transmisiones) : [];
+            let capillasRows = '';
+            if (hasSub) {
+                subNodosKeys.forEach(capKey => {
+                    const cap = c.sub_nodos[capKey];
+                    const capName = cap.nombre || capKey;
+                    const capChk = document.querySelector(`input[name="rep-comm-filter-chk"][value="sub_${capKey}"]`);
+                    const isCapChecked = capChk ? capChk.checked : true;
 
-                let sumPicos = 0;
-                hist.forEach(h => {
-                    sumPicos += (h.audiencia_pico || 0);
+                    const capHist = cap.historial_transmisiones ? Object.values(cap.historial_transmisiones) : [];
+                    const capFilteredHist = capHist.filter(h => (h.timestamp || 0) >= minTimestamp);
+
+                    let capPicos = 0;
+                    capFilteredHist.forEach(h => capPicos += (h.audiencia_pico || 0));
+
+                    if (isCapChecked) {
+                        totalFielesGlobal += capPicos;
+                        totalMisasGlobal += capFilteredHist.length;
+                    }
+
+                    const capLive = cap.estado_vivo === true;
+
+                    capillasRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03); background:rgba(0,0,0,0.15);">
+                        <td style="padding:6px 10px; font-size:11px; color:#cbd5e1; display:flex; align-items:center; gap:6px;">
+                            <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important;">
+                            <span>↳ ⛪ Capilla: ${capName}</span>
+                        </td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#aaa;">${capFilteredHist.length} Misas</td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#2dd4bf;">👥 ${capPicos} fieles</td>
+                        <td style="padding:6px 10px; text-align:center; font-size:11px; color:#94a3b8;">${capFilteredHist.length > 0 ? Math.round(capPicos / capFilteredHist.length) : 0} promedio</td>
+                        <td style="padding:6px 10px; text-align:center;">${capLive ? '<span style="color:#34d399; font-size:10px;">🟢</span>' : '<span style="color:#64748b; font-size:9px;">⚪</span>'}</td>
+                    </tr>`;
                 });
+            }
 
-                totalFielesGlobal += sumPicos;
-                totalMisasGlobal += hist.length;
+            commRowsHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px 10px;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
+                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:6px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1;">
+                            <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important;">
+                            <span style="color:#fff;">🏛️ Parroquia: ${cName}</span>
+                        </label>
+                        ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:1px 6px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0;">▶ ${subNodosKeys.length} capillas</button>` : ''}
+                    </div>
+                </td>
+                <td style="padding:8px 10px; text-align:center; color:var(--primary); font-weight:bold;">${filteredHist.length} Misas</td>
+                <td style="padding:8px 10px; text-align:center; color:#2dd4bf; font-weight:bold;">👥 ${sumPicos} fieles</td>
+                <td style="padding:8px 10px; text-align:center; color:#cbd5e1;">${filteredHist.length > 0 ? Math.round(sumPicos / filteredHist.length) : 0} promedio</td>
+                <td style="padding:8px 10px; text-align:center;">${isLive ? '<span style="color:#34d399; font-size:12px;">🟢</span>' : '<span style="color:#64748b; font-size:10px;">⚪</span>'}</td>
+            </tr>`;
 
-                commRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
-                    <td style="padding:10px; font-weight:bold; color:#fff;">🏛️ ${cName}</td>
-                    <td style="padding:10px; text-align:center; color:var(--primary); font-weight:bold;">${hist.length} Misas</td>
-                    <td style="padding:10px; text-align:center; color:#2dd4bf; font-weight:bold;">👥 ${sumPicos} fieles acompañados</td>
-                    <td style="padding:10px; text-align:center; color:#cbd5e1;">${hist.length > 0 ? Math.round(sumPicos / hist.length) : 0} promedio</td>
-                </tr>`;
-            });
+            if (hasSub) {
+                commRowsHtml += `<tr id="rep-accordion-capillas-${commKey}" style="display:none;"><td colspan="5" style="padding:0;"><table style="width:100%; border-collapse:collapse;">${capillasRows}</table></td></tr>`;
+            }
+        });
 
-            impactBox.innerHTML = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-bottom:15px;">
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">TOTAL FIELES ACOMPAÑADOS (DIÓCESIS)</small>
-                    <div style="font-size:22px; font-weight:bold; color:#2dd4bf; margin-top:4px;">👥 ${totalFielesGlobal}</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">TOTAL CELEBRACIONES EN VIVO</small>
-                    <div style="font-size:22px; font-weight:bold; color:var(--primary); margin-top:4px;">📜 ${totalMisasGlobal} Misas</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">PROMEDIO POR CELEBRACIÓN</small>
-                    <div style="font-size:22px; font-weight:bold; color:#f59e0b; margin-top:4px;">👥 ${totalMisasGlobal > 0 ? Math.round(totalFielesGlobal / totalMisasGlobal) : 0}</div>
-                </div>
+        if (leftBox) {
+            const promMisa = totalMisasGlobal > 0 ? Math.round(totalFielesGlobal / totalMisasGlobal) : 0;
+            leftBox.innerHTML = `<small style="color:#94a3b8; font-size:10px; font-weight:bold;">TOTAL FIELES ACOMPAÑADOS (SELECCIÓN)</small>
+            <div style="font-size:24px; font-weight:bold; color:#2dd4bf; margin:4px 0 10px 0; display:flex; align-items:center; gap:6px;">
+                <span>👥 ${totalFielesGlobal}</span>
             </div>
-            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:11px; color:#cbd5e1;">
+                <span>Total Celebraciones: <b style="color:var(--primary);">${totalMisasGlobal} Misas</b></span>
+                <span>Promedio: <b style="color:#f59e0b;">${promMisa} por Misa</b></span>
+            </div>
+
+            <div style="display:flex; align-items:flex-end; gap:4px; height:50px; padding-top:10px; border-bottom:1px solid rgba(255,255,255,0.1);">
+                <div style="flex:1; height:30%; background:rgba(45,212,191,0.3); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:45%; background:rgba(45,212,191,0.4); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:60%; background:rgba(45,212,191,0.5); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:40%; background:rgba(45,212,191,0.4); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:75%; background:rgba(45,212,191,0.7); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:65%; background:rgba(45,212,191,0.6); border-radius:4px 4px 0 0;"></div>
+                <div style="flex:1; height:90%; background:#2dd4bf; border-radius:4px 4px 0 0; box-shadow:0 0 8px #2dd4bf;"></div>
+            </div>`;
+        }
+
+        if (tableBox) {
+            tableBox.innerHTML = `<table style="width:100%; border-collapse:collapse; font-size:11px; color:#fff;">
                 <thead>
-                    <tr style="background:rgba(255,255,255,0.05); color:var(--primary); text-align:left;">
-                        <th style="padding:8px;">Comunidad / Parroquia</th>
-                        <th style="padding:8px; text-align:center;">Misas Transmitidas</th>
-                        <th style="padding:8px; text-align:center;">Participantes Totales</th>
-                        <th style="padding:8px; text-align:center;">Promedio/Misa</th>
+                    <tr style="border-bottom:1px solid var(--glass-border); color:var(--primary); text-align:left;">
+                        <th style="padding:6px 10px;">Comunidad / Parroquia & Capillas</th>
+                        <th style="padding:6px 10px; text-align:center;">Misas</th>
+                        <th style="padding:6px 10px; text-align:center;">Participantes</th>
+                        <th style="padding:6px 10px; text-align:center;">Promedio</th>
+                        <th style="padding:6px 10px; text-align:center;">Señal</th>
                     </tr>
                 </thead>
-                <tbody>${commRows}</tbody>
+                <tbody>${commRowsHtml}</tbody>
             </table>`;
-        });
-    } else {
-        db.ref(`${safePath}/historial_transmisiones`).once('value').then(snap => {
-            if (!snap.exists()) {
-                impactBox.innerHTML = '<p style="color:#aaa; font-size:12px; font-style:italic;">Aún no se han registrado transmisiones finalizadas en esta comunidad.</p>';
-                return;
-            }
-
-            const hist = Object.values(snap.val());
-            let sumPicos = 0;
-            hist.forEach(h => sumPicos += (h.audiencia_pico || 0));
-
-            impactBox.innerHTML = `<div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">FIELES ACOMPAÑADOS ESTE MES</small>
-                    <div style="font-size:22px; font-weight:bold; color:#2dd4bf; margin-top:4px;">👥 ${sumPicos}</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">MISAS TRANSMITIDAS</small>
-                    <div style="font-size:22px; font-weight:bold; color:var(--primary); margin-top:4px;">📜 ${hist.length}</div>
-                </div>
-                <div style="background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); padding:12px; border-radius:10px; text-align:center;">
-                    <small style="color:#94a3b8; font-size:10px;">PROMEDIO POR MISA</small>
-                    <div style="font-size:22px; font-weight:bold; color:#f59e0b; margin-top:4px;">👥 ${Math.round(sumPicos / hist.length)}</div>
-                </div>
-            </div>`;
-        });
-    }
+        }
+    });
 }
 
 function renderTransmissionsHistoryCards() {
