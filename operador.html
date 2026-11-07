@@ -2193,6 +2193,7 @@
       const activeImg = (galeriaFotos.length > 0 && fotoActivaIdx < galeriaFotos.length) ? galeriaFotos[fotoActivaIdx] : customImageBg;
 
       mostrarToast("📡 Transmitiendo al Cañón...");
+      db.ref(comunidadPath + '/estado_vivo').set(previewState.modo !== 'NEGRA');
       db.ref(comunidadPath + '/proyeccion_vivo').set({
         modo: previewState.modo,
         titulo: previewState.titulo,
