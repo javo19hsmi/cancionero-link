@@ -481,19 +481,20 @@ function switchMod(mod) {
     // 3. Buscamos el módulo seleccionado y le aplicamos el display correcto
     const targetMain = document.getElementById(`mod-${mod}`);
     if (targetMain) {
-        if (window.innerWidth <= 1100) {
+        if (mod === 'reports' || mod === 'notifications' || window.innerWidth <= 1100) {
             targetMain.style.display = 'flex';
             targetMain.style.flexDirection = 'column';
         } else {
             targetMain.style.display = 'grid'; 
         }
-    // PARA EL MÓDULO DE REPORTES Y NOTIFICACIONES
-    if (mod === 'reports' && typeof renderReportsModule === 'function') {
-        renderReportsModule();
-    }
-    if (mod === 'notifications' && typeof renderNotificationsModule === 'function') {
-        renderNotificationsModule();
-    }
+
+        // PARA EL MÓDULO DE REPORTES Y NOTIFICACIONES
+        if (mod === 'reports' && typeof renderReportsModule === 'function') {
+            renderReportsModule();
+        }
+        if (mod === 'notifications' && typeof renderNotificationsModule === 'function') {
+            renderNotificationsModule();
+        }
     }
     
     // 4. Activamos visualmente el botón superior correspondiente
