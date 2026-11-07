@@ -744,10 +744,26 @@ input, select, textarea {
   text-transform: none !important;
 }
 
-#web-target-checklist-container input[type="checkbox"] {
+#web-target-checklist-container input[type="checkbox"],
+#rep-community-table-content input[type="checkbox"] {
   width: 16px !important;
   height: 16px !important;
   margin: 0 !important;
+  padding: 0 !important;
   cursor: pointer !important;
   flex-shrink: 0 !important;
+}
+
+#rep-community-table-content label {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  cursor: pointer !important;
+  width: auto !important;
+  text-transform: none !important;
+  font-size: 12px !important;
+  color: white !important;
+  position: static !important;
 }

@@ -3439,10 +3439,10 @@ function renderPastoralImpactMetrics() {
 
                     capillasRows += `<tr style="border-bottom:1px solid rgba(255,255,255,0.03); background:rgba(0,0,0,0.15);">
                         <td style="padding:6px 10px 6px 24px; font-size:11px; color:#cbd5e1;">
-                            <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; white-space:nowrap; position:static !important;">
-                                <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important; flex-shrink:0;">
+                            <div style="display:flex; align-items:center; gap:8px; white-space:nowrap;">
+                                <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="width:16px !important; height:16px !important; margin:0 !important; cursor:pointer; flex-shrink:0;">
                                 <span style="white-space:nowrap; color:#cbd5e1;">↳ ⛪ Capilla: ${cleanCapName}</span>
-                            </label>
+                            </div>
                         </td>
                         <td style="padding:6px 10px; text-align:center; font-size:11px; color:#aaa; white-space:nowrap;">${capFilteredHist.length} Misas</td>
                         <td style="padding:6px 10px; text-align:center; font-size:11px; color:#2dd4bf; white-space:nowrap;">👥 ${capPicos} fieles</td>
@@ -3455,10 +3455,10 @@ function renderPastoralImpactMetrics() {
             commRowsHtml += `<tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
                 <td style="padding:8px 10px;">
                     <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
-                        <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1; white-space:nowrap; position:static !important;">
-                            <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important; flex-shrink:0;">
-                            <span style="color:#fff; white-space:nowrap;">🏛️ Parroquia: ${cleanParrName}</span>
-                        </label>
+                        <div style="display:flex; align-items:center; gap:8px; white-space:nowrap; flex:1;">
+                            <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="width:16px !important; height:16px !important; margin:0 !important; cursor:pointer; flex-shrink:0;">
+                            <span style="color:#fff; font-weight:bold; font-size:12px; white-space:nowrap;">🏛️ Parroquia: ${cleanParrName}</span>
+                        </div>
                         ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:2px 8px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0; white-space:nowrap;">${isExpanded ? '▼' : '▶'} ${subNodosKeys.length} capillas</button>` : ''}
                     </div>
                 </td>
