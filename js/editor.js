@@ -3355,6 +3355,16 @@ function handleReportParroquiaChkChange(parroquiaChk, commKey) {
     renderPastoralImpactMetrics();
 }
 
+function cleanReportCommunityName(name) {
+    if (!name) return '';
+    return name
+        .replace(/^parroquia:\s*/i, '')
+        .replace(/^parroquia\s+/i, '')
+        .replace(/^capilla:\s*/i, '')
+        .replace(/^capilla\s+/i, '')
+        .trim();
+}
+
 function renderPastoralImpactMetrics() {
     const leftBox = document.getElementById('rep-left-impact-box');
     const tableBox = document.getElementById('rep-community-table-content');
@@ -3384,6 +3394,7 @@ function renderPastoralImpactMetrics() {
         Object.keys(comms).forEach(commKey => {
             const c = comms[commKey];
             const cName = c.nombre || commKey;
+            const cleanParrName = cleanReportCommunityName(cName);
 
             const parrChk = document.querySelector(`input[name="rep-comm-filter-chk"][value="${commKey}"]`);
             const isParrChecked = parrChk ? parrChk.checked : true;
@@ -3409,6 +3420,7 @@ function renderPastoralImpactMetrics() {
                 subNodosKeys.forEach(capKey => {
                     const cap = c.sub_nodos[capKey];
                     const capName = cap.nombre || capKey;
+                    const cleanCapName = cleanReportCommunityName(capName);
                     const capChk = document.querySelector(`input[name="rep-comm-filter-chk"][value="sub_${capKey}"]`);
                     const isCapChecked = capChk ? capChk.checked : true;
 
@@ -3429,7 +3441,7 @@ function renderPastoralImpactMetrics() {
                         <td style="padding:6px 10px 6px 24px; font-size:11px; color:#cbd5e1;">
                             <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; white-space:nowrap; position:static !important;">
                                 <input type="checkbox" name="rep-comm-filter-chk" value="sub_${capKey}" data-rep-parent="${commKey}" ${isCapChecked ? 'checked' : ''} onchange="renderPastoralImpactMetrics()" style="margin:0 !important; flex-shrink:0;">
-                                <span style="white-space:nowrap;">↳ ⛪ Capilla: ${capName}</span>
+                                <span style="white-space:nowrap; color:#cbd5e1;">↳ ⛪ Capilla: ${cleanCapName}</span>
                             </label>
                         </td>
                         <td style="padding:6px 10px; text-align:center; font-size:11px; color:#aaa; white-space:nowrap;">${capFilteredHist.length} Misas</td>
@@ -3445,7 +3457,7 @@ function renderPastoralImpactMetrics() {
                     <div style="display:flex; align-items:center; justify-content:space-between; width:100%; gap:8px;">
                         <label style="display:flex !important; align-items:center !important; justify-content:flex-start !important; gap:8px !important; margin:0 !important; cursor:pointer; font-weight:bold; font-size:12px; flex:1; white-space:nowrap; position:static !important;">
                             <input type="checkbox" name="rep-comm-filter-chk" value="${commKey}" ${isParrChecked ? 'checked' : ''} onchange="handleReportParroquiaChkChange(this, '${commKey}')" style="margin:0 !important; flex-shrink:0;">
-                            <span style="color:#fff; white-space:nowrap;">🏛️ Parroquia: ${cName}</span>
+                            <span style="color:#fff; white-space:nowrap;">🏛️ Parroquia: ${cleanParrName}</span>
                         </label>
                         ${hasSub ? `<button type="button" onclick="toggleReportCapillaAccordion('${commKey}', this)" style="background:rgba(20,184,166,0.15); border:1px solid rgba(20,184,166,0.3); color:#2dd4bf; border-radius:6px; padding:2px 8px; font-size:9px; cursor:pointer; font-weight:bold; flex-shrink:0; white-space:nowrap;">${isExpanded ? '▼' : '▶'} ${subNodosKeys.length} capillas</button>` : ''}
                     </div>
