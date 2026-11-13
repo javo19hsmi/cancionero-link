@@ -172,6 +172,21 @@
       document.getElementById('loader').style.display='none';
       document.getElementById('main-view').style.display='block';
 
+      // 🚀 Registrar presencia en vivo de usuarios anónimos por QR/Web
+      try {
+        let sessionKey = localStorage.getItem('web_session_id');
+        if (!sessionKey) {
+          sessionKey = 'web_qr_' + Date.now() + Math.random().toString(36).substr(2, 6);
+          localStorage.setItem('web_session_id', sessionKey);
+        }
+        const presenceRef = db.ref(path + '/oyentes_vivo/' + sessionKey);
+        presenceRef.set({
+          tipo: 'web_qr',
+          timestamp: firebase.database.ServerValue.TIMESTAMP
+        });
+        presenceRef.onDisconnect().remove();
+      } catch (e) {}
+
       // Sincronizar color primario litúrgico de la Parroquia en vivo
       db.ref(path + '/proyector_config').on('value', s => {
         const cfg = s.val();
