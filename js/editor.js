@@ -3283,6 +3283,43 @@ function publishNextAppOtaVersion() {
     });
 }
 
+function exportAllUserEmailsForBroadcast() {
+    db.ref('usuarios').once('value').then(snap => {
+        if (!snap.exists()) {
+            alert('No se encontraron usuarios registrados en la base de datos.');
+            return;
+        }
+        const usersObj = snap.val();
+        const emailsSet = new Set();
+        Object.keys(usersObj).forEach(key => {
+            const u = usersObj[key];
+            if (u && u.email && typeof u.email === 'string' && u.email.includes('@')) {
+                emailsSet.add(u.email.trim().toLowerCase());
+            } else {
+                const reconstructed = key.replace(/_/g, '.');
+                if (reconstructed.includes('@')) {
+                    emailsSet.add(reconstructed.trim().toLowerCase());
+                }
+            }
+        });
+        const emailsList = Array.from(emailsSet).sort();
+        const commaSeparated = emailsList.join(', ');
+
+        if (!commaSeparated) {
+            alert('No se encontraron correos válidos.');
+            return;
+        }
+
+        navigator.clipboard.writeText(commaSeparated).then(() => {
+            alert(`📧 ¡Se copiaron ${emailsList.length} correos electrónicos al portapapeles!\n\n📌 Recomendación:\n1. Abrí Gmail con soportecancioneroparroquial@gmail.com\n2. Poné tu propio correo en "Para:"\n3. Pegá la lista en "CCO" (Copia Oculta).`);
+        }).catch(() => {
+            prompt(`📧 Se encontraron ${emailsList.length} correos. Copialos a continuación:`, commaSeparated);
+        });
+    }).catch(err => {
+        alert('Error al consultar usuarios: ' + err.message);
+    });
+}
+
 // 1. Renderiza las métricas y la tabla de reportes
 function renderReportsModule() {
     listenAppOtaVersionConfig();
