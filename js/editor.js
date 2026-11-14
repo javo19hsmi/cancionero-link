@@ -3269,7 +3269,7 @@ function publishNextAppOtaVersion() {
     const updateObj = {
         latest_version: nextVer,
         changelog: changeVal || 'Mejoras y correcciones generales en la aplicación.',
-        apk_url: 'https://drive.usercontent.google.com/download?id=1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c&export=download',
+        apk_url: 'https://drive.usercontent.google.com/download?id=1Ueg7P2rlZxYpF8E_CJ3qn0_KLJE3ru9c&export=download&confirm=t',
         force_update: false,
         timestamp: firebase.database.ServerValue.TIMESTAMP
     };
