@@ -44,14 +44,14 @@
       cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;
     }
 
-    .status-card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+    .status-card { background: var(--card); padding: 18px; border-radius: 16px; border: 1px solid var(--border); border-top: 3px solid var(--primary-light); box-shadow: 0 8px 24px rgba(0,0,0,0.3); transition: border-color 0.3s; }
     .zoom-controls { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 8px 16px; border-radius: 12px; margin-bottom: 16px; }
     .zoom-btn { background: var(--card); color: var(--text); border: 1px solid var(--border); width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-weight: bold; }
     .lyrics-view { text-align: left; line-height: 1.7; font-size: 1.25rem; padding: 10px 4px; }
     
     .bloque { padding: 12px; border-radius: 8px; margin-bottom: 8px; transition: all 0.3s ease; border-left: 4px solid transparent; white-space: normal; }
     br.espacio-estrofa { content: ""; margin-bottom: 14px; display: block; }
-    .bloque.active { background: rgba(77, 182, 172, 0.15); border-left-color: var(--primary-light); color: var(--text); font-weight: bold; transform: translateX(4px); }
+    .bloque.active { background: var(--primary-alpha, rgba(77, 182, 172, 0.15)); border-left-color: var(--primary-light); color: var(--text); font-weight: bold; transform: translateX(4px); }
     .bloque b { color: var(--primary-light); font-weight: 700; }
     
     .download-group { display: flex; flex-direction: column; gap: 10px; margin-top: 8px; }
@@ -187,15 +187,29 @@
         presenceRef.onDisconnect().remove();
       } catch (e) {}
 
-      // Sincronizar color primario litúrgico de la Parroquia en vivo
+      // 🎨 Sincronizar color primario litúrgico de la Parroquia en vivo
+      function aplicarColorLiturgico(colorHex) {
+        if (!colorHex) return;
+        let hex = String(colorHex).trim();
+        if (hex.startsWith('0x')) hex = hex.replace('0x', '');
+        if (hex.length === 8 && !hex.startsWith('#')) hex = '#' + hex.substring(2); // Quitar canal Alfa FF
+        if (!hex.startsWith('#')) hex = '#' + hex;
+
+        document.documentElement.style.setProperty('--primary-light', hex);
+        document.documentElement.style.setProperty('--primary', hex);
+        document.documentElement.style.setProperty('--primary-alpha', hex + '26');
+      }
+
+      // 1. Escuchar el color de tema activo de la comunidad (elegido en la App)
+      db.ref(path + '/configuracion_estilo/color_hex').on('value', s => {
+        if (s.exists() && s.val()) aplicarColorLiturgico(s.val());
+      });
+
+      // 2. Escuchar el color configurado en proyector como fallback
       db.ref(path + '/proyector_config').on('value', s => {
         const cfg = s.val();
-        if (cfg) {
-          if (cfg.colorTitulo || cfg.colorTexto) {
-            const activeColor = cfg.colorTitulo || cfg.colorTexto || '#4DB6AC';
-            document.documentElement.style.setProperty('--primary-light', activeColor);
-            document.documentElement.style.setProperty('--primary', activeColor);
-          }
+        if (cfg && (cfg.colorTitulo || cfg.colorTexto)) {
+          aplicarColorLiturgico(cfg.colorTitulo || cfg.colorTexto);
         }
       });
 
