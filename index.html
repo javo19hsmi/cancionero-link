@@ -191,21 +191,34 @@
       function aplicarColorLiturgico(colorHex) {
         if (!colorHex) return;
         let hex = String(colorHex).trim();
-        if (hex.startsWith('0x')) hex = hex.replace('0x', '');
-        if (hex.length === 8 && !hex.startsWith('#')) hex = '#' + hex.substring(2); // Quitar canal Alfa FF
+
+        // Si viene como número entero de Flutter (ej: 4283141724)
+        if (!isNaN(hex) && !hex.startsWith('#')) {
+          const num = parseInt(hex, 10);
+          if (!isNaN(num)) hex = num.toString(16).toUpperCase();
+        }
+
+        if (hex.startsWith('0x') || hex.startsWith('0X')) hex = hex.substring(2);
+
+        // Quitar canal Alfa de Flutter (FF8B5CF6 -> 8B5CF6)
+        if (hex.length === 8 && !hex.startsWith('#')) {
+          hex = hex.substring(2);
+        }
+
         if (!hex.startsWith('#')) hex = '#' + hex;
 
-        document.documentElement.style.setProperty('--primary-light', hex);
-        document.documentElement.style.setProperty('--primary', hex);
-        document.documentElement.style.setProperty('--primary-alpha', hex + '26');
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+          document.documentElement.style.setProperty('--primary-light', hex);
+          document.documentElement.style.setProperty('--primary', hex);
+          document.documentElement.style.setProperty('--primary-alpha', hex + '26');
+        }
       }
 
-      // 1. Escuchar el color de tema activo de la comunidad (elegido en la App)
+      // Escuchadores de color en múltiples rutas de Firebase
       db.ref(path + '/configuracion_estilo/color_hex').on('value', s => {
         if (s.exists() && s.val()) aplicarColorLiturgico(s.val());
       });
 
-      // 2. Escuchar el color configurado en proyector como fallback
       db.ref(path + '/proyector_config').on('value', s => {
         const cfg = s.val();
         if (cfg && (cfg.colorTitulo || cfg.colorTexto)) {
@@ -216,6 +229,13 @@
       db.ref(path).on('value', s => {
         const d = s.val(); if (!d) return;
         document.getElementById('comm-name').innerText = d.nombre || "Comunidad";
+
+        // Revisar si el nodo principal contiene color directamente
+        if (d.configuracion_estilo && d.configuracion_estilo.color_hex) {
+          aplicarColorLiturgico(d.configuracion_estilo.color_hex);
+        } else if (d.color) {
+          aplicarColorLiturgico(d.color);
+        }
         const lyricsDiv = document.getElementById('lyrics-display');
         const waitingDiv = document.getElementById('waiting-msg');
         const liveInd = document.getElementById('live-indicator');
